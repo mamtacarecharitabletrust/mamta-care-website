@@ -38,6 +38,22 @@ import humanitarianPhoto2 from "./assets/IMG-20260928-WA0015.jpg.jpeg";
 import mamtaCareTeam from "./assets/mamta-care-team.png";
 import heroHairDonation from "./assets/hero-hair-donation.png";
 
+import serviceCoverageMap from "./assets/serving-across-india-network.png";
+
+import plantationPhoto1 from "./assets/IMG-20260928-WA0018.jpg.jpeg";
+import plantationPhoto2 from "./assets/IMG-20260928-WA0012.jpg.jpeg";
+import plantationPhoto3 from "./assets/IMG-20260928-WA0019.jpg.jpeg";
+
+import wigProcessPhoto1 from "./assets/99.jpg.jpeg";
+import wigProcessPhoto2 from "./assets/11.jpg.jpeg";
+import wigProcessPhoto3 from "./assets/33.jpg.jpeg";
+import wigProcessPhoto4 from "./assets/66.jpg.jpeg";
+import wigProcessPhoto5 from "./assets/77.jpg.jpeg";
+import wigProcessPhoto6 from "./assets/88.jpg.jpeg";
+import wigProcessPhoto7 from "./assets/22.jpg.jpeg";
+import wigProcessPhoto8 from "./assets/44.jpg.jpeg";
+import wigProcessPhoto9 from "./assets/55.jpg.jpeg";
+
 /* =========================================================
 
    INFORMATION
@@ -107,6 +123,39 @@ const visuals = {
     humanitarianPhoto1,
 
 };
+
+/* =========================================================
+   PAN-INDIA SERVICE COVERAGE MARKERS
+   These are coverage markers, not branch-office locations.
+========================================================= */
+
+const serviceLocations = [
+  { name: "Srinagar", x: 34.5, y: 8.4 },
+  { name: "Chandigarh", x: 38.6, y: 18.4 },
+  { name: "Delhi", x: 39.8, y: 27.2 },
+  { name: "Jaipur", x: 31.2, y: 34.8 },
+  { name: "Ahmedabad", x: 24.4, y: 46.5 },
+  { name: "Nashik", x: 31.6, y: 52.4 },
+  { name: "Mumbai", x: 28.0, y: 58.8 },
+  { name: "Pune", x: 31.4, y: 61.0 },
+  { name: "Bhopal", x: 39.5, y: 46.7 },
+  { name: "Nagpur", x: 43.4, y: 55.6 },
+  { name: "Lucknow", x: 50.6, y: 36.8 },
+  { name: "Patna", x: 59.2, y: 42.0 },
+  { name: "Kolkata", x: 64.6, y: 51.0 },
+  { name: "Bhubaneswar", x: 57.6, y: 57.4 },
+  { name: "Guwahati", x: 79.4, y: 36.0 },
+  { name: "Hyderabad", x: 45.2, y: 66.0 },
+  { name: "Visakhapatnam", x: 53.2, y: 65.0 },
+  { name: "Bengaluru", x: 39.2, y: 76.4 },
+  { name: "Chennai", x: 44.8, y: 82.5 },
+  { name: "Kochi", x: 34.8, y: 84.0 },
+].map((location) => ({
+  ...location,
+  mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    `${location.name}, India`
+  )}`,
+}));
 
 /* =========================================================
 
@@ -360,19 +409,11 @@ function Layout({ children }) {
 
             </a>
 
-            <a
-
-              href={info.wigRequestForm}
-
-              target="_blank"
-
-              rel="noreferrer"
-
-            >
+            <Link to="/wig-request">
 
               Free Wig
 
-            </a>
+            </Link>
 
             <a
 
@@ -869,15 +910,12 @@ function Home() {
                 <span>↗</span>
               </motion.a>
 
-              <motion.a
+              <Link
                 className="btn hero-secondary"
-                href={info.wigRequestForm}
-                target="_blank"
-                rel="noreferrer"
-                whileHover={{ y: -5 }}
+                to="/wig-request"
               >
                 Request a Free Wig
-              </motion.a>
+              </Link>
 
               <motion.a
                 className="btn hero-track-btn"
@@ -1435,11 +1473,7 @@ function Home() {
 
             }
 
-            link={
-
-              info.wigRequestForm
-
-            }
+            to="/wig-request"
 
           />
 
@@ -1605,19 +1639,11 @@ function Home() {
 
           </p>
 
-          <a
+          <Link
 
             className="btn hero-primary"
 
-            href={
-
-              info.wigRequestForm
-
-            }
-
-            target="_blank"
-
-            rel="noreferrer"
+            to="/wig-request"
 
           >
 
@@ -1625,11 +1651,11 @@ function Home() {
 
             <span>
 
-              ↗
+              →
 
             </span>
 
-          </a>
+          </Link>
 
         </motion.div>
 
@@ -2883,11 +2909,11 @@ function About() {
 
           <PersonCard
 
-            initials="GS"
+            initials="MH"
 
-            name="GNANESWAR SAI"
+            name="MANOJ H A"
 
-            role="Administrator"
+            role="Regional Donation Manager"
 
           />
 
@@ -3373,35 +3399,113 @@ function GoGreen() {
 
           <p>
 
-            Plantation activity photographs
+            Real moments from Mamta Care plantation activities,
 
-            from Mamta Care will be displayed
+            showing our commitment to environmental responsibility
 
-            here.
+            through meaningful action.
 
           </p>
 
         </Reveal>
 
-        <div className="go-green-placeholder">
+        <motion.div
+          className="plantation-gallery"
+          initial={{
+            opacity: 0,
+            y: 45,
+          }}
+          whileInView={{
+            opacity: 1,
+            y: 0,
+          }}
+          viewport={{
+            once: true,
+            amount: 0.18,
+          }}
+          transition={{
+            duration: 0.9,
+            ease,
+          }}
+        >
 
-          <span>
+          {[
+            {
+              image: plantationPhoto1,
+              title: "Planting With Purpose",
+              text: "A hands-on plantation activity supporting a greener tomorrow.",
+            },
+            {
+              image: plantationPhoto2,
+              title: "Care in Every Step",
+              text: "Nurturing each sapling with responsibility, patience and care.",
+            },
+            {
+              image: plantationPhoto3,
+              title: "Growing Change Together",
+              text: "Community participation that turns environmental awareness into action.",
+            },
+          ].map((item, index) => (
 
-            Plantation photo gallery
+            <motion.figure
+              className="plantation-gallery-card"
+              key={item.title}
+              initial={{
+                opacity: 0,
+                y: 35,
+              }}
+              whileInView={{
+                opacity: 1,
+                y: 0,
+              }}
+              viewport={{
+                once: true,
+                amount: 0.2,
+              }}
+              transition={{
+                duration: 0.75,
+                delay: index * 0.1,
+                ease,
+              }}
+              whileHover={{
+                y: -8,
+              }}
+            >
 
-          </span>
+              <div className="plantation-gallery-image-wrap">
 
-          <p>
+                <img
+                  className="plantation-gallery-image"
+                  src={item.image}
+                  alt={item.title}
+                  loading="lazy"
+                />
 
-            The page is ready. Your real
+                <div className="plantation-gallery-shade" />
 
-            plantation photographs can now
+                <span className="plantation-gallery-number">
+                  0{index + 1}
+                </span>
 
-            be added here.
+              </div>
 
-          </p>
+              <figcaption>
 
-        </div>
+                <h3>
+                  {item.title}
+                </h3>
+
+                <p>
+                  {item.text}
+                </p>
+
+              </figcaption>
+
+            </motion.figure>
+
+          ))}
+
+        </motion.div>
 
       </section>
 
@@ -3729,23 +3833,195 @@ function Donate() {
 
 /* =========================================================
 
-   CONTACT
+   CONTACT + INTERACTIVE PAN-INDIA SERVICE MAP
 
 ========================================================= */
 
-function Contact() {
+function ServiceCoverageMap() {
 
-  function handleSubmit(event) {
+  const mapRef = useRef(null);
 
-    event.preventDefault();
+  const rawRotateX = useMotionValue(0);
+  const rawRotateY = useMotionValue(0);
 
-    alert(
+  const rotateX = useSpring(rawRotateX, {
+    stiffness: 110,
+    damping: 18,
+    mass: 0.7,
+  });
 
-      "Thank you. Your message has been recorded in this demo. The website backend will be connected later."
+  const rotateY = useSpring(rawRotateY, {
+    stiffness: 110,
+    damping: 18,
+    mass: 0.7,
+  });
 
-    );
+  function handlePointerMove(event) {
+
+    if (!mapRef.current) {
+      return;
+    }
+
+    const rect =
+      mapRef.current.getBoundingClientRect();
+
+    const x =
+      (event.clientX - rect.left) /
+        rect.width -
+      0.5;
+
+    const y =
+      (event.clientY - rect.top) /
+        rect.height -
+      0.5;
+
+    rawRotateY.set(x * 13);
+    rawRotateX.set(y * -10);
 
   }
+
+  function resetTilt() {
+
+    rawRotateX.set(0);
+    rawRotateY.set(0);
+
+  }
+
+  return (
+
+    <div
+      className="service-map-scene"
+      ref={mapRef}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={resetTilt}
+    >
+
+      <motion.div
+        className="service-map-card"
+        style={{
+          rotateX,
+          rotateY,
+        }}
+        initial={{
+          opacity: 0,
+          scale: 0.96,
+          y: 30,
+        }}
+        whileInView={{
+          opacity: 1,
+          scale: 1,
+          y: 0,
+        }}
+        viewport={{
+          once: true,
+          amount: 0.25,
+        }}
+        transition={{
+          duration: 0.9,
+          ease,
+        }}
+      >
+
+        <div className="service-map-glow" />
+
+        <img
+          className="service-map-image"
+          src={serviceCoverageMap}
+          alt="Illustrated India map showing Mamta Care service coverage across India"
+        />
+
+        <div className="service-map-depth" />
+
+        <div className="service-map-topline">
+
+          <span>
+            PAN-INDIA SERVICE COVERAGE
+          </span>
+
+          <small>
+            Rose markers are clickable • Open in Google Maps
+          </small>
+
+        </div>
+
+        <div
+          className="service-map-hotspots"
+          aria-label="Mamta Care service coverage locations across India"
+        >
+
+          {serviceLocations.map(
+            (
+              location,
+              index
+            ) => (
+
+              <a
+                key={location.name}
+                className="service-hotspot"
+                href={location.mapsUrl}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={`Open ${location.name} in Google Maps`}
+                title={`Open ${location.name} in Google Maps`}
+                style={{
+                  left: `${location.x}%`,
+                  top: `${location.y}%`,
+                  "--marker-delay": `${index * 0.08}s`,
+                }}
+              >
+
+                <span className="service-hotspot-ring" />
+
+                <span className="service-hotspot-dot" />
+
+                <span className="service-hotspot-tooltip">
+
+                  <strong>
+                    {location.name}
+                  </strong>
+
+                  <small>
+                    Service coverage
+                    <br />
+                    Open in Google Maps ↗
+                  </small>
+
+                </span>
+
+              </a>
+
+            )
+          )}
+
+        </div>
+
+        <div className="service-map-caption">
+
+          <strong>
+            Serving Across India
+          </strong>
+
+          <span>
+            Hair donation guidance,
+            wig-support coordination
+            and community assistance.
+          </span>
+
+        </div>
+
+      </motion.div>
+
+      <p className="service-map-note">
+        Glowing points represent service coverage areas, not branch-office locations.
+      </p>
+
+    </div>
+
+  );
+
+}
+
+function Contact() {
 
   return (
 
@@ -3753,11 +4029,11 @@ function Contact() {
 
       title="Contact Us"
 
-      intro="Whether you want to donate hair, request a free wig, volunteer, support our work or learn more, please get in touch."
+      intro="Connect with Mamta Care Charitable Trust or explore our pan-India service coverage. Move your cursor across the map and click a glowing location to open it in Google Maps."
 
     >
 
-      <div className="contact-grid">
+      <div className="contact-grid contact-map-grid">
 
         <Reveal>
 
@@ -3809,11 +4085,7 @@ function Contact() {
 
               <br />
 
-              <a
-
-                href={`mailto:${info.email}`}
-
-              >
+              <a href={`mailto:${info.email}`}>
 
                 {info.email}
 
@@ -3839,135 +4111,14 @@ function Contact() {
 
         </Reveal>
 
-        <motion.form
-
-          onSubmit={handleSubmit}
-
-          initial={{
-
-            opacity: 0,
-
-            y: 45,
-
-          }}
-
-          whileInView={{
-
-            opacity: 1,
-
-            y: 0,
-
-          }}
-
-          viewport={{
-
-            once: true,
-
-          }}
-
+        <Reveal
+          className="service-map-column"
+          delay={0.08}
         >
 
-          <label>
+          <ServiceCoverageMap />
 
-            Full Name *
-
-            <input required />
-
-          </label>
-
-          <label>
-
-            Mobile Number *
-
-            <input required />
-
-          </label>
-
-          <label>
-
-            Email Address
-
-            <input
-
-              type="email"
-
-            />
-
-          </label>
-
-          <label>
-
-            Reason for Contact
-
-            <select>
-
-              <option>
-
-                Hair Donation
-
-              </option>
-
-              <option>
-
-                Free Wig Request
-
-              </option>
-
-              <option>
-
-                Donation / Support
-
-              </option>
-
-              <option>
-
-                Go Green Challenge
-
-              </option>
-
-              <option>
-
-                Volunteering
-
-              </option>
-
-              <option>
-
-                General Enquiry
-
-              </option>
-
-            </select>
-
-          </label>
-
-          <label>
-
-            Message *
-
-            <textarea
-
-              required
-
-              rows="6"
-
-            />
-
-          </label>
-
-          <button
-
-            className="btn primary"
-
-            type="submit"
-
-          >
-
-            Send Message
-
-          </button>
-
-        </motion.form>
+        </Reveal>
 
       </div>
 
@@ -4099,29 +4250,232 @@ function WigRequest() {
 
           </p>
 
-          <a
+          <div className="wig-request-actions">
 
-            className="btn primary"
+            <a
 
-            href={
+              className="btn primary"
 
-              info.wigRequestForm
+              href={
 
-            }
+                info.wigRequestForm
 
-            target="_blank"
+              }
 
-            rel="noreferrer"
+              target="_blank"
 
-          >
+              rel="noreferrer"
 
-            Open Wig Request Form
+            >
 
-          </a>
+              Open Wig Request Form
+
+            </a>
+
+            <Link
+
+              className="btn wig-process-button"
+
+              to="/wig-making-process"
+
+            >
+
+              Wig Making Process
+
+              <span>
+                →
+              </span>
+
+            </Link>
+
+          </div>
 
         </div>
 
       </AnimatedHighlight>
+
+    </Page>
+
+  );
+
+}
+
+/* =========================================================
+
+   WIG MAKING PROCESS
+
+========================================================= */
+
+function WigMakingProcess() {
+
+  const photos = [
+    {
+      image: wigProcessPhoto2,
+      title: "Collected Donated Hair",
+    },
+    {
+      image: wigProcessPhoto7,
+      title: "Hair Sorting & Alignment",
+    },
+    {
+      image: wigProcessPhoto3,
+      title: "Prepared Hair Bundles",
+    },
+    {
+      image: wigProcessPhoto8,
+      title: "Lace Base Preparation",
+    },
+    {
+      image: wigProcessPhoto9,
+      title: "Hand Knotting & Ventilation",
+    },
+    {
+      image: wigProcessPhoto4,
+      title: "Wig Assembly",
+    },
+    {
+      image: wigProcessPhoto5,
+      title: "Wig Styling",
+    },
+    {
+      image: wigProcessPhoto6,
+      title: "Finishing & Fit Check",
+    },
+    {
+      image: wigProcessPhoto1,
+      title: "Finished Wig",
+    },
+  ];
+
+  return (
+
+    <Page
+
+      title="Wig Making Process"
+
+      intro="A visual look at the journey from donated hair to a finished wig."
+
+    >
+
+      <motion.div
+
+        className="wig-process-gallery"
+
+        initial={{
+          opacity: 0,
+          y: 35,
+        }}
+
+        whileInView={{
+          opacity: 1,
+          y: 0,
+        }}
+
+        viewport={{
+          once: true,
+          amount: 0.12,
+        }}
+
+        transition={{
+          duration: 0.8,
+          ease,
+        }}
+
+      >
+
+        {photos.map(
+          (
+            photo,
+            index
+          ) => (
+
+            <motion.figure
+
+              className={`wig-process-photo-card wig-process-photo-${index + 1}`}
+
+              key={photo.title}
+
+              initial={{
+                opacity: 0,
+                y: 30,
+              }}
+
+              whileInView={{
+                opacity: 1,
+                y: 0,
+              }}
+
+              viewport={{
+                once: true,
+                amount: 0.12,
+              }}
+
+              transition={{
+                duration: 0.65,
+                delay:
+                  Math.min(
+                    index * 0.06,
+                    0.3
+                  ),
+                ease,
+              }}
+
+              whileHover={{
+                y: -6,
+                scale: 1.01,
+              }}
+
+            >
+
+              <img
+
+                src={photo.image}
+
+                alt={photo.title}
+
+                loading="lazy"
+
+              />
+
+              <span className="wig-process-photo-index">
+
+                {String(
+                  index + 1
+                ).padStart(
+                  2,
+                  "0"
+                )}
+
+              </span>
+
+              <figcaption className="wig-process-photo-title">
+
+                {photo.title}
+
+              </figcaption>
+
+            </motion.figure>
+
+          )
+        )}
+
+      </motion.div>
+
+      <div className="wig-process-back">
+
+        <Link
+
+          className="btn"
+
+          to="/wig-request"
+
+        >
+
+          ← Back to Free Wig
+
+        </Link>
+
+      </div>
 
     </Page>
 
@@ -4258,6 +4612,18 @@ function AppRoutes() {
             element={
 
               <WigRequest />
+
+            }
+
+          />
+
+          <Route
+
+            path="/wig-making-process"
+
+            element={
+
+              <WigMakingProcess />
 
             }
 
