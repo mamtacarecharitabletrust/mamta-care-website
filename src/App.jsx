@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 
 import {
 
@@ -234,6 +234,10 @@ function Reveal({
 
 function Layout({ children }) {
 
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const closeMobileMenu = () => setMenuOpen(false);
+
   return (
 
     <>
@@ -276,6 +280,8 @@ function Layout({ children }) {
 
             aria-label="Mamta Care Charitable Trust Home"
 
+            onClick={closeMobileMenu}
+
           >
 
             <img
@@ -288,7 +294,39 @@ function Layout({ children }) {
 
           </Link>
 
-          <nav>
+          <button
+
+            className={`mobile-menu-button ${menuOpen ? "is-open" : ""}`}
+
+            type="button"
+
+            onClick={() => setMenuOpen((open) => !open)}
+
+            aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
+
+            aria-expanded={menuOpen}
+
+            aria-controls="primary-navigation"
+
+          >
+
+            <span />
+
+            <span />
+
+            <span />
+
+          </button>
+
+          <nav
+
+            id="primary-navigation"
+
+            className={`site-nav ${menuOpen ? "mobile-open" : ""}`}
+
+            onClick={closeMobileMenu}
+
+          >
 
             <Link to="/">
 
@@ -333,6 +371,22 @@ function Layout({ children }) {
             >
 
               Free Wig
+
+            </a>
+
+            <a
+
+              className="mobile-only-track"
+
+              href={info.trackingApp}
+
+              target="_blank"
+
+              rel="noreferrer"
+
+            >
+
+              Track Donation
 
             </a>
 
