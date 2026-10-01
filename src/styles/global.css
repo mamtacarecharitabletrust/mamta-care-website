@@ -220,7 +220,7 @@ header {
 
   );
 
-  min-height: 88px;
+  min-height: 94px;
 
   margin: 0 auto;
 
@@ -242,9 +242,13 @@ header {
 
 .brand img {
 
-  width: 225px;
+  width: 95px;
 
-  max-height: 70px;
+  height: 95px;
+
+  max-width: none;
+
+  max-height: none;
 
   object-fit: contain;
 
@@ -256,6 +260,34 @@ header {
 
     );
 
+}
+
+/* =========================================================
+   DESKTOP LOGO — VISUAL ZOOM / CROP
+   Keeps the actual Mamta Care mark larger without
+   making the desktop header unnecessarily tall.
+========================================================= */
+
+@media (min-width: 761px) {
+  .brand {
+    width: 115px;
+    height: 78px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .brand img {
+    width: 115px;
+    height: 115px;
+    max-width: none;
+    max-height: none;
+    object-fit: contain;
+    transform: scale(1.35);
+    transform-origin: center center;
+  }
 }
 
 nav {
