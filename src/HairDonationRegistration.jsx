@@ -1,0 +1,150 @@
+import React, { useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import officialLogo from "./assets/mamta-care-logo.jpeg";
+import hairDonationReference from "./assets/IMG_20260709_142702.jpg.jpeg";
+import headShaveReference from "./assets/wig-support.png";
+import "./styles/hair-registration.css";
+
+const LENGTHS = ["14–16 inches", "17 inches", "18 inches", "19 inches", "20 inches", "21–25 inches", "26 inches or more"];
+const FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
+
+function StepTitle({ number, title, help }) {
+  return <header className="mchr-step-heading"><span>{number}</span><div><h2>{title}</h2><p>{help}</p></div></header>;
+}
+
+function FormField({ title, required = true, children }) {
+  return <label className="mchr-field"><span>{title}{required ? " *" : ""}</span>{children}</label>;
+}
+
+export default function HairDonationRegistration() {
+  const [step, setStep] = useState(1);
+  const [method, setMethod] = useState("haircut");
+  const [values, setValues] = useState({
+    hair_length: LENGTHS[0], full_name: "", phone: "", email: "", gender: "", state: "", city: "",
+    hair_type: "", guidance: "", readiness: "", referral_source: "",
+    voluntary: false, private_photos: false, awareness: false,
+  });
+  const [files, setFiles] = useState({ front: null, back: null });
+  const [error, setError] = useState("");
+  const [finished, setFinished] = useState(false);
+  const frontGallery = useRef(null), frontCamera = useRef(null);
+  const backGallery = useRef(null), backCamera = useRef(null);
+  const refs = useMemo(() => ({ front: { gallery: frontGallery, camera: frontCamera }, back: { gallery: backGallery, camera: backCamera } }), []);
+  const set = (key, value) => { setValues(old => ({ ...old, [key]: value })); setError(""); };
+  const handleFile = (which, file) => {
+    if (!file) return;
+    if (!FILE_TYPES.includes(file.type) || !file.size || file.size > MAX_PHOTO_BYTES) {
+      setError("Choose a JPG, PNG or WebP image smaller than 4 MB."); return;
+    }
+    setFiles(old => ({ ...old, [which]: file })); setError("");
+  };
+  const validate = (current) => {
+    if (current === 2) {
+      if (!values.full_name.trim() || !/^\+?[\d\s-]{10,18}$/.test(values.phone.trim()) ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim()) ||
+        !values.gender || !values.state.trim() || !values.city.trim() || !values.hair_type ||
+        !values.guidance || !values.readiness || !values.referral_source) {
+        return "Complete every required donor information field before continuing.";
+      }
+    }
+    if (current === 3 && (!files.front || !files.back)) return "Select one front photograph and one back photograph.";
+    if (current === 4 && (!values.voluntary || !values.private_photos)) return "Accept the voluntary donation declaration and private photo review consent.";
+    return "";
+  };
+  const next = () => {
+    const issue = validate(step);
+    if (issue) { setError(issue); return; }
+    setError(""); if (step < 4) { setStep(step + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }
+    else setFinished(true);
+  };
+  const photoNames = { front: "Front photograph", back: "Back photograph" };
+
+  return <div className="mchr">
+    <div className="mchr-container">
+      <div className="mchr-top"><img src={officialLogo} alt="Official Mamta Care Charitable Trust logo" /><div>
+        <p className="mchr-overline">MAMTA CARE CHARITABLE TRUST</p>
+        <h1>Donate Hair. Give Hope.</h1>
+        <p>Secure hair donation registration · Designed for mobile and desktop</p>
+      </div></div>
+      <div role="status" className="mchr-preview-warning"><strong>DESIGN PREVIEW — NOT LIVE.</strong> Use fictional information and sample photos only. No data, images or emails are sent. The existing Google Form remains live.</div>
+      {finished ? <section className="mchr-panel mchr-success" aria-live="polite">
+        <span className="mchr-success-icon">✓</span><h2>Preview completed!</h2>
+        <p>The form design and required consent were validated in this browser. <strong>No registration was created.</strong></p>
+        <button type="button" className="mchr-primary" onClick={() => { setFinished(false); setStep(1); setError(""); }}>Return to preview</button>
+      </section> : <>
+        <nav aria-label="Registration preview steps" className="mchr-steps">
+          {["Donation type", "Your details", "Two photos", "Consent"].map((label, index) =>
+            <div key={label} className={step === index + 1 ? "current" : step > index + 1 ? "done" : ""}><b>{index + 1}</b><span>{label}</span></div>)}
+        </nav>
+        <AnimatePresence mode="wait">
+          <motion.section className="mchr-panel" key={step} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: .23 }}>
+            {step === 1 && <>
+              <StepTitle number="01" title="Tell us about your hair donation" help="Choose how you would like to donate. Both options are entirely voluntary." />
+              <div className="mchr-choices">
+                <button type="button" className={"mchr-method " + (method === "haircut" ? "selected" : "")} aria-pressed={method === "haircut"} onClick={() => setMethod("haircut")}>
+                  <div className="mchr-method-image"><img src={hairDonationReference} alt="Indian hair donation photography; illustrative website reference" /><div className="mchr-falling-hair" aria-hidden="true"><i/><i/><i/><i/></div><span className="mchr-method-icon">✂</span></div>
+                  <div className="mchr-method-body"><strong>Haircut Donation</strong><span>Minimum 14 usable inches, excluding split ends and uneven hair.</span></div>
+                </button>
+                <button type="button" className={"mchr-method " + (method === "head_shave" ? "selected" : "")} aria-pressed={method === "head_shave"} onClick={() => setMethod("head_shave")}>
+                  <div className="mchr-method-image"><img src={headShaveReference} alt="Illustrative Mamta Care support photo; actual head-shave reference photography is pending approval" /><span className="mchr-razor" aria-hidden="true">⌁</span></div>
+                  <div className="mchr-method-body"><strong>Complete Head Shave <small>Recommended</small></strong><span>A meaningful option when chosen freely. A woman barber may guide the process.</span></div>
+                </button>
+              </div>
+              <p className="mchr-image-note">The motion is symbolic. Final haircut and female-barber razor photographs will be added after image approval; no donor photo is presented as a real procedure without permission.</p>
+              {method === "haircut" ? <FormField title="Approximate usable hair length, excluding split ends"><select value={values.hair_length} onChange={e => set("hair_length", e.target.value)}>{LENGTHS.map(x => <option key={x}>{x}</option>)}</select></FormField> : <div className="mchr-note">Complete head shave selected. No haircut length is required.</div>}
+            </>}
+            {step === 2 && <>
+              <StepTitle number="02" title="Your donation details" help="These are the basic fields from your existing Google Form." />
+              <div className="mchr-form-grid">
+                <FormField title="Full name"><input autoComplete="name" value={values.full_name} onChange={e => set("full_name", e.target.value)} placeholder="Full name" /></FormField>
+                <FormField title="Contact number"><input type="tel" inputMode="tel" autoComplete="tel" value={values.phone} onChange={e => set("phone", e.target.value)} placeholder="10-digit mobile number" /></FormField>
+                <FormField title="Email address"><input type="email" autoComplete="email" value={values.email} onChange={e => set("email", e.target.value)} placeholder="name@example.com" /></FormField>
+                <FormField title="Gender"><select value={values.gender} onChange={e => set("gender", e.target.value)}><option value="">Select gender</option>{["Female","Male","Other","Prefer not to say"].map(x => <option key={x}>{x}</option>)}</select></FormField>
+                <FormField title="State"><input autoComplete="address-level1" value={values.state} onChange={e => set("state", e.target.value)} placeholder="e.g. Andhra Pradesh" /></FormField>
+                <FormField title="City"><input autoComplete="address-level2" value={values.city} onChange={e => set("city", e.target.value)} placeholder="e.g. Guntur" /></FormField>
+                <FormField title="Hair type"><select value={values.hair_type} onChange={e => set("hair_type", e.target.value)}><option value="">Select hair type</option>{["Straight","Wavy","Curly","Coily","Other"].map(x => <option key={x}>{x}</option>)}</select></FormField>
+                <FormField title="Need guidance on cutting and packing?"><select value={values.guidance} onChange={e => set("guidance", e.target.value)}><option value="">Select</option><option>Yes</option><option>No</option></select></FormField>
+                <FormField title="Donation readiness"><select value={values.readiness} onChange={e => set("readiness", e.target.value)}><option value="">Select</option><option>Planning to cut</option><option>Already cut</option></select></FormField>
+                <FormField title="How did you hear about Mamta Care?"><select value={values.referral_source} onChange={e => set("referral_source", e.target.value)}><option value="">Select</option>{["Instagram","WhatsApp","Salon","Friend or family","Website","Other"].map(x => <option key={x}>{x}</option>)}</select></FormField>
+              </div>
+            </>}
+            {step === 3 && <>
+              <StepTitle number="03" title="Upload exactly two photographs" help="Bring your hair to the front for the front photo. Show its full length in the back photo." />
+              <div className="mchr-photo-grid">
+                {["front", "back"].map(which => <div className="mchr-photo-card" key={which}>
+                  <div className={"mchr-photo-sample " + which}><img src={hairDonationReference} alt={which === "front" ? "Illustrative photo of a donor; front photo must show face and hair brought forward" : "Illustrative photo; back photo must show the full length of the hair from behind"} /><span>{which === "front" ? "Face visible · hair brought forward" : "Back view · complete hair length"}</span></div>
+                  <strong>{photoNames[which]}</strong>
+                  <p>{which === "front" ? "Face and front hair clearly visible." : "Show the complete length of your hair from behind."}</p>
+                  <div className="mchr-upload-actions">
+                    <button type="button" onClick={() => refs[which].camera.current?.click()}>Take photo</button>
+                    <button type="button" onClick={() => refs[which].gallery.current?.click()}>Choose file</button>
+                  </div>
+                  <input aria-label={"Camera " + photoNames[which]} className="mchr-hidden-file" ref={refs[which].camera} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={e => handleFile(which, e.target.files?.[0])}/>
+                  <input aria-label={"Gallery " + photoNames[which]} className="mchr-hidden-file" ref={refs[which].gallery} type="file" accept="image/jpeg,image/png,image/webp" onChange={e => handleFile(which, e.target.files?.[0])}/>
+                  <small>{files[which] ? "Selected: " + files[which].name : "No photograph selected yet"}</small>
+                </div>)}
+              </div>
+              <div className="mchr-note">JPEG, PNG or WebP · maximum 4 MB per photograph. Please use clear, well-lit photographs. Photos selected here stay in your browser for the preview.</div>
+            </>}
+            {step === 4 && <>
+              <StepTitle number="04" title="Review and consent" help="Please read each declaration before submitting your registration." />
+              <div className="mchr-summary"><div>Method: <strong>{method === "haircut" ? "Haircut · " + values.hair_length : "Complete Head Shave"}</strong></div><div>Front and back photos: <strong>{files.front && files.back ? "Selected" : "Missing"}</strong></div></div>
+              <label className="mchr-check"><input type="checkbox" checked={values.voluntary} onChange={e => set("voluntary", e.target.checked)}/><span>I voluntarily wish to donate my hair to help make wigs for cancer patients through Mamta Care Charitable Trust. I confirm that no one has pressured me and that I have read the donation conditions. <b>Required</b></span></label>
+              <label className="mchr-check"><input type="checkbox" checked={values.private_photos} onChange={e => set("private_photos", e.target.checked)}/><span>I permit the Trust to collect and privately review my submitted photographs and donor details for registration and coordination under its privacy notice. <b>Required</b></span></label>
+              <label className="mchr-check"><input type="checkbox" checked={values.awareness} onChange={e => set("awareness", e.target.checked)}/><span>I optionally authorize the Trust to use specific photographs or videos I approve for educational and awareness communications. This choice is not required to donate. <b>Optional</b></span></label>
+              <p className="mchr-image-note">Publicity consent does not transfer copyright. Terms, photo retention and withdrawal instructions require final legal and privacy review before launch.</p>
+            </>}
+            {error && <p role="alert" className="mchr-error">{error}</p>}
+            <div className="mchr-footer-actions">
+              <button type="button" className="mchr-secondary" onClick={() => step === 1 ? null : (setStep(step - 1), setError(""))} disabled={step === 1}>Back</button>
+              <button type="button" className="mchr-primary" onClick={next}>{step === 4 ? "Complete design preview" : "Continue →"}</button>
+            </div>
+          </motion.section>
+        </AnimatePresence>
+      </>}
+      <p className="mchr-footnote">This private design preview is not connected to the Google Form, Apps Script, Cloudflare R2 or the live Donor Desk. <Link to="/">Return to Mamta Care website</Link>.</p>
+    </div>
+  </div>;
+}
