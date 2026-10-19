@@ -76,9 +76,9 @@ async function finalizeTestRegistration(req,env,token,origin) {
   } catch (_) {return respond({ok:false,error:"Invalid TEST donor details"},400,origin);}
   const v=input?.values;
   const str=k=>String(v?.[k]??"").trim();
-  if (!v || !/^(Fictional|Test|Demo)\\b/i.test(str("full_name")) ||
+  if (!v || !/^(Fictional|Test|Demo)\b/i.test(str("full_name")) ||
       str("full_name").length>160 || str("phone")!=="9000000000" ||
-      !/^[^\\s@]+@example\\.test$/i.test(str("email")) ||
+      !/^[^\s@]+@example\.test$/i.test(str("email")) ||
       !["FEMALE","MALE"].includes(str("gender")) ||
       !["14-16INCHES","18-20INCHES","21-26INCHES","BALD(FULL LENGTH)"].includes(str("hair_length")) ||
       !["STRAIGHT","CURLY","WAVY","COILY","MIXED/COMBINATION"].includes(str("hair_type")) ||
