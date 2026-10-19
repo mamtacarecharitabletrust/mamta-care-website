@@ -163,7 +163,7 @@ function mcWebBridgeMatchItems_(items,v) {
     [/^full name/,v.full_name,'name'],[/^contact no/,v.phone,'phone'],
     [/^gender/,v.gender,'gender'],[/^length that you prefer to donate/,v.hair_length,'length'],
     [/^city/,v.city,'city'],[/^hair type/,v.hair_type,'type'],
-    [/would you lo.ke guidance|would you like guidance/,v.guidance,'guidance'],
+    [/^would you l[io]ke guidance/,v.guidance,'guidance'],
     [/have you already cut|planning to donate/,v.readiness,'readiness'],
     [/how did you hear/,v.referral_source,'referral'],
     [/i voluntarily wish/,v.consent,'consent'],[/^email address/,v.email,'email']
