@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import officialLogo from "./assets/mamta-care-logo.jpeg";
+import { validateFictionalTestIdentity, sendFictionalTestRegistration } from "./lib/fictionalRegistrationTest";
 
 
 import "./styles/hair-registration.css";
@@ -32,6 +33,9 @@ export default function HairDonationRegistration() {
   const [files, setFiles] = useState({ front: null, back: null });
   const [error, setError] = useState("");
   const [finished, setFinished] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [testResult, setTestResult] = useState(null);
+  const attempted = useRef(false);
   const frontGallery = useRef(null), frontCamera = useRef(null);
   const backGallery = useRef(null), backCamera = useRef(null);
   const refs = useMemo(() => ({ front: { gallery: frontGallery, camera: frontCamera }, back: { gallery: backGallery, camera: backCamera } }), []);
@@ -60,7 +64,29 @@ export default function HairDonationRegistration() {
     const issue = validate(step);
     if (issue) { setError(issue); return; }
     setError(""); if (step < 4) { setStep(step + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }
-    else setFinished(true);
+    else submitTest();
+  };
+  const submitTest = async () => {
+    const identityError = validateFictionalTestIdentity(values);
+    if (identityError) { setError(identityError); return; }
+    if (attempted.current || submitting) { setError("Already attempted. Do not submit twice."); return; }
+    const id = crypto.randomUUID();
+    attempted.current = true;
+    setSubmitting(true);
+    setError("");
+    try {
+      const data = await sendFictionalTestRegistration(id, {
+        full_name: values.full_name.trim(), phone: "9000000000",
+        email: values.email.trim().toLowerCase(), gender: values.gender,
+        hair_length: method === "head_shave" ? "BALD(FULL LENGTH)" : values.hair_length,
+        city: values.city.trim(), hair_type: values.hair_type, guidance: values.guidance,
+        readiness: values.readiness, referral_source: values.referral_source, consent: "STRONGLY AGREE"
+      });
+      setTestResult(data);
+      setFinished(true);
+    } catch (ex) {
+      setError("TEST result not confirmed. Do not retry this attempt. " + String(ex.message || ""));
+    } finally { setSubmitting(false); }
   };
   const photoNames = { front: "Front photograph", back: "Back photograph" };
 
@@ -71,11 +97,11 @@ export default function HairDonationRegistration() {
         <h1>Donate Hair. Give Hope.</h1>
         <p>Secure hair donation registration · Designed for mobile and desktop</p>
       </div></div>
-      <div role="status" className="mchr-preview-warning"><strong>DESIGN PREVIEW — NOT LIVE.</strong> Use fictional information and sample photos only. No data, images or emails are sent. The existing Google Form remains live.</div>
+      <div role="status" className="mchr-preview-warning"><strong>FICTIONAL REGISTRATION TEST — NOT LIVE.</strong> Use a name starting Fictional, Test or Demo, an @example.test email and phone 9000000000. Basic details can be submitted to the separate TEST Google Form. Photos stay on your device and no emails are sent.</div>
       {finished ? <section className="mchr-panel mchr-success" aria-live="polite">
-        <span className="mchr-success-icon">✓</span><h2>Preview completed!</h2>
-        <p>The form design and required consent were validated in this browser. <strong>No registration was created.</strong></p>
-        <button type="button" className="mchr-primary" onClick={() => { setFinished(false); setStep(1); setError(""); }}>Return to preview</button>
+        <span className="mchr-success-icon">✓</span><h2>TEST registration received</h2>
+        <p>Fictional TEST registration ID: <strong>{testResult?.registration_id}</strong>. No photos or emails were sent.</p>
+        <button type="button" className="mchr-primary" onClick={() => window.location.reload()}>Return to preview</button>
       </section> : <>
         <nav aria-label="Registration preview steps" className="mchr-steps">
           {["Donation type", "Your details", "Two photos", "Consent"].map((label, index) =>
@@ -129,7 +155,7 @@ export default function HairDonationRegistration() {
                   <small>{files[which] ? "Selected: " + files[which].name : "No photograph selected yet"}</small>
                 </div>)}
               </div>
-              <div className="mchr-note">JPEG, PNG or WebP · maximum 4 MB per photograph. Please use clear, well-lit photographs. Photos selected here stay in your browser for the preview.</div>
+              <div className="mchr-note">JPEG, PNG or WebP · maximum 4 MB per photograph. Please use clear, well-lit photographs. Use fictional example photos only. Photos stay on this device and are not uploaded.</div>
             </>}
             {step === 4 && <>
               <StepTitle number="04" title="Review and consent" help="Please read each declaration before submitting your registration." />
@@ -142,12 +168,12 @@ export default function HairDonationRegistration() {
             {error && <p role="alert" className="mchr-error">{error}</p>}
             <div className="mchr-footer-actions">
               <button type="button" className="mchr-secondary" onClick={() => step === 1 ? null : (setStep(step - 1), setError(""))} disabled={step === 1}>Back</button>
-              <button type="button" className="mchr-primary" onClick={next}>{step === 4 ? "Complete design preview" : "Continue →"}</button>
+              <button type="button" className="mchr-primary" onClick={next} disabled={submitting || attempted.current}>{submitting ? "Submitting TEST…" : step === 4 ? "Submit fictional TEST registration" : "Continue →"}</button>
             </div>
           </motion.section>
         </AnimatePresence>
       </>}
-      <p className="mchr-footnote">This private design preview is not connected to the Google Form, Apps Script, Cloudflare R2 or the live Donor Desk. <Link to="/">Return to Mamta Care website</Link>.</p>
+      <p className="mchr-footnote">This fictional TEST connects basic fields to the copied TEST Google Form through Cloudflare. Photos are not uploaded, and the live Donor Desk is not connected. <Link to="/">Return to Mamta Care website</Link>.</p>
     </div>
   </div>;
 }
