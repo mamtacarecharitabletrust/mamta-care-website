@@ -150,7 +150,7 @@ function mcWebFormValues_(d) {
   if(v.full_name.length<2 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email) ||
      !/^\+?[0-9 ()-]{10,22}$/.test(v.phone) || !v.city || !v.hair_length ||
      !v.gender || !v.hair_type || !v.guidance || !v.readiness || !v.referral_source ||
-     !/voluntar/i.test(v.consent))
+     v.consent !== 'STRONGLY AGREE')
     throw Error('Incomplete registration data');
   return v;
 }
