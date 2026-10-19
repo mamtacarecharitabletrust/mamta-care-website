@@ -2,13 +2,16 @@ import React, { useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import officialLogo from "./assets/mamta-care-logo.jpeg";
-import hairDonationReference from "./assets/IMG_20260709_142702.jpg.jpeg";
-import headShaveReference from "./assets/wig-support.png";
+
+
 import "./styles/hair-registration.css";
 
+const PHOTO_GUIDES = { haircut: "/registration-guides/haircut.webp", head_shave: "/registration-guides/headshave.webp", front: "/registration-guides/front.webp", back: "/registration-guides/back.webp" };
 const LENGTHS = ["14–16 inches", "17 inches", "18 inches", "19 inches", "20 inches", "21–25 inches", "26 inches or more"];
 const FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
+
+function GuidePhoto({ src, alt }) { const [missing, setMissing] = React.useState(false); return missing ? <div className="mchr-photo-unavailable">Corrected photograph will appear after image upload</div> : <img src={src} alt={alt} onError={() => setMissing(true)} />; }
 
 function StepTitle({ number, title, help }) {
   return <header className="mchr-step-heading"><span>{number}</span><div><h2>{title}</h2><p>{help}</p></div></header>;
@@ -84,15 +87,15 @@ export default function HairDonationRegistration() {
               <StepTitle number="01" title="Tell us about your hair donation" help="Choose how you would like to donate. Both options are entirely voluntary." />
               <div className="mchr-choices">
                 <button type="button" className={"mchr-method " + (method === "haircut" ? "selected" : "")} aria-pressed={method === "haircut"} onClick={() => setMethod("haircut")}>
-                  <div className="mchr-method-image"><img src={hairDonationReference} alt="Indian hair donation photography; illustrative website reference" /><div className="mchr-falling-hair" aria-hidden="true"><i/><i/><i/><i/></div><span className="mchr-method-icon">✂</span></div>
+                  <div className="mchr-method-image"><GuidePhoto src={PHOTO_GUIDES.haircut} alt="Illustrative Indian woman smiling while a woman stylist cuts her tied braid" /><div className="mchr-falling-hair" aria-hidden="true"><i/><i/><i/><i/></div><span className="mchr-method-icon">✂</span></div>
                   <div className="mchr-method-body"><strong>Haircut Donation</strong><span>Minimum 14 usable inches, excluding split ends and uneven hair.</span></div>
                 </button>
                 <button type="button" className={"mchr-method " + (method === "head_shave" ? "selected" : "")} aria-pressed={method === "head_shave"} onClick={() => setMethod("head_shave")}>
-                  <div className="mchr-method-image"><img src={headShaveReference} alt="Illustrative Mamta Care support photo; actual head-shave reference photography is pending approval" /><span className="mchr-razor" aria-hidden="true">⌁</span></div>
+                  <div className="mchr-method-image"><GuidePhoto src={PHOTO_GUIDES.head_shave} alt="Illustrative Indian woman receiving complete head shave with a razor guided by a woman barber" /><span className="mchr-razor" aria-hidden="true">⌁</span></div>
                   <div className="mchr-method-body"><strong>Complete Head Shave <small>Recommended</small></strong><span>A meaningful option when chosen freely. A woman barber may guide the process.</span></div>
                 </button>
               </div>
-              <p className="mchr-image-note">The motion is symbolic. Final haircut and female-barber razor photographs will be added after image approval; no donor photo is presented as a real procedure without permission.</p>
+              <p className="mchr-image-note">These are generated guidance illustrations, not photographs of actual Mamta Care donors. Animation is symbolic and the donation choice is voluntary.</p>
               {method === "haircut" ? <FormField title="Approximate usable hair length, excluding split ends"><select value={values.hair_length} onChange={e => set("hair_length", e.target.value)}>{LENGTHS.map(x => <option key={x}>{x}</option>)}</select></FormField> : <div className="mchr-note">Complete head shave selected. No haircut length is required.</div>}
             </>}
             {step === 2 && <>
@@ -114,7 +117,7 @@ export default function HairDonationRegistration() {
               <StepTitle number="03" title="Upload exactly two photographs" help="Bring your hair to the front for the front photo. Show its full length in the back photo." />
               <div className="mchr-photo-grid">
                 {["front", "back"].map(which => <div className="mchr-photo-card" key={which}>
-                  <div className={"mchr-photo-sample " + which}><img src={hairDonationReference} alt={which === "front" ? "Illustrative photo of a donor; front photo must show face and hair brought forward" : "Illustrative photo; back photo must show the full length of the hair from behind"} /><span>{which === "front" ? "Face visible · hair brought forward" : "Back view · complete hair length"}</span></div>
+                  <div className={"mchr-photo-sample " + which}><GuidePhoto src={PHOTO_GUIDES[which]} alt={which === "front" ? "Illustrative Indian woman facing forward with all her long hair brought to the front over her shoulders" : "Illustrative Indian woman photographed from behind showing the full length of long hair"} /><span>{which === "front" ? "Face visible · hair brought forward" : "Back view · complete hair length"}</span></div>
                   <strong>{photoNames[which]}</strong>
                   <p>{which === "front" ? "Face and front hair clearly visible." : "Show the complete length of your hair from behind."}</p>
                   <div className="mchr-upload-actions">
