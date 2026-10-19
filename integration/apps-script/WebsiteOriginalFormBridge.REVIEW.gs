@@ -37,6 +37,17 @@ function mcWebFormBridge_(e) {
     if (!sheet || sheet.getMaxColumns() < 19)
       return answer({ok:false,error:'Form response sheet requires review'});
     const v = mcWebFormValues_(req.values);
+    const choices={
+      hair_length:['14-16INCHES','18-20INCHES','21-26INCHES','BALD(FULL LENGTH)'],
+      gender:['MALE','FEMALE'],
+      hair_type:['STRAIGHT','CURLY','WAVY','COILY','MIXED/COMBINATION'],
+      guidance:['YES','ALREADY AWARE'],
+      readiness:['planning to donate','Already cut and ready to donate','Need guidance before cutting'],
+      referral_source:['INSTAGRAM','FACEBOOK','WHATSAPP','FRIENDS/FAMILY'],
+      consent:['STRONGLY AGREE']
+    };
+    Object.keys(choices).forEach(k=>{if(!choices[k].includes(v[k]))throw Error('Original Form choice mismatch: '+k);});
+
     const marker = 'SOCIAL:' + donorId + '|SOURCE:WEBSITE';
     const lock = LockService.getScriptLock();
     lock.waitLock(30000);
@@ -173,6 +184,12 @@ function mcWebBridgeItemResponse_(item,value) {
     const exact=x.getChoices().find(c=>mcWebBridgeTitle_(c.getValue())===mcWebBridgeTitle_(value));
     if(!exact)throw Error('Existing Form choice mismatch for '+item.getTitle());
     return x.createResponse(exact.getValue());
+  }
+  if(t===FormApp.ItemType.CHECKBOX) {
+    const x=item.asCheckboxItem();
+    const exact=x.getChoices().find(c=>mcWebBridgeTitle_(c.getValue())===mcWebBridgeTitle_(value));
+    if(!exact)throw Error('Existing Form checkbox choice mismatch: '+item.getTitle());
+    return x.createResponse([exact.getValue()]);
   }
   if(t===FormApp.ItemType.LIST) {
     const x=item.asListItem();
