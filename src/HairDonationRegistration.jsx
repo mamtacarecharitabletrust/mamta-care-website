@@ -6,7 +6,7 @@ import officialLogo from "./assets/mamta-care-logo.jpeg";
 
 import "./styles/hair-registration.css";
 
-const PHOTO_GUIDES = { haircut: "/registration-guides/haircut.webp", head_shave: "/registration-guides/headshave.webp", front: "/registration-guides/front.webp", back: "/registration-guides/back.webp" };
+const PHOTO_GUIDES = { haircut: "/registration-guides/haircut-approved.webp", head_shave: "/registration-guides/headshave.webp", front: "/registration-guides/front.webp", back: "/registration-guides/back.webp" };
 const LENGTHS = ["14–16 inches", "17 inches", "18 inches", "19 inches", "20 inches", "21–25 inches", "26 inches or more"];
 const FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
