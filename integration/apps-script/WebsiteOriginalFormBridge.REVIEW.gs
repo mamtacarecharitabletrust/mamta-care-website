@@ -8,6 +8,9 @@
  * MC_WEB_BRIDGE_KEY   Random secret with 32+ characters; same as Cloudflare Worker secret
  *
  * This intentionally DOES NOT upload photos or write to Google Drive.
+ * WEBSITE: marker in Column S is separate from SOCIAL:; normal Google Form
+ * registrations must not be incorrectly blocked by the social-approval mail guard.
+ * Keep Column N unchanged for native Form responses (no approval required).
  * Programmatic FormApp submission does NOT run ordinary Form submit triggers;
  * we call the existing onFormSubmit({range: ...}) explicitly.
  *
@@ -48,7 +51,7 @@ function mcWebFormBridge_(e) {
     };
     Object.keys(choices).forEach(k=>{if(!choices[k].includes(v[k]))throw Error('Original Form choice mismatch: '+k);});
 
-    const marker = 'SOCIAL:' + donorId + '|SOURCE:WEBSITE';
+    const marker = 'WEBSITE:' + donorId + '|SOURCE:WEBSITE';
     const lock = LockService.getScriptLock();
     lock.waitLock(30000);
     let row = 0;
@@ -88,10 +91,9 @@ function mcWebFormBridge_(e) {
         if (!row) return answer({ok:false,pending:true,error:'Form response submitted; awaiting linked sheet row'});
       }
       const colS = String(sheet.getRange(row,19).getDisplayValue() || '').trim();
-      if (colS && !colS.startsWith('SOCIAL:' + donorId))
+      if (colS && !colS.startsWith('WEBSITE:' + donorId))
         return answer({ok:false,pending:true,error:'Response row is already linked to another registration'});
       sheet.getRange(row,19).setValue(marker);
-      if (!String(sheet.getRange(row,14).getDisplayValue()).trim()) sheet.getRange(row,14).setValue('PENDING');
       SpreadsheetApp.flush();
     } finally {
       try { lock.releaseLock(); } catch (_) {}
@@ -109,15 +111,14 @@ function mcWebFormBridge_(e) {
       const id = String(sheet.getRange(located,13).getDisplayValue()).trim();
       if (!/^\d{4}-\d{6,}\/M\/2022$/.test(id))
         return answer({ok:false,pending:true,error:'Registration ID generation pending'});
-      const status = String(sheet.getRange(located,14).getDisplayValue()).trim().toUpperCase();
-      if (status === 'PENDING') sheet.getRange(located,14).setValue('SOCIAL APPROVED');
-      else if (status !== 'SOCIAL APPROVED')
-        return answer({ok:false,pending:true,error:'Form verification status needs review'});
       SpreadsheetApp.flush();
       props.setProperty('MC_WEB_REF_'+donorId,JSON.stringify({
         status:'SYNCED',row:located,registration_id:id
       }));
-      // Existing scheduled checkAndSendRegistrationEmails() retains SENT guard.
+      // Existing checkAndSendRegistrationEmails(): normal Form rows are eligible
+      // based on timestamp, email, registration ID and Column P != SENT.
+      // Do not change Column N or apply social approval rules to these rows.
+      // SENT check isn't transactional with sendEmail; test timeouts carefully.
       // DO NOT call the email function here.
       return answer({ok:true,registration_id:id,row:located,email_eligible:true});
     } finally {
