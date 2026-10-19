@@ -36,6 +36,7 @@ export default function HairDonationRegistration() {
   const [submitting, setSubmitting] = useState(false);
   const [testResult, setTestResult] = useState(null);
   const attempted = useRef(false);
+  const [uploadState, setUploadState] = useState("idle");
   const frontGallery = useRef(null), frontCamera = useRef(null);
   const backGallery = useRef(null), backCamera = useRef(null);
   const refs = useMemo(() => ({ front: { gallery: frontGallery, camera: frontCamera }, back: { gallery: backGallery, camera: backCamera } }), []);
@@ -83,6 +84,19 @@ export default function HairDonationRegistration() {
         readiness: values.readiness, referral_source: values.referral_source, consent: "STRONGLY AGREE"
       });
       setTestResult(data);
+      if (!data.photo_upload_token) throw new Error("Registration succeeded, but upload authorization is unavailable. Do not resubmit.");
+      const base = "https://mamta-website-photo-upload-test-20261019.bharathairseva-in.workers.dev";
+      for (const side of ["front", "back"]) {
+        setUploadState("Uploading " + side + " sample photo");
+        const upload = await fetch(base + "/api/test-photo?side=" + side, {
+          method: "POST",
+          headers: { "Authorization": "Bearer " + data.photo_upload_token, "Content-Type": files[side].type },
+          body: files[side]
+        });
+        const outcome = await upload.json();
+        if (!upload.ok || !outcome.ok) throw new Error(side + " photo: " + (outcome.error || "upload failed") + ". Do not submit again.");
+      }
+      setUploadState("Both private TEST photographs stored");
       setFinished(true);
     } catch (ex) {
       setError("TEST result not confirmed. Do not retry this attempt. " + String(ex.message || ""));
@@ -97,10 +111,10 @@ export default function HairDonationRegistration() {
         <h1>Donate Hair. Give Hope.</h1>
         <p>Secure hair donation registration · Designed for mobile and desktop</p>
       </div></div>
-      <div role="status" className="mchr-preview-warning"><strong>FICTIONAL REGISTRATION TEST — NOT LIVE.</strong> Use a name starting Fictional, Test or Demo, an @example.test email and phone 9000000000. Basic details can be submitted to the separate TEST Google Form. Photos stay on your device and no emails are sent.</div>
+      <div role="status" className="mchr-preview-warning"><strong>FICTIONAL REGISTRATION TEST — NOT LIVE.</strong> Use a name starting Fictional, Test or Demo, an @example.test email and phone 9000000000. Use only artificial SAMPLE images, never genuine donor photos. Basic details go to the TEST Google Form and sample images to private TEST Cloudflare storage. No emails are sent.</div>
       {finished ? <section className="mchr-panel mchr-success" aria-live="polite">
         <span className="mchr-success-icon">✓</span><h2>TEST registration received</h2>
-        <p>Fictional TEST registration ID: <strong>{testResult?.registration_id}</strong>. No photos or emails were sent.</p>
+        <p>Fictional TEST registration ID: <strong>{testResult?.registration_id}</strong>. Front and back sample photos stored privately in TEST Cloudflare storage. No emails were sent.</p>
         <button type="button" className="mchr-primary" onClick={() => window.location.reload()}>Return to preview</button>
       </section> : <>
         <nav aria-label="Registration preview steps" className="mchr-steps">
@@ -155,7 +169,7 @@ export default function HairDonationRegistration() {
                   <small>{files[which] ? "Selected: " + files[which].name : "No photograph selected yet"}</small>
                 </div>)}
               </div>
-              <div className="mchr-note">JPEG, PNG or WebP · maximum 4 MB per photograph. Please use clear, well-lit photographs. Use fictional example photos only. Photos stay on this device and are not uploaded.</div>
+              <div className="mchr-note">JPEG, PNG or WebP · maximum 4 MB per photograph. Please use clear, well-lit photographs. Use fictional example photos only. After registration, fictional sample photos will be uploaded to private TEST storage. Never upload genuine donor photos here.</div>
             </>}
             {step === 4 && <>
               <StepTitle number="04" title="Review and consent" help="Please read each declaration before submitting your registration." />
@@ -165,6 +179,7 @@ export default function HairDonationRegistration() {
               <label className="mchr-check"><input type="checkbox" checked={values.awareness} onChange={e => set("awareness", e.target.checked)}/><span>I optionally authorize the Trust to use specific photographs or videos I approve for educational and awareness communications. This choice is not required to donate. <b>Optional</b></span></label>
               <p className="mchr-image-note">Publicity consent does not transfer copyright. Terms, photo retention and withdrawal instructions require final legal and privacy review before launch.</p>
             </>}
+            {uploadState !== "idle" && <p role="status" className="mchr-note">{uploadState}</p>}
             {error && <p role="alert" className="mchr-error">{error}</p>}
             <div className="mchr-footer-actions">
               <button type="button" className="mchr-secondary" onClick={() => step === 1 ? null : (setStep(step - 1), setError(""))} disabled={step === 1}>Back</button>
@@ -173,7 +188,7 @@ export default function HairDonationRegistration() {
           </motion.section>
         </AnimatePresence>
       </>}
-      <p className="mchr-footnote">This fictional TEST connects basic fields to the copied TEST Google Form through Cloudflare. Photos are not uploaded, and the live Donor Desk is not connected. <Link to="/">Return to Mamta Care website</Link>.</p>
+      <p className="mchr-footnote">This fictional TEST submits basic fields to a copied Google Form and sample photos to private TEST Cloudflare storage. The live Donor Desk is not connected. <Link to="/">Return to Mamta Care website</Link>.</p>
     </div>
   </div>;
 }
