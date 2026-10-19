@@ -7,7 +7,7 @@ import officialLogo from "./assets/mamta-care-logo.jpeg";
 import "./styles/hair-registration.css";
 
 const PHOTO_GUIDES = { haircut: "/registration-guides/haircut-approved.webp", head_shave: "/registration-guides/headshave.webp", front: "/registration-guides/front.webp", back: "/registration-guides/back.webp" };
-const LENGTHS = ["14–16 inches", "17 inches", "18 inches", "19 inches", "20 inches", "21–25 inches", "26 inches or more"];
+const LENGTHS = ["14-16INCHES", "18-20INCHES", "21-26INCHES"];
 const FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
 
@@ -96,7 +96,7 @@ export default function HairDonationRegistration() {
                 </button>
               </div>
               <p className="mchr-image-note">These are generated guidance illustrations, not photographs of actual Mamta Care donors. Animation is symbolic and the donation choice is voluntary.</p>
-              {method === "haircut" ? <FormField title="Approximate usable hair length, excluding split ends"><select value={values.hair_length} onChange={e => set("hair_length", e.target.value)}>{LENGTHS.map(x => <option key={x}>{x}</option>)}</select></FormField> : <div className="mchr-note">Complete head shave selected. No haircut length is required.</div>}
+              {method === "haircut" ? <FormField title="Approximate usable hair length, excluding split ends (original Google Form choices)"><select value={values.hair_length} onChange={e => set("hair_length", e.target.value)}>{LENGTHS.map(x => <option key={x}>{x}</option>)}</select><small className="mchr-image-note">The original Google Form has 14–16, 18–20 and 21–26 inches; it does not currently offer 17 inches. We will not record an inaccurate range.</small></FormField> : <div className="mchr-note">Complete head shave selected. The existing Google Form records this as <strong>BALD(FULL LENGTH)</strong>.</div>}
             </>}
             {step === 2 && <>
               <StepTitle number="02" title="Your donation details" help="These are the basic fields from your existing Google Form." />
@@ -104,13 +104,13 @@ export default function HairDonationRegistration() {
                 <FormField title="Full name"><input autoComplete="name" value={values.full_name} onChange={e => set("full_name", e.target.value)} placeholder="Full name" /></FormField>
                 <FormField title="Contact number"><input type="tel" inputMode="tel" autoComplete="tel" value={values.phone} onChange={e => set("phone", e.target.value)} placeholder="10-digit mobile number" /></FormField>
                 <FormField title="Email address"><input type="email" autoComplete="email" value={values.email} onChange={e => set("email", e.target.value)} placeholder="name@example.com" /></FormField>
-                <FormField title="Gender"><select value={values.gender} onChange={e => set("gender", e.target.value)}><option value="">Select gender</option>{["Female","Male","Other","Prefer not to say"].map(x => <option key={x}>{x}</option>)}</select></FormField>
+                <FormField title="Gender"><select value={values.gender} onChange={e => set("gender", e.target.value)}><option value="">Select gender</option>{["FEMALE","MALE"].map(x => <option key={x}>{x}</option>)}</select></FormField>
                 <FormField title="State"><input autoComplete="address-level1" value={values.state} onChange={e => set("state", e.target.value)} placeholder="e.g. Andhra Pradesh" /></FormField>
                 <FormField title="City"><input autoComplete="address-level2" value={values.city} onChange={e => set("city", e.target.value)} placeholder="e.g. Guntur" /></FormField>
-                <FormField title="Hair type"><select value={values.hair_type} onChange={e => set("hair_type", e.target.value)}><option value="">Select hair type</option>{["Straight","Wavy","Curly","Coily","Other"].map(x => <option key={x}>{x}</option>)}</select></FormField>
-                <FormField title="Need guidance on cutting and packing?"><select value={values.guidance} onChange={e => set("guidance", e.target.value)}><option value="">Select</option><option>Yes</option><option>No</option></select></FormField>
-                <FormField title="Donation readiness"><select value={values.readiness} onChange={e => set("readiness", e.target.value)}><option value="">Select</option><option>Planning to cut</option><option>Already cut</option></select></FormField>
-                <FormField title="How did you hear about Mamta Care?"><select value={values.referral_source} onChange={e => set("referral_source", e.target.value)}><option value="">Select</option>{["Instagram","WhatsApp","Salon","Friend or family","Website","Other"].map(x => <option key={x}>{x}</option>)}</select></FormField>
+                <FormField title="Hair type"><select value={values.hair_type} onChange={e => set("hair_type", e.target.value)}><option value="">Select hair type</option>{["STRAIGHT","CURLY","WAVY","COILY","MIXED/COMBINATION"].map(x => <option key={x}>{x}</option>)}</select></FormField>
+                <FormField title="Need guidance on cutting and packing?"><select value={values.guidance} onChange={e => set("guidance", e.target.value)}><option value="">Select</option><option value="YES">Yes, please guide me</option><option value="ALREADY AWARE">Already aware</option></select></FormField>
+                <FormField title="Donation readiness"><select value={values.readiness} onChange={e => set("readiness", e.target.value)}><option value="">Select</option><option value="planning to donate">Planning to donate</option><option value="Already cut and ready to donate">Already cut and ready to donate</option><option value="Need guidance before cutting">Need guidance before cutting</option></select></FormField>
+                <FormField title="How did you hear about Mamta Care?"><select value={values.referral_source} onChange={e => set("referral_source", e.target.value)}><option value="">Select</option>{["INSTAGRAM","FACEBOOK","WHATSAPP","FRIENDS/FAMILY"].map(x => <option key={x}>{x}</option>)}</select></FormField>
               </div>
             </>}
             {step === 3 && <>
@@ -133,7 +133,7 @@ export default function HairDonationRegistration() {
             </>}
             {step === 4 && <>
               <StepTitle number="04" title="Review and consent" help="Please read each declaration before submitting your registration." />
-              <div className="mchr-summary"><div>Method: <strong>{method === "haircut" ? "Haircut · " + values.hair_length : "Complete Head Shave"}</strong></div><div>Front and back photos: <strong>{files.front && files.back ? "Selected" : "Missing"}</strong></div></div>
+              <div className="mchr-summary"><div>Method: <strong>{method === "haircut" ? "Haircut · " + values.hair_length : "Complete Head Shave · BALD(FULL LENGTH)"}</strong></div><div>Front and back photos: <strong>{files.front && files.back ? "Selected" : "Missing"}</strong></div></div>
               <label className="mchr-check"><input type="checkbox" checked={values.voluntary} onChange={e => set("voluntary", e.target.checked)}/><span>I voluntarily wish to donate my hair to help make wigs for cancer patients through Mamta Care Charitable Trust. I confirm that no one has pressured me and that I have read the donation conditions. <b>Required</b></span></label>
               <label className="mchr-check"><input type="checkbox" checked={values.private_photos} onChange={e => set("private_photos", e.target.checked)}/><span>I permit the Trust to collect and privately review my submitted photographs and donor details for registration and coordination under its privacy notice. <b>Required</b></span></label>
               <label className="mchr-check"><input type="checkbox" checked={values.awareness} onChange={e => set("awareness", e.target.checked)}/><span>I optionally authorize the Trust to use specific photographs or videos I approve for educational and awareness communications. This choice is not required to donate. <b>Optional</b></span></label>
