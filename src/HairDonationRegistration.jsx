@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import officialLogo from "./assets/mamta-care-logo.jpeg";
 import { validateFictionalTestIdentity, sendFictionalTestRegistration } from "./lib/fictionalRegistrationTest";
+import { finalizeFictionalDonorDeskSync } from "./lib/finishFictionalRegistration";
 
 
 import "./styles/hair-registration.css";
@@ -96,7 +97,20 @@ export default function HairDonationRegistration() {
         const outcome = await upload.json();
         if (!upload.ok || !outcome.ok) throw new Error(side + " photo: " + (outcome.error || "upload failed") + ". Do not submit again.");
       }
-      setUploadState("Both private TEST photographs stored");
+      setUploadState("Both private TEST photographs stored · Checking Donor Desk sync");
+      try {
+        await finalizeFictionalDonorDeskSync(data.photo_upload_token, {
+          full_name: values.full_name.trim(), phone: "9000000000", email: values.email.trim().toLowerCase(),
+          gender: values.gender, hair_length: method === "head_shave" ? "BALD(FULL LENGTH)" : values.hair_length,
+          city: values.city.trim(), hair_type: values.hair_type, guidance: values.guidance,
+          readiness: values.readiness, referral_source: values.referral_source, consent: "STRONGLY AGREE"
+        });
+        setUploadState("Both sample photos stored and TEST Donor Desk synced");
+        setTestResult({ ...data, desk_synced: true });
+      } catch (_) {
+        setUploadState("Both sample photos stored · TEST Donor Desk sync needs review");
+        setTestResult({ ...data, desk_synced: false });
+      }
       setFinished(true);
     } catch (ex) {
       setError("TEST result not confirmed. Do not retry this attempt. " + String(ex.message || ""));
@@ -114,7 +128,7 @@ export default function HairDonationRegistration() {
       <div role="status" className="mchr-preview-warning"><strong>FICTIONAL REGISTRATION TEST — NOT LIVE.</strong> Use a name starting Fictional, Test or Demo, an @example.test email and phone 9000000000. Use only artificial SAMPLE images, never genuine donor photos. Basic details go to the TEST Google Form and sample images to private TEST Cloudflare storage. No emails are sent.</div>
       {finished ? <section className="mchr-panel mchr-success" aria-live="polite">
         <span className="mchr-success-icon">✓</span><h2>TEST registration received</h2>
-        <p>Fictional TEST registration ID: <strong>{testResult?.registration_id}</strong>. Front and back sample photos stored privately in TEST Cloudflare storage. No emails were sent.</p>
+        <p>Fictional TEST registration ID: <strong>{testResult?.registration_id}</strong>. Front and back sample photos stored privately in TEST Cloudflare storage. <strong>{testResult?.desk_synced ? "TEST Donor Desk synced." : "Donor Desk sync needs administrator review; do not register again."}</strong> No emails were sent.</p>
         <button type="button" className="mchr-primary" onClick={() => window.location.reload()}>Return to preview</button>
       </section> : <>
         <nav aria-label="Registration preview steps" className="mchr-steps">
