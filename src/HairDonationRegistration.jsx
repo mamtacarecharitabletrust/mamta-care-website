@@ -59,9 +59,9 @@ export default function HairDonationRegistration() {
   }, [step]);
   const [method, setMethod] = useState("haircut");
   const [values, setValues] = useState({
-    hair_length: LENGTHS[0], full_name: "", phone: "", email: "", gender: "", state: "", city: "",
+    hair_length: LENGTHS[0], full_name: "", phone: "", email: "", gender: "", city: "",
     hair_type: "", guidance: "", readiness: "", referral_source: "",
-    voluntary: false, private_photos: false, awareness: false,
+    voluntary: false, private_photos: false, terms_accepted: false, awareness: false,
   });
   const [files, setFiles] = useState({ front: null, back: null });
   const [error, setError] = useState("");
@@ -85,13 +85,13 @@ export default function HairDonationRegistration() {
     if (current === 2) {
       if (!values.full_name.trim() || !/^\+?[\d\s-]{10,18}$/.test(values.phone.trim()) ||
         !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim()) ||
-        !values.gender || !values.state.trim() || !values.city.trim() || !values.hair_type ||
+        !values.gender || !values.city.trim() || !values.hair_type ||
         !values.guidance || !values.readiness || !values.referral_source) {
         return "Complete every required donor information field before continuing.";
       }
     }
     if (current === 3 && (!files.front || !files.back)) return "Select one front photograph and one back photograph.";
-    if (current === 4 && (!values.voluntary || !values.private_photos)) return "Accept the voluntary donation declaration and private photo review consent.";
+    if (current === 4 && (!values.voluntary || !values.private_photos || !values.terms_accepted)) return "Please accept the voluntary donation, privacy, and registration terms.";
     return "";
   };
   const next = () => {
@@ -121,7 +121,7 @@ export default function HairDonationRegistration() {
         submission_uuid: requestId.current,
         hair_length: method === "head_shave" ? "BALD(FULL LENGTH)" : values.hair_length,
         method, voluntary: values.voluntary ? "yes" : "no",
-        private_photos: values.private_photos ? "yes" : "no",
+        private_photos: values.private_photos ? "yes" : "no", terms_accepted: values.terms_accepted ? "yes" : "no",
         awareness: values.awareness ? "yes" : "no", turnstile: token
       };
       Object.entries(fields).forEach(([key,value]) => body.append(key,String(value)));
@@ -185,7 +185,7 @@ export default function HairDonationRegistration() {
                 <FormField title="Contact number"><input type="tel" inputMode="tel" autoComplete="tel" value={values.phone} onChange={e => set("phone", e.target.value)} placeholder="10-digit mobile number" /></FormField>
                 <FormField title="Email address"><input type="email" autoComplete="email" value={values.email} onChange={e => set("email", e.target.value)} placeholder="name@example.com" /></FormField>
                 <FormField title="Gender"><select value={values.gender} onChange={e => set("gender", e.target.value)}><option value="">Select gender</option>{["FEMALE","MALE"].map(x => <option key={x}>{x}</option>)}</select></FormField>
-                <FormField title="State"><input autoComplete="address-level1" value={values.state} onChange={e => set("state", e.target.value)} placeholder="e.g. Andhra Pradesh" /></FormField>
+                
                 <FormField title="City"><input autoComplete="address-level2" value={values.city} onChange={e => set("city", e.target.value)} placeholder="e.g. Guntur" /></FormField>
                 <FormField title="Hair type"><select value={values.hair_type} onChange={e => set("hair_type", e.target.value)}><option value="">Select hair type</option>{["STRAIGHT","CURLY","WAVY","COILY","MIXED/COMBINATION"].map(x => <option key={x}>{x}</option>)}</select></FormField>
                 <FormField title="Need guidance on cutting and packing?"><select value={values.guidance} onChange={e => set("guidance", e.target.value)}><option value="">Select</option><option value="YES">Yes, please guide me</option><option value="ALREADY AWARE">Already aware</option></select></FormField>
@@ -216,6 +216,11 @@ export default function HairDonationRegistration() {
               <div className="mchr-summary"><div>Method: <strong>{method === "haircut" ? "Haircut · " + values.hair_length : "Complete Head Shave · BALD(FULL LENGTH)"}</strong></div><div>Front and back photos: <strong>{files.front && files.back ? "Selected" : "Missing"}</strong></div></div>
               <label className="mchr-check"><input type="checkbox" checked={values.voluntary} onChange={e => set("voluntary", e.target.checked)}/><span>I voluntarily wish to donate my hair to help make wigs for cancer patients through Mamta Care Charitable Trust. I confirm that no one has pressured me and that I have read the donation conditions. <b>Required</b></span></label>
               <label className="mchr-check"><input type="checkbox" checked={values.private_photos} onChange={e => set("private_photos", e.target.checked)}/><span>I permit the Trust to collect and privately review my submitted photographs and donor details for registration and coordination under its privacy notice. <b>Required</b></span></label>
+              <div className="mchr-note" style={{margin:"14px 0"}}>
+                <strong>Hair donation terms</strong>
+                <p>For haircut donations, Mamta Care requires at least 14 inches of usable hair, excluding split ends and uneven ends. A full head shave is optional and must be entirely your choice. Submit accurate contact details and clear front/back photographs so our team can coordinate the donation. Submitted photos are privately reviewed and will not be published without separate permission. A donation does not guarantee a particular wig recipient.</p>
+              </div>
+              <label className="mchr-check"><input type="checkbox" checked={values.terms_accepted} onChange={e => set("terms_accepted", e.target.checked)}/><span>I have read and agree to the hair donation registration terms above. <b>Required</b></span></label>
               <label className="mchr-check"><input type="checkbox" checked={values.awareness} onChange={e => set("awareness", e.target.checked)}/><span>I optionally authorize the Trust to use specific photographs or videos I approve for educational and awareness communications. This choice is not required to donate. <b>Optional</b></span></label>
               <p className="mchr-image-note">Publicity consent does not transfer copyright. Terms, photo retention and withdrawal instructions require final legal and privacy review before launch.</p>
             </>}
