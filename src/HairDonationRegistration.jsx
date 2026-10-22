@@ -104,6 +104,7 @@ export default function HairDonationRegistration() {
     if (attempted.current || submitting) return;
     setSubmitting(true); setError(""); setUploadState("Submitting your registration securely");
     try {
+      throw new Error("Website photo registration is not active. Use the official Google Form above; your photos have not been uploaded.");
       const token = window.turnstile?.getResponse?.(widgetId.current);
       if (!token) throw new Error("Complete the security check before submitting.");
       const body = new FormData();
@@ -139,7 +140,7 @@ export default function HairDonationRegistration() {
         <h1>Donate Hair. Give Hope.</h1>
         <p>Secure hair donation registration · Designed for mobile and desktop</p>
       </div></div>
-      <div className="mchr-preview-warning"><strong>Private donor registration.</strong> Your details and two photographs are collected for review by Mamta Care. Your registration remains pending until an Administrator verifies it. For the original Google Form, <a href="https://forms.gle/VpKSKJoichRqyTvH9" target="_blank" rel="noreferrer">use this link</a>.</div>
+      <div className="mchr-preview-warning" role="status"><strong>Photo-enabled registration is not yet accepting submissions.</strong> The existing Google Form is still the official registration channel and continues its registration-ID and email process. <a href="https://forms.gle/VpKSKJoichRqyTvH9" target="_blank" rel="noreferrer">Open the official Google Form</a>. Photos selected on this preview page are not transmitted.</div>
       {finished ? <section className="mchr-panel mchr-success" aria-live="polite">
         <span className="mchr-success-icon">✓</span><h2>Registration received</h2>
         <p>Your reference number: <strong>{testResult?.registration_id}</strong>. Your two photographs were submitted for private Administrator review. The official registration ID and any confirmation emails will follow the Trust’s verification process.</p>
@@ -212,7 +213,7 @@ export default function HairDonationRegistration() {
             {error && <p role="alert" className="mchr-error">{error}</p>}
             <div className="mchr-footer-actions">
               <button type="button" className="mchr-secondary" onClick={() => step === 1 ? null : (setStep(step - 1), setError(""))} disabled={step === 1}>Back</button>
-              <button type="button" className="mchr-primary" onClick={next} disabled={submitting || attempted.current}>{submitting ? "Submitting securely…" : step === 4 ? "Submit hair donation registration" : "Continue →"}</button>
+              <button type="button" className="mchr-primary" onClick={next} disabled={submitting || attempted.current}>{submitting ? "Submitting securely…" : step === 4 ? "Registration not yet enabled" : "Continue →"}</button>
             </div>
           </motion.section>
         </AnimatePresence>
