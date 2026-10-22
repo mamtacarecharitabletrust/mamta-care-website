@@ -119,15 +119,13 @@ export default function HairDonationRegistration() {
       Object.entries(fields).forEach(([key,value]) => body.append(key,String(value)));
       body.append("front",files.front); body.append("back",files.back);
       attempted.current = true;
-      const res=await fetch("https://mamta-website-hair-registration.bharathairseva-in.workers.dev/api/register",{method:"POST",body});
-      const result=await res.json().catch(()=>({ok:false,error:"Unexpected server response"}));
-      if (!res.ok || !result.ok) {
-        attempted.current = false; window.turnstile?.reset?.(widgetId.current);
-        throw new Error(result.error || "Could not confirm your registration");
-      }
-      setTestResult({registration_id:result.reference,desk_synced:true});
-      setUploadState("Registration received for Administrator review");
-      setFinished(true);
+      // Do not send donor data into the old direct-to-D1 Worker.
+      // Activation requires a verified Google Form bridge, same-ID photo pairing,
+      // and the existing Apps Script email flow.
+      throw new Error("Online registration is being connected to our official Google Form. Please use the existing Google Form link above for now.");
+      // Submission transport will be enabled after the original Form bridge passes validation.
+      // const res = await fetch(SAFE_BRIDGE_ENDPOINT, {method:"POST", body});
+
     } catch(ex) {
       setError(String(ex.message||"Registration failed. Contact Mamta Care if you have already submitted."));
     } finally { setSubmitting(false); }
