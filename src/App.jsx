@@ -73,7 +73,7 @@ const info = {
 
   hairDonationForm:
 
-    "https://forms.gle/VpKSKJoichRqyTvH9",
+    "/hair-registration",
 
   wigRequestForm:
 
@@ -4594,7 +4594,7 @@ function AppRoutes() {
 
           />
 
-          <Route path="/hair-registration-preview" element={<HairDonationRegistration />} />
+          <Route path="/hair-registration" element={<HairDonationRegistration />} />
 
           <Route
 
