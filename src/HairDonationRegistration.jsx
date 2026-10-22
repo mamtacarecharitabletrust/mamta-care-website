@@ -25,6 +25,7 @@ function FormField({ title, required = true, children }) {
 
 export default function HairDonationRegistration() {
   useEffect(() => {
+    if (import.meta.env.VITE_HAIR_REGISTRATION_ENABLED !== "true") return;
     const script=document.createElement("script");
     script.src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
     script.async=true;script.defer=true;document.head.appendChild(script);
@@ -34,7 +35,7 @@ export default function HairDonationRegistration() {
   const securityRef = useRef(null);
   const widgetId = useRef(null);
   useEffect(() => {
-    if (step !== 4) return;
+    if (step !== 4 || import.meta.env.VITE_HAIR_REGISTRATION_ENABLED !== "true") return;
     let disposed = false;
     let frame = 0;
     function mount() {
@@ -64,6 +65,10 @@ export default function HairDonationRegistration() {
     voluntary: false, private_photos: false, terms_accepted: false, awareness: false,
   });
   const [files, setFiles] = useState({ front: null, back: null });
+  const frontPreview = useMemo(() => files.front ? URL.createObjectURL(files.front) : null, [files.front]);
+  const backPreview = useMemo(() => files.back ? URL.createObjectURL(files.back) : null, [files.back]);
+  useEffect(() => () => { if (frontPreview) URL.revokeObjectURL(frontPreview); }, [frontPreview]);
+  useEffect(() => () => { if (backPreview) URL.revokeObjectURL(backPreview); }, [backPreview]);
   const [error, setError] = useState("");
   const [finished, setFinished] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -100,9 +105,10 @@ export default function HairDonationRegistration() {
     setError(""); if (step < 4) { setStep(step + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }
     else submitTest();
   };
-  // Keep the preview form disabled until backend auth, email and private-photo
-  // matching have been verified. No browser-managed secret is ever required.
-  const WEBSITE_REGISTRATION_ENABLED = false;
+  // Set VITE_HAIR_REGISTRATION_ENABLED only after the Google Form bridge,
+  // original registration email, and administrator photo viewer pass end to end.
+  // No privileged secret ever belongs in the browser.
+  const WEBSITE_REGISTRATION_ENABLED = import.meta.env.VITE_HAIR_REGISTRATION_ENABLED === "true";
   const requestId = useRef(null);
   const submitTest = async () => {
     if (!WEBSITE_REGISTRATION_ENABLED) {
@@ -151,13 +157,17 @@ export default function HairDonationRegistration() {
         <h1>Donate Hair. Give Hope.</h1>
         <p>Secure hair donation registration · Designed for mobile and desktop</p>
       </div></div>
-      <div className="mchr-preview-warning" role="status"><strong>Photo-enabled registration is not yet accepting submissions.</strong> The existing Google Form is still the official registration channel and continues its registration-ID and email process. <a href="https://forms.gle/VpKSKJoichRqyTvH9" target="_blank" rel="noreferrer">Open the official Google Form</a>. Photos selected on this preview page are not transmitted.</div>
+      {!WEBSITE_REGISTRATION_ENABLED && <div className="mchr-preview-warning" role="status">
+        <strong>Registration page preview — not accepting applications yet.</strong>
+        You can explore all four steps and choose photos without sending any details. This page will submit the existing Google Form automatically when the secure integration has been verified.
+        <span className="mchr-preview-note">Existing donors can still use <a href="https://forms.gle/VpKSKJoichRqyTvH9" target="_blank" rel="noreferrer">the original official form</a> during testing.</span>
+      </div>}
       {finished ? <section className="mchr-panel mchr-success" aria-live="polite">
         <span className="mchr-success-icon">✓</span><h2>Registration received</h2>
-        <p>Your reference number: <strong>{testResult?.registration_id}</strong>. Your two photographs were submitted for private Administrator review. The official registration ID and any confirmation emails will follow the Trust’s verification process.</p>
+        <p>Your official registration ID is <strong>{testResult?.registration_id}</strong>. Your two photographs were privately received. Your confirmation email is handled by Mamta Care’s existing email process. The team will review the details in Donor Desk.</p>
         <button type="button" className="mchr-primary" onClick={() => window.location.reload()}>Return to website</button>
       </section> : <>
-        <nav aria-label="Registration preview steps" className="mchr-steps">
+        <nav aria-label="Hair donation registration steps" className="mchr-steps">
           {["Donation type", "Your details", "Two photos", "Consent"].map((label, index) =>
             <div key={label} className={step === index + 1 ? "current" : step > index + 1 ? "done" : ""}><b>{index + 1}</b><span>{label}</span></div>)}
         </nav>
@@ -179,7 +189,7 @@ export default function HairDonationRegistration() {
               {method === "haircut" ? <FormField title="Approximate usable hair length, excluding split ends (original Google Form choices)"><select value={values.hair_length} onChange={e => set("hair_length", e.target.value)}>{LENGTHS.map(x => <option key={x}>{x}</option>)}</select><small className="mchr-image-note">The original Google Form has 14–16, 18–20 and 21–26 inches; it does not currently offer 17 inches. We will not record an inaccurate range.</small></FormField> : <div className="mchr-note">Complete head shave selected. The existing Google Form records this as <strong>BALD(FULL LENGTH)</strong>.</div>}
             </>}
             {step === 2 && <>
-              <StepTitle number="02" title="Your donation details" help="These are the basic fields from your existing Google Form." />
+              <StepTitle number="02" title="About you" help="Tell us about yourself once. We will complete the official Google Form in the background." />
               <div className="mchr-form-grid">
                 <FormField title="Full name"><input autoComplete="name" value={values.full_name} onChange={e => set("full_name", e.target.value)} placeholder="Full name" /></FormField>
                 <FormField title="Contact number"><input type="tel" inputMode="tel" autoComplete="tel" value={values.phone} onChange={e => set("phone", e.target.value)} placeholder="10-digit mobile number" /></FormField>
@@ -194,10 +204,15 @@ export default function HairDonationRegistration() {
               </div>
             </>}
             {step === 3 && <>
-              <StepTitle number="03" title="Upload exactly two photographs" help="Bring your hair to the front for the front photo. Show its full length in the back photo." />
+              <StepTitle number="03" title="Two simple photos" help="Please take one picture with your hair in front, and one picture with your hair at the back." />
               <div className="mchr-photo-grid">
                 {["front", "back"].map(which => <div className="mchr-photo-card" key={which}>
-                  <div className={"mchr-photo-sample " + which}><GuidePhoto src={PHOTO_GUIDES[which]} alt={which === "front" ? "Illustrative Indian woman facing forward with all her long hair brought to the front over her shoulders" : "Illustrative Indian woman photographed from behind showing the full length of long hair"} /><span>{which === "front" ? "Face visible · hair brought forward" : "Back view · complete hair length"}</span></div>
+                  <div className={"mchr-photo-sample " + which}>
+                    {(which === "front" ? frontPreview : backPreview)
+                      ? <img src={which === "front" ? frontPreview : backPreview} alt={"Your selected " + which + " hair photograph"} />
+                      : <GuidePhoto src={PHOTO_GUIDES[which]} alt={which === "front" ? "Sample front view: face visible and long hair brought forward over both shoulders" : "Sample back view: hair hanging down the back with full length visible"} />}
+                    <span>{files[which] ? "Your photo · on this device" : which === "front" ? "Example · hair in front" : "Example · hair at back"}</span>
+                  </div>
                   <strong>{photoNames[which]}</strong>
                   <p>{which === "front" ? "Face and front hair clearly visible." : "Show the complete length of your hair from behind."}</p>
                   <div className="mchr-upload-actions">
@@ -206,10 +221,10 @@ export default function HairDonationRegistration() {
                   </div>
                   <input aria-label={"Camera " + photoNames[which]} className="mchr-hidden-file" ref={refs[which].camera} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={e => handleFile(which, e.target.files?.[0])}/>
                   <input aria-label={"Gallery " + photoNames[which]} className="mchr-hidden-file" ref={refs[which].gallery} type="file" accept="image/jpeg,image/png,image/webp" onChange={e => handleFile(which, e.target.files?.[0])}/>
-                  <small>{files[which] ? "Selected: " + files[which].name : "No photograph selected yet"}</small>
+                  <small>{files[which] ? "✓ Photo selected on this device (not sent yet)" : "No photo selected yet"}</small>
                 </div>)}
               </div>
-              <div className="mchr-note">JPEG, PNG or WebP · maximum 4 MB per photograph. Please use clear, well-lit photographs. Your photographs are stored privately for review by the Mamta Care team.</div>
+              <div className="mchr-note">Exactly two clear pictures. Maximum 4 MB each. When registration is enabled, they will be stored privately for your assigned Mamta Care team — never posted publicly.</div>
             </>}
             {step === 4 && <>
               <StepTitle number="04" title="Review and consent" help="Please read each declaration before submitting your registration." />
@@ -224,17 +239,17 @@ export default function HairDonationRegistration() {
               <label className="mchr-check"><input type="checkbox" checked={values.awareness} onChange={e => set("awareness", e.target.checked)}/><span>I optionally authorize the Trust to use specific photographs or videos I approve for educational and awareness communications. This choice is not required to donate. <b>Optional</b></span></label>
               <p className="mchr-image-note">Publicity consent does not transfer copyright. Terms, photo retention and withdrawal instructions require final legal and privacy review before launch.</p>
             </>}
-            {step === 4 && <div ref={securityRef} aria-label="Security verification" />}
+            {step === 4 && WEBSITE_REGISTRATION_ENABLED && <div ref={securityRef} aria-label="Security verification" />}
             {uploadState !== "idle" && <p role="status" className="mchr-note">{uploadState}</p>}
             {error && <p role="alert" className="mchr-error">{error}</p>}
             <div className="mchr-footer-actions">
               <button type="button" className="mchr-secondary" onClick={() => step === 1 ? null : (setStep(step - 1), setError(""))} disabled={step === 1}>Back</button>
-              <button type="button" className="mchr-primary" onClick={next} disabled={submitting || attempted.current}>{submitting ? "Submitting securely…" : step === 4 ? "Registration not yet enabled" : "Continue →"}</button>
+              <button type="button" className="mchr-primary" onClick={next} disabled={submitting || attempted.current}>{submitting ? "Submitting securely…" : step === 4 ? (WEBSITE_REGISTRATION_ENABLED ? "Submit my donation" : "Preview only — not accepting registrations") : "Continue →"}</button>
             </div>
           </motion.section>
         </AnimatePresence>
       </>}
-      <p className="mchr-footnote">By submitting, you request review by Mamta Care Charitable Trust. Your reference is not an official registration ID or certificate. <Link to="/">Return to Mamta Care website</Link>.</p>
+      <p className="mchr-footnote">By submitting, you request review by Mamta Care Charitable Trust. Your official registration number is generated automatically by Mamta Care after a successful submission. <Link to="/">Return to Mamta Care website</Link>.</p>
     </div>
   </div>;
 }
