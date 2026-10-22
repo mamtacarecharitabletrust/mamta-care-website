@@ -12,6 +12,27 @@ const MC_WEB_LEDGER = "MC_Web_Intake_Ledger";
 const MC_WEB_KEYS = ["full_name","phone","gender","hair_length","city","hair_type",
   "guidance","readiness","referral_source","consent","email"];
 
+// Verified against the original Form Responses 1 spreadsheet (B:L).
+const MC_WEB_ORIGINAL_HEADINGS = [
+  "FULL NAME:",
+  "CONTACT NO:",
+  "GENDER:",
+  "LENGTH THAT YOU PREFER TO DONATE",
+  "CITY:",
+  "HAIR TYPE:",
+  "Would you loke guidance on how to cut and pack the hair for donation?",
+  "Have you already cut your hair or planning to donate?",
+  "How did you hear about Mamta Care Charitable Trust?",
+  "I voluntarily wish to donate my hair for the noble cause of making wigs for cancer paitients through Mamta Care Charitable Tust",
+  "EMAIL ADDRESS:"
+];
+function mcWebsiteAssertOriginalSheet_(sheet) {
+  const actual = sheet.getRange(1,2,1,11).getDisplayValues()[0];
+  if(actual.length!==MC_WEB_ORIGINAL_HEADINGS.length ||
+    actual.some((v,i)=>mcWebsiteCanonical_(v)!==mcWebsiteCanonical_(MC_WEB_ORIGINAL_HEADINGS[i])))
+    throw Error("Original Google Form column mapping changed; intake paused safely");
+}
+
 function mcWebsiteReply_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
@@ -83,6 +104,7 @@ function mcWebsiteItemResponse_(item,value) {
   throw Error("Unsupported required Google Form item: "+item.getTitle().slice(0,65));
 }
 function mcWebsiteBuildResponse_(form,sheet,v) {
+  mcWebsiteAssertOriginalSheet_(sheet);
   const headings=sheet.getRange(1,2,1,11).getDisplayValues()[0];
   const mapping=new Map();
   for(let i=0;i<headings.length;i++){
@@ -146,6 +168,7 @@ function mcWebsiteBridgePost_(p){
       const ss=SpreadsheetApp.getActiveSpreadsheet();
       sheet=ss.getSheetByName(MC_WEB_TAB);
       if(!sheet)throw Error("Original response tab missing");
+      mcWebsiteAssertOriginalSheet_(sheet);
       ledger=mcWebsiteLedger_();
       row=mcWebsiteFindLedger_(ledger,id);
       if(row){
