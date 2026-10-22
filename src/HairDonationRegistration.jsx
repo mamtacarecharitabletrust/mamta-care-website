@@ -88,7 +88,7 @@ export default function HairDonationRegistration() {
   };
   const validate = (current) => {
     if (current === 2) {
-      if (!values.full_name.trim() || !/^\+?[\d\s-]{10,18}$/.test(values.phone.trim()) ||
+      if (!values.full_name.trim() || !/^[0-9]{10}$/.test(values.phone.replace(/\D/g, "")) ||
         !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim()) ||
         !values.gender || !values.city.trim() || !values.hair_type ||
         !values.guidance || !values.readiness || !values.referral_source) {
