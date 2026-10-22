@@ -1,0 +1,51 @@
+MAMTA CARE — WEBSITE REGISTRATION BRIDGE
+Google Apps Script project provided by user:
+https://script.google.com/u/0/home/projects/1sPYRk_p3sXr8RwQ2WZoSwUgXiZExtmY9vhD0gO6z6f9uIDorooaRvwu8/edit
+
+IMPORTANT:
+The script project's current doPost(e) could not be read or changed directly.
+The version below is based on the previously supplied
+Mamta_Care_Social_Bridge_WITH_DeskSync_READY.gs source.
+Before replacing doPost(e), compare it with the code now in the editor.
+Retain any newer custom routes from the actual project.
+DO NOT create a second doPost(e).
+
+If the existing doPost(e) matches the known previous version exactly,
+replace ONLY that one doPost(e) function with:
+
+function doPost(e) {
+  let payload = null;
+  try {
+    payload = JSON.parse(e && e.postData && e.postData.contents || '{}');
+  } catch (_) {}
+
+  // New website registration actions. The bridge verifies its own secret.
+  if (payload && (payload.action === 'website_submit' ||
+                  payload.action === 'website_status')) {
+    return mcWebsiteBridgePost_(payload);
+  }
+
+  // Existing protected Donor Desk actions, unchanged.
+  if (payload && (payload.action === 'desk_verify' ||
+                  payload.action === 'desk_snapshot')) {
+    return mcDeskBridgePost_(payload);
+  }
+
+  // Existing social-registration workflow, unchanged.
+  return mcSocialBridgePost_(e);
+}
+
+ADDITIONAL DEPENDENCIES:
+- Add MamtaWebsiteGoogleFormBridge.gs from this repository to the SAME
+  spreadsheet-bound Apps Script project.
+- Add MamtaWebsiteBridgePreflight.gs from this repository.
+- Set a strong WEBSITE_FORM_BRIDGE_SECRET under Apps Script Properties.
+- Before deploying any version, run mcWebsitePreflightReadOnly_ in Apps Script
+  and confirm report.ready is true.
+- Test on a copied form/spreadsheet first. The bridge's MC_WEB_SHEET_ID is
+  pinned to the original LIVE spreadsheet, and MUST be repointed to the
+  isolated test spreadsheet before any test submissions.
+- Google Form submission and email automation are NOT verified until the
+  real project source has been checked and a test passes.
+- Never put the bridge secret in the browser or GitHub.
+- Google Form bridge and photo matching are NOT live.
