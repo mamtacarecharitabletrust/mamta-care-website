@@ -244,7 +244,7 @@ export default function HairDonationRegistration() {
             {error && <p role="alert" className="mchr-error">{error}</p>}
             <div className="mchr-footer-actions">
               <button type="button" className="mchr-secondary" onClick={() => step === 1 ? null : (setStep(step - 1), setError(""))} disabled={step === 1}>Back</button>
-              <button type="button" className="mchr-primary" onClick={next} disabled={submitting || attempted.current}>{submitting ? "Submitting securely…" : step === 4 ? (WEBSITE_REGISTRATION_ENABLED ? "Submit my donation" : "Preview only — not accepting registrations") : "Continue →"}</button>
+              <button type="button" className="mchr-primary" onClick={next} disabled={submitting || attempted.current || (step === 4 && !WEBSITE_REGISTRATION_ENABLED)}>{submitting ? "Submitting securely…" : step === 4 ? (WEBSITE_REGISTRATION_ENABLED ? "Submit my donation" : "Preview only — submissions disabled") : "Continue →"}</button>
             </div>
           </motion.section>
         </AnimatePresence>
