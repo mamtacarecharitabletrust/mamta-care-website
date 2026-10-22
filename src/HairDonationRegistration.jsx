@@ -26,11 +26,37 @@ function FormField({ title, required = true, children }) {
 export default function HairDonationRegistration() {
   useEffect(() => {
     const script=document.createElement("script");
-    script.src="https://challenges.cloudflare.com/turnstile/v0/api.js";
+    script.src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
     script.async=true;script.defer=true;document.head.appendChild(script);
     return()=>{document.head.removeChild(script);};
   }, []);
   const [step, setStep] = useState(1);
+  const securityRef = useRef(null);
+  const widgetId = useRef(null);
+  useEffect(() => {
+    if (step !== 4) return;
+    let disposed = false;
+    let frame = 0;
+    function mount() {
+      if (disposed) return;
+      if (window.turnstile && securityRef.current) {
+        widgetId.current = window.turnstile.render(securityRef.current, {
+          sitekey: "0x4AAAAAAFg4La53uj9Wuu94", theme: "light"
+        });
+      } else {
+        frame = requestAnimationFrame(mount);
+      }
+    }
+    mount();
+    return () => {
+      disposed = true;
+      cancelAnimationFrame(frame);
+      if (widgetId.current !== null) {
+        try { window.turnstile?.remove(widgetId.current); } catch {}
+        widgetId.current = null;
+      }
+    };
+  }, [step]);
   const [method, setMethod] = useState("haircut");
   const [values, setValues] = useState({
     hair_length: LENGTHS[0], full_name: "", phone: "", email: "", gender: "", state: "", city: "",
@@ -78,7 +104,7 @@ export default function HairDonationRegistration() {
     if (attempted.current || submitting) return;
     setSubmitting(true); setError(""); setUploadState("Submitting your registration securely");
     try {
-      const token = window.turnstile?.getResponse?.();
+      const token = window.turnstile?.getResponse?.(widgetId.current);
       if (!token) throw new Error("Complete the security check before submitting.");
       const body = new FormData();
       const fields = {
@@ -96,7 +122,7 @@ export default function HairDonationRegistration() {
       const res=await fetch("https://mamta-website-hair-registration.bharathairseva-in.workers.dev/api/register",{method:"POST",body});
       const result=await res.json().catch(()=>({ok:false,error:"Unexpected server response"}));
       if (!res.ok || !result.ok) {
-        attempted.current = false; window.turnstile?.reset?.();
+        attempted.current = false; window.turnstile?.reset?.(widgetId.current);
         throw new Error(result.error || "Could not confirm your registration");
       }
       setTestResult({registration_id:result.reference,desk_synced:true});
@@ -183,7 +209,7 @@ export default function HairDonationRegistration() {
               <label className="mchr-check"><input type="checkbox" checked={values.awareness} onChange={e => set("awareness", e.target.checked)}/><span>I optionally authorize the Trust to use specific photographs or videos I approve for educational and awareness communications. This choice is not required to donate. <b>Optional</b></span></label>
               <p className="mchr-image-note">Publicity consent does not transfer copyright. Terms, photo retention and withdrawal instructions require final legal and privacy review before launch.</p>
             </>}
-            {step === 4 && <div className="cf-turnstile" data-sitekey="0x4AAAAAAFg4La53uj9Wuu94" data-theme="light" />}
+            {step === 4 && <div ref={securityRef} aria-label="Security verification" />}
             {uploadState !== "idle" && <p role="status" className="mchr-note">{uploadState}</p>}
             {error && <p role="alert" className="mchr-error">{error}</p>}
             <div className="mchr-footer-actions">
