@@ -202,7 +202,7 @@ export default function HairDonationRegistration() {
           </motion.section>
         </AnimatePresence>
       </>}
-      <p className="mchr-footnote">This fictional TEST submits basic fields to a copied Google Form and sample photos to private TEST Cloudflare storage. The live Donor Desk is not connected. <Link to="/">Return to Mamta Care website</Link>.</p>
+      <p className="mchr-footnote">This fictional TEST submits basic fields to a copied Google Form, sample photos to private TEST Cloudflare storage, and completed registrations to the separate TEST Donor Desk. The live Donor Desk is unchanged. <Link to="/">Return to Mamta Care website</Link>.</p>
     </div>
   </div>;
 }
