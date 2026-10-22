@@ -30,7 +30,7 @@ async function registration(req,env,origin){
  const values=Object.fromEntries(["full_name","phone","gender","hair_length","city","hair_type","guidance","readiness","referral_source","email"].map(k=>[k,field(f,k,k==="email"?180:200)]));
  values.phone=values.phone.replace(/\D/g,"");values.consent="STRONGLY AGREE";
  if(values.full_name.length<2||!/^[0-9]{10}$/.test(values.phone)||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)
-  ||["gender","hair_length","city","hair_type","guidance","readiness","referral_source"].some(k=>!values[k])||field(f,"voluntary")!=="yes"||field(f,"private_photos")!=="yes")
+  ||["gender","hair_length","city","hair_type","guidance","readiness","referral_source"].some(k=>!values[k])||field(f,"voluntary")!=="yes"||field(f,"private_photos")!=="yes"||field(f,"terms_accepted")!=="yes")
   return response({ok:false,error:"Incomplete donor registration"},400,origin);
  const method=field(f,"method",32);
  if(!["haircut","head_shave"].includes(method)||(method==="head_shave")!==(values.hair_length==="BALD(FULL LENGTH)"))
