@@ -25,7 +25,7 @@ async function registration(req,env,origin){
  const id=field(f,"submission_uuid",50),token=field(f,"turnstile",4096);
  if(!uuid.test(id)||!token)return response({ok:false,error:"Submission reference or security check missing"},400,origin);
  const verify=new FormData();verify.set("secret",env.TURNSTILE_SECRET);verify.set("response",token);
- let verdict;try{const r=await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify",{method:"POST",body:verify});verdict=await r.json()}catch{return response({ok:false,error:"Security check temporarily unavailable"},503,origin)}
+ let verdict;try{const r=await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify",{method:"POST",body:verify});if(!r.ok)throw Error("Turnstile service unavailable");verdict=await r.json()}catch{return response({ok:false,error:"Security check temporarily unavailable"},503,origin)}
  if(verdict.success!==true||verdict.hostname!=="mamta-care-website.vercel.app")return response({ok:false,error:"Security check rejected"},403,origin);
  const values=Object.fromEntries(["full_name","phone","gender","hair_length","city","hair_type","guidance","readiness","referral_source","email"].map(k=>[k,field(f,k,k==="email"?180:200)]));
  values.phone=values.phone.replace(/\D/g,"");values.consent="STRONGLY AGREE";
