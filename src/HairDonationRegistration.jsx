@@ -100,35 +100,46 @@ export default function HairDonationRegistration() {
     setError(""); if (step < 4) { setStep(step + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }
     else submitTest();
   };
+  // Keep the preview form disabled until backend auth, email and private-photo
+  // matching have been verified. No browser-managed secret is ever required.
+  const WEBSITE_REGISTRATION_ENABLED = false;
+  const requestId = useRef(null);
   const submitTest = async () => {
+    if (!WEBSITE_REGISTRATION_ENABLED) {
+      setError("The photo-registration service is not active. Please complete the official Google Form using the link above. Your photographs have not been sent.");
+      return;
+    }
     if (attempted.current || submitting) return;
-    setSubmitting(true); setError(""); setUploadState("Submitting your registration securely");
+    setSubmitting(true); setError(""); setUploadState("Sending secure registration");
     try {
-      throw new Error("Website photo registration is not active. Use the official Google Form above; your photos have not been uploaded.");
       const token = window.turnstile?.getResponse?.(widgetId.current);
-      if (!token) throw new Error("Complete the security check before submitting.");
+      if (!token) throw new Error("Complete the security check first.");
+      if (!requestId.current) requestId.current = crypto.randomUUID();
       const body = new FormData();
       const fields = {
         ...values,
+        submission_uuid: requestId.current,
         hair_length: method === "head_shave" ? "BALD(FULL LENGTH)" : values.hair_length,
-        method,
-        voluntary: values.voluntary ? "yes" : "no",
+        method, voluntary: values.voluntary ? "yes" : "no",
         private_photos: values.private_photos ? "yes" : "no",
-        awareness: values.awareness ? "yes" : "no",
-        turnstile: token,
+        awareness: values.awareness ? "yes" : "no", turnstile: token
       };
       Object.entries(fields).forEach(([key,value]) => body.append(key,String(value)));
       body.append("front",files.front); body.append("back",files.back);
       attempted.current = true;
-      // Do not send donor data into the old direct-to-D1 Worker.
-      // Activation requires a verified Google Form bridge, same-ID photo pairing,
-      // and the existing Apps Script email flow.
-      throw new Error("Online registration is being connected to our official Google Form. Please use the existing Google Form link above for now.");
-      // Submission transport will be enabled after the original Form bridge passes validation.
-      // const res = await fetch(SAFE_BRIDGE_ENDPOINT, {method:"POST", body});
-
-    } catch(ex) {
-      setError(String(ex.message||"Registration failed. Contact Mamta Care if you have already submitted."));
+      const res = await fetch(
+        "https://mamta-website-hair-registration.bharathairseva-in.workers.dev/api/register",
+        {method:"POST",body}
+      );
+      const result = await res.json().catch(() => null);
+      if (!res.ok || result?.ok !== true || !result?.registration_id) {
+        throw new Error(result?.error || "Registration not confirmed. Contact Mamta Care before retrying.");
+      }
+      setTestResult({registration_id:result.registration_id});
+      setUploadState("Registration received");
+      setFinished(true);
+    } catch (e) {
+      setError(String(e?.message || "Registration could not be confirmed. Contact Mamta Care before retrying."));
     } finally { setSubmitting(false); }
   };
   const photoNames = { front: "Front photograph", back: "Back photograph" };
