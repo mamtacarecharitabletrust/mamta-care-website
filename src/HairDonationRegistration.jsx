@@ -112,7 +112,7 @@ export default function HairDonationRegistration() {
   const requestId = useRef(null);
   const submitTest = async () => {
     if (!WEBSITE_REGISTRATION_ENABLED) {
-      setError("The photo-registration service is not active. Please complete the official Google Form using the link above. Your photographs have not been sent.");
+      setError("Preview only: no information or photographs have been submitted.");
       return;
     }
     if (attempted.current || submitting) return;
@@ -160,7 +160,7 @@ export default function HairDonationRegistration() {
       {!WEBSITE_REGISTRATION_ENABLED && <div className="mchr-preview-warning" role="status">
         <strong>Registration page preview — not accepting applications yet.</strong>
         You can explore all four steps and choose photos without sending any details. This page will submit the existing Google Form automatically when the secure integration has been verified.
-        <span className="mchr-preview-note">Existing donors can still use <a href="https://forms.gle/VpKSKJoichRqyTvH9" target="_blank" rel="noreferrer">the original official form</a> during testing.</span>
+        <span className="mchr-preview-note">This is a test preview only. No donor information, photographs, or email is submitted from this page.</span>
       </div>}
       {finished ? <section className="mchr-panel mchr-success" aria-live="polite">
         <span className="mchr-success-icon">✓</span><h2>Registration received</h2>
