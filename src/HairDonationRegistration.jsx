@@ -134,7 +134,7 @@ export default function HairDonationRegistration() {
       body.append("front",files.front); body.append("back",files.back);
       attempted.current = true;
       const res = await fetch(
-        "https://mamta-website-hair-registration.bharathairseva-in.workers.dev/api/register",
+        "/api/hair-registration",
         {method:"POST",body}
       );
       const result = await res.json().catch(() => null);
