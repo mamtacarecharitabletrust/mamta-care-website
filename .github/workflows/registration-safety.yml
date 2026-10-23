@@ -1,0 +1,23 @@
+name: Mamta Care registration safety
+on:
+  push:
+    branches:
+      - feature/hair-donation-registration-preview-20261019
+  pull_request:
+    paths:
+      - 'cloudflare/**'
+      - 'src/HairDonationRegistration.jsx'
+      - 'tests/**'
+      - 'package.json'
+jobs:
+  registration-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run registration and photo access tests
+        run: npm test

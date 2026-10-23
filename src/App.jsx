@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import HairDonationRegistration from "./HairDonationRegistration";
 
 import {
 
@@ -72,7 +73,7 @@ const info = {
 
   hairDonationForm:
 
-    "https://forms.gle/VpKSKJoichRqyTvH9",
+    import.meta.env.VITE_HAIR_REGISTRATION_ENABLED === "true" ? "/hair-registration" : "https://forms.gle/VpKSKJoichRqyTvH9",
 
   wigRequestForm:
 
@@ -4592,6 +4593,8 @@ function AppRoutes() {
             }
 
           />
+
+          <Route path="/hair-registration" element={<HairDonationRegistration />} />
 
           <Route
 
