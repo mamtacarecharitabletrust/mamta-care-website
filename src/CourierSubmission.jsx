@@ -1,145 +1,252 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import logo from "./assets/mamta-care-logo.jpeg";
 import "./styles/courier-submission.css";
 
-const EXISTING_COURIER_FORM = "https://script.google.com/macros/s/AKfycbzEYc0GYB25mTIp2l1nHEOa8MRx0DX5sxN-TWIOntXBWVikvkz5ZK1vyiK1ABj1FEIN/exec";
 const COURIERS = [
   { id: "speedpost", name: "India Post / Speed Post" },
   { id: "dtdc", name: "DTDC" },
   { id: "bluedart", name: "Blue Dart" },
-  { id: "professional", name: "Professional Couriers" },
-  { id: "other", name: "Other courier (manual review)" }
+  { id: "professional", name: "Professional Couriers" }
 ];
-// Remains off unless the server-side courier bridge and old workflow have
-// passed an end-to-end test. Never trust this flag as server authorization.
+
+// Off until the authenticated Apps Script bridge is connected and verified.
+// This is presentation only: server-side access controls must independently deny submissions.
 const ENABLED = import.meta.env.VITE_COURIER_SUBMISSION_ENABLED === "true";
-const clean = value => value.trim().toUpperCase().replace(/\s+/g, "");
-const regPattern = /^20\d{2}-\d{6}\/M\/2022$/;
-const trackingPattern = /^[A-Z0-9-]{5,40}$/;
+const regPattern = /^[A-Z0-9][A-Z0-9/_.-]{2,79}$/;
+const trackingPattern = /^[A-Z0-9][A-Z0-9-]{4,39}$/;
+const norm = value => String(value || "").trim().toUpperCase();
+
+function StepHeader({ number, title }) {
+  return <div className="mcc-pill"><span>{number}</span>{title}</div>;
+}
 
 export default function CourierSubmission() {
-  const [form, setForm] = useState({
-    registration_id: "", courier_partner: "", other_courier: "",
-    tracking_number: "", confirm: false
-  });
-  const [waiting, setWaiting] = useState(false);
-  const [result, setResult] = useState(null);
+  const [stage, setStage] = useState("identity");
+  const [identity, setIdentity] = useState({ registration_id: "", email: "", code: "" });
+  const [shipment, setShipment] = useState({ carrier: "", tracking: "", confirm: false });
+  const [token, setToken] = useState("");
+  const [record, setRecord] = useState(null);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [submissionId] = useState(() =>
-    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-      ? crypto.randomUUID() : ""
-  );
-  const set = (key, value) => setForm(previous => ({ ...previous, [key]: value }));
-  const registrationId = useMemo(() => clean(form.registration_id), [form.registration_id]);
-  const awb = useMemo(() => clean(form.tracking_number), [form.tracking_number]);
-  const courierName = form.courier_partner === "other" ? form.other_courier.trim() : form.courier_partner;
+  const [message, setMessage] = useState("");
+  const captchaNode = useRef(null);
+  const captchaId = useRef(null);
+  const registeredId = norm(identity.registration_id);
 
-  async function submit(event) {
-    event.preventDefault();
-    setError("");
-    if (!ENABLED) {
-      setError("Website courier submissions are not active yet. Please use the existing courier submission form below.");
-      return;
+  useEffect(() => {
+    if (!ENABLED) return;
+    const script = document.createElement("script");
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+    return () => { if (script.parentNode) script.parentNode.removeChild(script); };
+  }, []);
+
+  useEffect(() => {
+    if (!ENABLED || stage !== "identity") return;
+    let closed = false;
+    let frame;
+    function mount() {
+      if (closed) return;
+      if (window.turnstile && captchaNode.current) {
+        if (captchaId.current === null) {
+          captchaId.current = window.turnstile.render(captchaNode.current, {
+            sitekey: "0x4AAAAAAFg4La53uj9Wuu94",
+            theme: "light"
+          });
+        }
+      } else frame = requestAnimationFrame(mount);
     }
-    if (!regPattern.test(registrationId)) return setError("Enter your full Mamta Care registration ID exactly as shown on your confirmation.");
-    if (!courierName || !form.courier_partner) return setError("Choose a courier company.");
-    if (!trackingPattern.test(awb)) return setError("Enter a valid courier tracking or AWB number (5–40 letters, numbers or hyphens).");
-    if (!form.confirm) return setError("Confirm that the courier details are accurate before submitting.");
-    if (waiting || result) return;
-    setWaiting(true);
-    try {
-      const response = await fetch("/api/courier-submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          submission_uuid: submissionId,
-          registration_id: registrationId,
-          courier_partner: courierName,
-          tracking_number: awb,
-          confirmation: true
-        })
-      });
-      const data = await response.json().catch(() => null);
-      if (!response.ok || data?.ok !== true) {
-        throw new Error(data?.error || "Courier submission could not be confirmed. Please contact Mamta Care before attempting again.");
+    mount();
+    return () => {
+      closed = true;
+      cancelAnimationFrame(frame);
+      if (captchaId.current !== null) {
+        try { window.turnstile?.remove(captchaId.current); } catch {}
+        captchaId.current = null;
       }
-      setResult(data);
-    } catch (e) {
-      setError(e.message || "Unable to confirm submission. Please contact Mamta Care before submitting again.");
-    } finally { setWaiting(false); }
+    };
+  }, [stage]);
+
+  const setI = (key, value) => { setIdentity(old => ({ ...old, [key]: value })); setError(""); };
+  const setS = (key, value) => { setShipment(old => ({ ...old, [key]: value })); setError(""); };
+
+  async function api(action, fields) {
+    const res = await fetch("/api/courier/" + action, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(fields)
+    });
+    const response = await res.json().catch(() => null);
+    if (!res.ok || !response?.ok) {
+      throw new Error(response?.error || "The secure courier service is unavailable. Please contact Mamta Care.");
+    }
+    return response.data || {};
   }
 
-  return (
-    <main className="mcc-page">
-      <div className="mcc-wrap">
-        <header className="mcc-heading">
-          <img src={logo} alt="Mamta Care Charitable Trust" />
-          <div>
-            <div className="mcc-eyebrow">MAMTA CARE CHARITABLE TRUST</div>
-            <h1>Submit Courier Details</h1>
-            <p>Already sent your hair donation parcel? Share your consignment number so our team can follow its journey.</p>
-          </div>
-        </header>
-        <div className="mcc-columns">
-          <section className="mcc-card">
-            <div className="mcc-pill"><span>01</span> Courier information</div>
-            {result ? (
-              <div className="mcc-confirm" role="status">
-                <h2>Courier details received</h2>
-                <p>Thank you. Your parcel details have been recorded for Mamta Care's verification and tracking process.</p>
-                <p><strong>Registration ID:</strong> {registrationId}</p>
-                <p><strong>Tracking number:</strong> {awb}</p>
-                <p className="mcc-small">Courier delivery or hair receipt has not yet been verified. Please keep your original courier receipt.</p>
-              </div>
-            ) : (
-              <form onSubmit={submit} noValidate>
-                <label htmlFor="mcc-registration">Mamta Care Registration ID <span>*</span></label>
-                <input id="mcc-registration" autoComplete="off" spellCheck="false" value={form.registration_id} maxLength={35}
-                  onChange={e => set("registration_id", e.target.value)} placeholder="2026-231005/M/2022" required />
-                <p className="mcc-help">Use the ID in your Mamta Care registration email or certificate.</p>
+  async function requestCode(e) {
+    e.preventDefault();
+    if (!ENABLED || busy) return;
+    if (!regPattern.test(registeredId)) return setError("Enter the Registration ID exactly as shown in your email.");
+    const email = identity.email.trim().toLowerCase();
+    if (!/^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(email)) return setError("Enter your registered email address.");
+    const challenge = window.turnstile?.getResponse?.(captchaId.current);
+    if (!challenge) return setError("Complete the Cloudflare security verification first.");
+    setBusy(true);
+    try {
+      const reply = await api("request-code", {
+        registration_id: registeredId, email, turnstile_token: challenge
+      });
+      setMessage(reply.message || "If your details match our records, a code has been emailed to you.");
+      setStage("verify");
+    } catch (err) {
+      setError(err.message);
+      try { window.turnstile?.reset(captchaId.current); } catch {}
+    } finally { setBusy(false); }
+  }
 
-                <label htmlFor="mcc-partner">Courier company <span>*</span></label>
-                <select id="mcc-partner" value={form.courier_partner} required onChange={e => set("courier_partner", e.target.value)}>
-                  <option value="">Select the courier company</option>
-                  {COURIERS.map(c => <option value={c.id} key={c.id}>{c.name}</option>)}
-                </select>
-                {form.courier_partner === "other" && <>
-                  <label htmlFor="mcc-other">Courier company name <span>*</span></label>
-                  <input id="mcc-other" maxLength={80} value={form.other_courier}
-                    onChange={e => set("other_courier", e.target.value)} placeholder="Name as printed on your receipt" required />
-                  <p className="mcc-help">Other couriers may require a manual tracking review.</p>
-                </>}
+  async function verifyCode(e) {
+    e.preventDefault();
+    if (!ENABLED || busy) return;
+    const code = norm(identity.code);
+    if (!/^[0-9A-F]{8}$/.test(code)) return setError("Enter the eight-character code sent to your email.");
+    setBusy(true);
+    try {
+      const result = await api("verify-code", { registration_id: registeredId, code });
+      if (!result.token || result.registrationId !== registeredId) throw new Error("Verification was not completed.");
+      setToken(result.token);
+      const status = await api("status", { token: result.token });
+      setRecord(status);
+      setMessage("");
+      setStage(status.found ? "existing" : "shipment");
+    } catch (err) { setError(err.message); }
+    finally { setBusy(false); }
+  }
 
-                <label htmlFor="mcc-awb">Consignment / AWB / Tracking Number <span>*</span></label>
-                <input id="mcc-awb" autoComplete="off" spellCheck="false" value={form.tracking_number} maxLength={40}
-                  onChange={e => set("tracking_number", e.target.value)} placeholder="Enter the number on your courier receipt" required />
-                <p className="mcc-help">Make sure every letter and digit matches your courier receipt.</p>
-                <label className="mcc-consent" htmlFor="mcc-confirm">
-                  <input id="mcc-confirm" type="checkbox" checked={form.confirm}
-                    onChange={e => set("confirm", e.target.checked)} />
-                  <span>I confirm that these details are accurate and understand that shipment verification is performed separately.</span>
-                </label>
-                {error && <p className="mcc-error" role="alert">{error}</p>}
-                <button className="mcc-submit" type="submit" disabled={!ENABLED || waiting}>
-                  {waiting ? "Submitting…" : ENABLED ? "Submit Courier Details" : "Website submission coming soon"}
-                </button>
-                {!ENABLED && <p className="mcc-help mcc-preview">This website form is being connected to the existing courier system. The current courier submission form remains available below.</p>}
-              </form>
-            )}
-          </section>
-          <aside className="mcc-card mcc-aside">
-            <div className="mcc-pill"><span>02</span> What happens next?</div>
-            <ol>
-              <li><strong>Submit your consignment details.</strong><p>Keep a photograph or copy of your booking receipt.</p></li>
-              <li><strong>Courier verification.</strong><p>Tracking information is checked through the existing Mamta Care process. Submission is not proof of delivery.</p></li>
-              <li><strong>Hair donation processing.</strong><p>Receipt and processing statuses are updated only after confirmation and Administrator approval.</p></li>
-            </ol>
-            <div className="mcc-note"><strong>Current courier submission</strong><p>Until the integrated page is activated, use the existing official Apps Script link.</p>
-              <a href={EXISTING_COURIER_FORM} target="_blank" rel="noopener noreferrer">Open the existing Courier Details form ↗</a>
-            </div>
-          </aside>
+  async function submitCourier(e) {
+    e.preventDefault();
+    if (!ENABLED || busy) return;
+    const carrier = shipment.carrier;
+    const tracking = norm(shipment.tracking);
+    if (!COURIERS.some(c => c.id === carrier)) return setError("Choose a supported courier company.");
+    if (!trackingPattern.test(tracking)) return setError("Enter the tracking/AWB number shown on your receipt.");
+    if (!shipment.confirm) return setError("Confirm that the courier details match your booking receipt.");
+    setBusy(true);
+    try {
+      const result = await api("submit", { token, carrier, tracking });
+      const latest = await api("status", { token });
+      setRecord(latest);
+      setMessage(result.message || "Courier details received.");
+      setStage("existing");
+    } catch (err) { setError(err.message); }
+    finally { setBusy(false); }
+  }
+
+  return <main className="mcc-page">
+    <div className="mcc-wrap">
+      <header className="mcc-heading">
+        <img src={logo} alt="Mamta Care Charitable Trust" />
+        <div>
+          <div className="mcc-eyebrow">MAMTA CARE CHARITABLE TRUST</div>
+          <h1>Submit Courier Details</h1>
+          <p>Already dispatched your hair donation? Securely submit your consignment details and follow the verification process.</p>
         </div>
+      </header>
+      <div className="mcc-columns">
+        <section className="mcc-card">
+          {!ENABLED && <div className="mcc-error" role="status">
+            <strong>Courier website preview only.</strong> This form is being connected to the existing secure Apps Script system. No courier submissions are accepted on this page yet.
+          </div>}
+          {stage === "identity" && <>
+            <StepHeader number="01" title="Verify your registration" />
+            <p className="mcc-help">For your privacy, we first verify the email address registered with Mamta Care.</p>
+            <form onSubmit={requestCode}>
+              <label htmlFor="mcc-id">Registration ID <span>*</span></label>
+              <input id="mcc-id" autoComplete="off" spellCheck="false" maxLength={80}
+                placeholder="Enter the ID shown in your email" value={identity.registration_id}
+                onChange={e => setI("registration_id", e.target.value)} required />
+              <label htmlFor="mcc-email">Registered email address <span>*</span></label>
+              <input id="mcc-email" type="email" autoComplete="email" maxLength={254}
+                placeholder="Email used during hair registration" value={identity.email}
+                onChange={e => setI("email", e.target.value)} required />
+              {ENABLED && <div className="mcc-security" ref={captchaNode} />}
+              {error && <p className="mcc-error" role="alert">{error}</p>}
+              <button className="mcc-submit" type="submit" disabled={!ENABLED || busy}>
+                {busy ? "Sending…" : "Email my verification code"}
+              </button>
+              <p className="mcc-help">The code is sent only to the registered address, expires after 10 minutes, and does not confirm shipment delivery.</p>
+            </form>
+          </>}
+          {stage === "verify" && <>
+            <StepHeader number="02" title="Enter email verification code" />
+            <p className="mcc-help" role="status">{message}</p>
+            <form onSubmit={verifyCode}>
+              <label htmlFor="mcc-otp">Eight-character verification code <span>*</span></label>
+              <input id="mcc-otp" autoComplete="one-time-code" spellCheck="false" maxLength={8}
+                placeholder="Example: 3FA9C12E" value={identity.code}
+                onChange={e => setI("code", e.target.value)} required />
+              {error && <p className="mcc-error" role="alert">{error}</p>}
+              <button className="mcc-submit" disabled={!ENABLED || busy} type="submit">
+                {busy ? "Verifying…" : "Verify and continue"}
+              </button>
+              <button className="mcc-secondary" type="button" onClick={() => { setStage("identity"); setError(""); }}>Back to email verification</button>
+            </form>
+          </>}
+          {stage === "shipment" && <>
+            <StepHeader number="03" title="Your courier shipment" />
+            <p className="mcc-help">Email verified for Registration ID: <strong>{registeredId}</strong></p>
+            <form onSubmit={submitCourier}>
+              <label htmlFor="mcc-partner">Courier company <span>*</span></label>
+              <select id="mcc-partner" value={shipment.carrier} onChange={e => setS("carrier", e.target.value)} required>
+                <option value="">Select courier company</option>
+                {COURIERS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+              <label htmlFor="mcc-tracking">Consignment / AWB / Tracking Number <span>*</span></label>
+              <input id="mcc-tracking" spellCheck="false" maxLength={40}
+                placeholder="As printed on your courier receipt" value={shipment.tracking}
+                onChange={e => setS("tracking", e.target.value)} required />
+              <label className="mcc-consent" htmlFor="mcc-confirm">
+                <input id="mcc-confirm" type="checkbox" checked={shipment.confirm}
+                  onChange={e => setS("confirm", e.target.checked)} />
+                <span>I confirm that my courier details are correct. I understand that shipment verification, receipt, and processing are separate.</span>
+              </label>
+              {error && <p className="mcc-error" role="alert">{error}</p>}
+              <button className="mcc-submit" type="submit" disabled={!ENABLED || busy}>
+                {busy ? "Saving…" : "Submit Courier Details"}
+              </button>
+            </form>
+          </>}
+          {stage === "existing" && <>
+            <StepHeader number="✓" title="Courier submission status" />
+            {message && <p role="status" className="mcc-confirm">{message}</p>}
+            <div className="mcc-confirm">
+              <p><strong>Registration ID:</strong> {registeredId}</p>
+              <p><strong>Courier:</strong> {record?.carrier || "Pending"}</p>
+              <p><strong>Tracking number:</strong> {record?.tracking || "Pending"}</p>
+              <p><strong>Verification:</strong> {record?.verification || "Pending"}</p>
+              <p><strong>Courier status:</strong> {record?.status || "Awaiting check"}</p>
+              <p><strong>Administrator review:</strong> {record?.approval || "Pending"}</p>
+              <p className="mcc-small">Status reflects the existing courier system. Submission does not guarantee that your parcel has been received or processed.</p>
+            </div>
+          </>}
+        </section>
+        <aside className="mcc-card mcc-aside">
+          <StepHeader number="?" title="How it works" />
+          <ol>
+            <li><strong>Verify your registered email.</strong><p>We send a one-time code to the email associated with your Mamta Care registration ID.</p></li>
+            <li><strong>Submit your courier tracking number.</strong><p>Only after successful verification can your shipment be linked to your existing registration.</p></li>
+            <li><strong>Follow secure processing updates.</strong><p>The courier tracker and certificate database stay connected to the existing automated workflow.</p></li>
+          </ol>
+          <div className="mcc-note">
+            <strong>Need help?</strong>
+            <p>Keep your courier receipt and contact Mamta Care if you entered incorrect shipment details. Please do not submit the same parcel under another registration ID.</p>
+            <Link to="/contact">Contact Mamta Care →</Link>
+          </div>
+        </aside>
       </div>
-    </main>
-  );
+    </div>
+  </main>;
 }
