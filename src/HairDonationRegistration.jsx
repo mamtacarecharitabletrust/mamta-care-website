@@ -138,6 +138,9 @@ export default function HairDonationRegistration() {
         {method:"POST",body}
       );
       const result = await res.json().catch(() => null);
+      if (res.status === 202 || result?.pending === true) {
+        throw new Error("Your registration needs Administrator review. Do not submit again; Mamta Care will reconcile the registration and photographs.");
+      }
       if (!res.ok || result?.ok !== true || !result?.registration_id) {
         throw new Error(result?.error || "Registration not confirmed. Contact Mamta Care before retrying.");
       }
