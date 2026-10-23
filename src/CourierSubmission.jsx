@@ -12,7 +12,7 @@ const COURIERS = [
 
 // Off until the authenticated Apps Script bridge is connected and verified.
 // This is presentation only: server-side access controls must independently deny submissions.
-const ENABLED = import.meta.env.VITE_COURIER_SUBMISSION_ENABLED === "true";
+const ENABLED = import.meta.env.VITE_COURIER_SUBMISSION_ENABLED !== "false";
 const regPattern = /^[A-Z0-9][A-Z0-9/_.-]{2,79}$/;
 const trackingPattern = /^[A-Z0-9][A-Z0-9-]{4,39}$/;
 const norm = value => String(value || "").trim().toUpperCase();
