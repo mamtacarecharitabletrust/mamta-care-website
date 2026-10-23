@@ -24,8 +24,9 @@ function setup(){
        return {meta:{changes:1}};
       }
       if(sql.startsWith("UPDATE website_form_intakes")){
-       const row=intakes.get(args[args.length-1]);row.state=args[0];
-       if(args.length===4)row.registration_id=args[1];
+       const row=intakes.get(args[args.length-1]);
+       row.state=sql.includes("state='COMPLETE'")?"COMPLETE":args[0];
+       if(sql.includes("registration_id=?"))row.registration_id=args[0];
        return {meta:{changes:1}};
       }
       if(sql.startsWith("INSERT OR IGNORE INTO website_hair_photos")){
