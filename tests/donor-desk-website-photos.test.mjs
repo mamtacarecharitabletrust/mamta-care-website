@@ -40,3 +40,18 @@ test("write methods are rejected",async()=>{
  const r=await handleWebsiteDonorPhotos(req,env,{username:"sai",role:"team"});
  assert.equal(r.status,405);
 });
+
+// A manually registered donor must never inherit photos via a copied registration ID.
+test("manual donor records cannot access Google Form photographs",async()=>{
+ const {env}=mock();
+ const original=env.DB.prepare.bind(env.DB);
+ env.DB.prepare=(sql)=>{const stmt=original(sql);if(sql.includes("FROM donors WHERE"))stmt.first=async()=>({...donor,source:"manual"});return stmt;};
+ const r=await handleWebsiteDonorPhotos(request("/front"),env,{username:"administrator",role:"admin"});
+ assert.equal(r.status,404);
+});
+test("missing photo is not exposed as a broken private URL",async()=>{
+ const {env}=mock();const original=env.DB.prepare.bind(env.DB);
+ env.DB.prepare=(sql)=>{const stmt=original(sql);if(sql.includes("website_form_photo_link"))stmt.all=async()=>({results:[]});return stmt;};
+ const r=await handleWebsiteDonorPhotos(request("/front"),env,{username:"administrator",role:"admin"});
+ assert.equal(r.status,404);
+});
