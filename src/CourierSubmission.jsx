@@ -112,7 +112,7 @@ export default function CourierSubmission() {
     e.preventDefault();
     if (!ENABLED || busy) return;
     const code = norm(identity.code);
-    if (!/^[0-9A-F]{8}$/.test(code)) return setError("Enter the eight-character code sent to your email.");
+    if (!/^\d{4}$/.test(code)) return setError("Enter the four-digit code sent to your email.");
     setBusy(true);
     try {
       const result = await api("verify-code", { registration_id: registeredId, code });
@@ -184,10 +184,10 @@ export default function CourierSubmission() {
             <StepHeader number="02" title="Enter email verification code" />
             <p className="mcc-help" role="status">{message}</p>
             <form onSubmit={verifyCode}>
-              <label htmlFor="mcc-otp">Eight-character verification code <span>*</span></label>
-              <input id="mcc-otp" autoComplete="one-time-code" spellCheck="false" maxLength={8}
-                placeholder="Example: 3FA9C12E" value={identity.code}
-                onChange={e => setI("code", e.target.value)} required />
+              <label htmlFor="mcc-otp">Four-digit verification code <span>*</span></label>
+              <input id="mcc-otp" autoComplete="one-time-code" inputMode="numeric" pattern="[0-9]{4}" spellCheck="false" maxLength={4}
+                placeholder="Enter 4 digits" value={identity.code}
+                onChange={e => setI("code", e.target.value.replace(/\D/g, "").slice(0, 4))} required />
               {error && <p className="mcc-error" role="alert">{error}</p>}
               <button className="mcc-submit" disabled={!ENABLED || busy} type="submit">
                 {busy ? "Verifying…" : "Verify and continue"}
