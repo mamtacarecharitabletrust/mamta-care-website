@@ -2,6 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
+      "source": "/api/courier/:action",
+      "destination": "https://mamta-website-hair-registration.bharathairseva-in.workers.dev/api/courier/:action"
+    },
+    {
       "source": "/api/hair-registration",
       "destination": "https://mamta-website-hair-registration.bharathairseva-in.workers.dev/api/register"
     },
