@@ -1,14 +1,14 @@
 /**
  * MAMTA CARE — Courier website bridge.
  * Add this file to the EXISTING Apps Script project alongside CourierPortal.gs.
- * DO NOT add another doPost(): an existing doPost router handles other live flows.
+ * This helper defines NO doPost. The shared MAMTA script project must have exactly one doPost router.
  * DO NOT change CourierPortal.gs, HardCopyCertificate.gs, or donor sheets.
  *
- * Extend the existing doPost(e) JSON router BEFORE its social bridge fallback:
- *
- *   if (payload && /^courier_(code|verify|submit|status)$/.test(String(payload.action || ''))) {
- *     return mcCourierWebsiteBridgePost_(payload);
- *   }
+ * The supplied HardCopyCertificate.gs defines doGet but NOT doPost.
+ * Inspect all other .gs files in that SAME project before adding one router.
+ * If doPost already exists, add the action dispatch there; otherwise add a
+ * single doPost in the MAMTA project that handles courier actions only.
+ * Never edit the separate Social Registration Bridge project for this.
  *
  * Production access requires the EXISTING Script Property:
  * WEBSITE_FORM_BRIDGE_SECRET
