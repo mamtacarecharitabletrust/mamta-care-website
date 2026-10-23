@@ -240,7 +240,7 @@ export default function HairDonationRegistration() {
               </div>
               <label className="mchr-check"><input type="checkbox" checked={values.terms_accepted} onChange={e => set("terms_accepted", e.target.checked)}/><span>I have read and agree to the hair donation registration terms above. <b>Required</b></span></label>
               <label className="mchr-check"><input type="checkbox" checked={values.awareness} onChange={e => set("awareness", e.target.checked)}/><span>I optionally authorize the Trust to use specific photographs or videos I approve for educational and awareness communications. This choice is not required to donate. <b>Optional</b></span></label>
-              <p className="mchr-image-note">Publicity consent does not transfer copyright. Terms, photo retention and withdrawal instructions require final legal and privacy review before launch.</p>
+              <p className="mchr-image-note">Publicity permission is optional and separate from registration. Your photos are used privately for registration review and donor coordination. To ask about your data or request withdrawal, contact Mamta Care through our Contact page. Requests are reviewed under the Trust's applicable procedures.</p>
             </>}
             {step === 4 && WEBSITE_REGISTRATION_ENABLED && <div ref={securityRef} aria-label="Security verification" />}
             {uploadState !== "idle" && <p role="status" className="mchr-note">{uploadState}</p>}
