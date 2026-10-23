@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import HairDonationRegistration from "./HairDonationRegistration";
+import CourierSubmission from "./CourierSubmission";
 
 import {
 
@@ -4595,6 +4596,8 @@ function AppRoutes() {
           />
 
           <Route path="/hair-registration" element={<HairDonationRegistration />} />
+
+          <Route path="/submit-courier-details" element={<CourierSubmission />} />
 
           <Route
 
