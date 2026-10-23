@@ -157,8 +157,10 @@ export default function CourierSubmission() {
       </header>
       <div className="mcc-columns">
         <section className="mcc-card">
-          {!ENABLED && <div className="mcc-error" role="status">
-            <strong>Courier website preview only.</strong> This form is being connected to the existing secure Apps Script system. No courier submissions are accepted on this page yet.
+          {!ENABLED && <div className="mcc-note" role="status">
+            <strong>Secure courier submission is available</strong>
+            <p>Use the existing Mamta Care portal with four-digit email verification while direct website submissions undergo final connection checks.</p>
+            <a href="https://script.google.com/macros/s/AKfycbyAPGRhxM7b4Y_JUNrfrkVa8rrZBOEJnaJogRThwzXM-LIe7FLsjKPmQevmoKHYTb-y-Q/exec?page=courier" target="_blank" rel="noopener noreferrer">Open secure courier portal ↗</a>
           </div>}
           {stage === "identity" && <>
             <StepHeader number="01" title="Verify your registration" />
