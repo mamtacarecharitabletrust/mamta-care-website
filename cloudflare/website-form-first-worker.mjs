@@ -54,11 +54,25 @@ async function registration(req,env,origin){
   await env.DB.prepare("UPDATE website_form_intakes SET state='PHOTOS_STORED',updated_at=? WHERE submission_uuid=?").bind(Date.now(),id).run();
   phase="google_form";
   const requestBody={action:"website_submit",submission_uuid:id,secret:env.GOOGLE_FORM_BRIDGE_SECRET,values};
-  const a=await fetch(env.GOOGLE_FORM_BRIDGE_URL,{method:"POST",headers:{"content-type":"text/plain;charset=UTF-8"},body:JSON.stringify(requestBody),redirect:"follow"});
-  if(!a.ok)throw Error("Google Form bridge request failed");
-  const t=await a.text();if(t.length>20000)throw Error("Unrecognized bridge response");
-  let answer;try{answer=JSON.parse(t)}catch{throw Error("Invalid bridge response")}
-  if(answer.ok!==true||!official.test(String(answer.registration_id||"")))throw Error("Registration not confirmed");
+  // Retry only with the same UUID; the Apps Script ledger prevents duplicates.
+  let answer=null;
+  for(let attempt=0;attempt<3;attempt++){
+   const action=attempt===0?"website_submit":"website_status";
+   try{
+    const a=await fetch(env.GOOGLE_FORM_BRIDGE_URL,{method:"POST",headers:{"content-type":"text/plain;charset=UTF-8"},body:JSON.stringify({...requestBody,action}),redirect:"follow"});
+    if(!a.ok)continue;
+    const t=await a.text();if(t.length>20000)continue;
+    let candidate;try{candidate=JSON.parse(t)}catch{continue;}
+    if(candidate?.ok===true&&official.test(String(candidate.registration_id||""))){answer=candidate;break;}
+    // Only an explicit missing UUID allows safely trying website_submit again.
+    if(attempt===1&&candidate?.error==="Submission reference not found"){
+     const retry=await fetch(env.GOOGLE_FORM_BRIDGE_URL,{method:"POST",headers:{"content-type":"text/plain;charset=UTF-8"},body:JSON.stringify(requestBody),redirect:"follow"});
+     if(retry.ok){const raw=await retry.text();if(raw.length<=20000){let parsed;try{parsed=JSON.parse(raw)}catch{}
+      if(parsed?.ok===true&&official.test(String(parsed.registration_id||""))){answer=parsed;break;}}}
+    }
+   }catch(e){console.error("Website bridge response not confirmed");}
+  }
+  if(!answer)throw Error("Registration not confirmed");
   phase="association";
   const reg=String(answer.registration_id);
   const updates=await env.DB.batch([
