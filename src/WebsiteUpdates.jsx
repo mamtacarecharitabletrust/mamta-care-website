@@ -32,13 +32,15 @@ function validContent(payload) {
     : [];
   const photos = Array.isArray(payload.photos)
     ? payload.photos.slice(0, 24).filter((item) =>
-        item && /^\/media\/[0-9a-f-]{36}\.webp$/.test(String(item.url || "")) &&
+        item && /^\/media\/[0-9a-f-]{36}\.(?:webp|jpg|png)$/.test(String(item.url || "")) &&
         typeof item.caption === "string"
       )
     : [];
-  if (!hasCounts && !drives.length && !photos.length) return null;
+  const announcements = Array.isArray(payload.announcements) ? payload.announcements.slice(0, 8).filter((x) => x && typeof x.title === "string" && typeof x.message === "string") : [];
+  const promotions = Array.isArray(payload.promotions) ? payload.promotions.slice(0, 12).filter((x) => x && typeof x.title === "string" && /^\/media\/[0-9a-f-]{36}\.(?:webp|jpg|png)$/.test(String(x.url || ""))) : [];
+  if (!hasCounts && !drives.length && !photos.length && !announcements.length && !promotions.length) return null;
   const wigsDonated = Number.isSafeInteger(payload.wigsDonated) && payload.wigsDonated >= 0 ? payload.wigsDonated : null;
-  return { hasCounts, completed, pending, drives, photos, wigsDonated, updatedAt: payload.updatedAt || null };
+  return { hasCounts, completed, pending, drives, photos, announcements, promotions, wigsDonated, updatedAt: payload.updatedAt || null };
 }
 
 const numberFormat = new Intl.NumberFormat("en-IN");
@@ -141,6 +143,12 @@ export default function WebsiteUpdates() {
   const indiaToday = `${indiaPart("year")}-${indiaPart("month")}-${indiaPart("day")}`;
   const upcoming = (published.drives || [])
     .filter((drive) => drive.date >= indiaToday)
+    .sort((a,b) => a.date.localeCompare(b.date))
+    .slice(0, 4);
+  const recentCutoff = new Date(Date.now() - 31 * 86400000).toISOString().slice(0, 10);
+  const recent = (published.drives || [])
+    .filter((drive) => drive.date < indiaToday && drive.date >= recentCutoff)
+    .sort((a,b) => b.date.localeCompare(a.date))
     .slice(0, 4);
 
   return (
@@ -178,6 +186,32 @@ export default function WebsiteUpdates() {
           </div>
         )}
 
+        {!!(published.announcements || []).length && (
+          <div className="mcct-public-announcements" aria-label="Latest Mamta Care announcements">
+            {published.announcements.map((announcement) => (
+              <article className="mcct-public-announcement" key={announcement.id}>
+                <span className="mcct-public-overline">TRUST ANNOUNCEMENT</span>
+                <h3>{announcement.title}</h3>
+                <p>{announcement.message}</p>
+                {safeLink(announcement.link) && <a href={safeLink(announcement.link)} target="_blank" rel="noopener noreferrer">Read more</a>}
+              </article>
+            ))}
+          </div>
+        )}
+
+        {!!(published.promotions || []).length && (
+          <div className="mcct-public-block">
+            <div className="mcct-public-block-heading"><p className="mcct-public-overline">MAMTA CARE UPDATES</p><h2>Campaign posters &amp; highlights</h2></div>
+            <div className="mcct-public-promotions">
+              {published.promotions.map((promo) => <article className="mcct-public-promotion" key={promo.id}>
+                <img src={PUBLIC_MEDIA_BASE + promo.url} alt={promo.title} loading="lazy" decoding="async" />
+                <div><h3>{promo.title}</h3>{promo.caption && <p>{promo.caption}</p>}
+                {safeLink(promo.link) && <a href={safeLink(promo.link)} target="_blank" rel="noopener noreferrer">Learn more</a>}</div>
+              </article>)}
+            </div>
+          </div>
+        )}
+
         {!!upcoming.length && (
           <div className="mcct-public-block">
             <div className="mcct-public-block-heading">
@@ -199,6 +233,18 @@ export default function WebsiteUpdates() {
                 </article>
               ))}
             </div>
+          </div>
+        )}
+
+        {!!recent.length && (
+          <div className="mcct-public-block">
+            <div className="mcct-public-block-heading"><p className="mcct-public-overline">PAST 30 DAYS</p><h2>Recent hair donation drives</h2></div>
+            <div className="mcct-public-drives">{recent.map((drive) => <article key={drive.id} className="mcct-public-drive">
+              <div className="mcct-public-drive-date">{dateFormat.format(new Date(drive.date + "T12:00:00+05:30"))} · CONCLUDED</div>
+              <h3>{drive.title}</h3><p className="mcct-public-location">{drive.city}</p>
+              {drive.note && <p className="mcct-public-note">{drive.note}</p>}
+              {safeLink(drive.link) && <a href={safeLink(drive.link)} target="_blank" rel="noopener noreferrer">View details</a>}
+            </article>)}</div>
           </div>
         )}
 
