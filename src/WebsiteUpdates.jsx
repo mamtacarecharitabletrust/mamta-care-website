@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import React, { useEffect, useRef, useState } from "react";
+import { motion, useInView, useReducedMotion } from "framer-motion";
 
 /**
  * Website-only impact content. This feed never queries the private Donor Desk
@@ -74,18 +74,83 @@ function usePublishedWebsiteUpdates() {
 }
 
 function ImpactNumber({ amount, label }) {
+  const ref = useRef(null);
+  const visible = useInView(ref, { once: true, amount: 0.2 });
   const reduceMotion = useReducedMotion();
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    if (!Number.isSafeInteger(amount) || amount < 0) {
+      setDisplay(null);
+      return undefined;
+    }
+    if (!visible) return undefined;
+    if (reduceMotion) {
+      setDisplay(amount);
+      return undefined;
+    }
+    let frame;
+    const start = performance.now();
+    const duration = 1250;
+    const animate = (now) => {
+      const progress = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - progress, 4);
+      setDisplay(Math.round(amount * eased));
+      if (progress < 1) frame = requestAnimationFrame(animate);
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [amount, visible, reduceMotion]);
   return (
-    <div className="mcct-public-stat">
-      <motion.strong
-        initial={reduceMotion ? false : { opacity: 0, y: 12 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.42 }}
-      >
-        {Number.isSafeInteger(amount) ? numberFormat.format(amount) : "—"}
+    <div ref={ref} className="mcct-public-stat">
+      <motion.strong initial={reduceMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+        {Number.isSafeInteger(amount) ? numberFormat.format(display ?? 0) : "—"}
       </motion.strong>
       <span>{label}</span>
+    </div>
+  );
+}
+
+/**
+ * Public goal projections, not recorded donations.
+ * Campaign model: each India-local calendar day adds goals of
+ * 10 registrations, 5 completions and 5 follow-up cases.
+ * Verified counts above are NEVER incremented by this model.
+ */
+const CAMPAIGN_START_UTC = Date.UTC(2026, 9, 30);
+function campaignDayInIndia() {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit"
+  }).formatToParts(new Date());
+  const part = (type) => Number(parts.find((entry) => entry.type === type)?.value);
+  const dayUtc = Date.UTC(part("year"), part("month") - 1, part("day"));
+  return Math.max(1, Math.floor((dayUtc - CAMPAIGN_START_UTC) / 86400000) + 1);
+}
+function DailyCampaignTargets() {
+  const [day, setDay] = useState(campaignDayInIndia);
+  useEffect(() => {
+    const interval = setInterval(() => setDay(campaignDayInIndia()), 60000);
+    return () => clearInterval(interval);
+  }, []);
+  return (
+    <div className="mcct-daily-campaign" aria-labelledby="mcct-goal-heading">
+      <div className="mcct-daily-head">
+        <div>
+          <p className="mcct-public-overline">DAILY CAMPAIGN · TARGETS</p>
+          <h3 id="mcct-goal-heading">Our ambition grows every day.</h3>
+          <p>Campaign projection since 30 October 2026 · day {numberFormat.format(day)}</p>
+        </div>
+        <div className="mcct-daily-pace">+10 <span>planned per day</span></div>
+      </div>
+      <div className="mcct-daily-targets">
+        <ImpactNumber amount={day * 10} label="Target registrations" />
+        <ImpactNumber amount={day * 5} label="Target completions" />
+        <ImpactNumber amount={day * 5} label="Target follow-ups" />
+      </div>
+      <div className="mcct-daily-distribution" aria-hidden="true"><span /><span /></div>
+      <p className="mcct-daily-explanation">
+        Illustrative campaign goals (+10 registrations, +5 completions and +5 follow-ups per day).
+        These projections are not actual donor submissions or completed donations.
+      </p>
     </div>
   );
 }
@@ -122,6 +187,7 @@ export default function WebsiteUpdates() {
             <p className="mcct-public-disclaimer">Figures are verified and published by Mamta Care Charitable Trust.</p>
           </div>
         )}
+        {(published.hasCounts || designPreview) && <DailyCampaignTargets />}
 
         {!!upcoming.length && (
           <div className="mcct-public-block">
