@@ -83,7 +83,7 @@ function ImpactNumber({ amount, label }) {
         viewport={{ once: true }}
         transition={{ duration: 0.42 }}
       >
-        {numberFormat.format(amount)}
+        {Number.isSafeInteger(amount) ? numberFormat.format(amount) : "—"}
       </motion.strong>
       <span>{label}</span>
     </div>
@@ -92,33 +92,34 @@ function ImpactNumber({ amount, label }) {
 
 export default function WebsiteUpdates() {
   const content = usePublishedWebsiteUpdates();
-  if (!content) return null;
-  const updatedDate = content.updatedAt && !Number.isNaN(Date.parse(content.updatedAt))
-    ? dateFormat.format(new Date(content.updatedAt))
-    : null;
-  const total = content.hasCounts ? content.completed + content.pending : null;
-  const upcoming = content.drives
+  const designPreview = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("mcct_preview") === "1";
+  if (!content && !designPreview) return null;
+  const published = content || { hasCounts: true, completed: null, pending: null, drives: [], photos: [] };
+  const total = Number.isSafeInteger(published.completed) && Number.isSafeInteger(published.pending) ? published.completed + published.pending : null;
+  const upcoming = published.drives
     .filter((drive) => drive.date >= new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }))
     .slice(0, 4);
 
   return (
     <section className="mcct-public-impact" aria-labelledby="mcct-public-impact-title">
       <div className="mcct-public-impact-inner">
-        {content.hasCounts && (
+        {designPreview && !content && (
+          <p className="mcct-public-preview-note" role="note">Design preview · Actual donation figures have not been published yet.</p>
+        )}
+        {published.hasCounts && (
           <div className="mcct-public-impact-card">
             <div className="mcct-public-impact-header">
               <div>
-                <p className="mcct-public-overline"><span aria-hidden="true" className="mcct-public-signal" /> COMMUNITY IMPACT · UPDATED WEEKLY</p>
+                <p className="mcct-public-overline mcct-public-live-label"><span aria-hidden="true" className="mcct-public-live-dot" /> LIVE</p>
                 <h2 id="mcct-public-impact-title">Every donation. A step towards hope.</h2>
               </div>
-              {updatedDate && <span className="mcct-public-update">Last updated {updatedDate}</span>}
             </div>
             <div className="mcct-public-impact-grid">
               <ImpactNumber amount={total} label="Total recorded" />
-              <ImpactNumber amount={content.completed} label="Completed donations" />
-              <ImpactNumber amount={content.pending} label="Pending donations" />
+              <ImpactNumber amount={published.completed} label="Completed donations" />
+              <ImpactNumber amount={published.pending} label="Pending donations" />
             </div>
-            <p className="mcct-public-disclaimer">Figures are verified and published by Mamta Care Charitable Trust. They are not real-time donor submissions.</p>
+            <p className="mcct-public-disclaimer">Figures are verified and published by Mamta Care Charitable Trust.</p>
           </div>
         )}
 
@@ -146,14 +147,14 @@ export default function WebsiteUpdates() {
           </div>
         )}
 
-        {!!content.photos.length && (
+        {!!published.photos.length && (
           <div className="mcct-public-block">
             <div className="mcct-public-block-heading">
               <p className="mcct-public-overline">MOMENTS THAT MATTER</p>
               <h2>From our community</h2>
             </div>
             <div className="mcct-public-photos">
-              {content.photos.slice(0, 8).map((photo) => (
+              {published.photos.slice(0, 8).map((photo) => (
                 <figure key={photo.id} className="mcct-public-photo">
                   <img src={PUBLIC_MEDIA_BASE + photo.url} alt={photo.caption} loading="lazy" decoding="async" />
                   <figcaption>{photo.caption}</figcaption>
