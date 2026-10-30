@@ -37,7 +37,8 @@ function validContent(payload) {
       )
     : [];
   if (!hasCounts && !drives.length && !photos.length) return null;
-  return { hasCounts, completed, pending, drives, photos, updatedAt: payload.updatedAt || null };
+  const wigsDonated = Number.isSafeInteger(payload.wigsDonated) && payload.wigsDonated >= 0 ? payload.wigsDonated : null;
+  return { hasCounts, completed, pending, drives, photos, wigsDonated, updatedAt: payload.updatedAt || null };
 }
 
 const numberFormat = new Intl.NumberFormat("en-IN");
@@ -134,6 +135,7 @@ export default function WebsiteUpdates() {
   if (!content && !metrics && !designPreview) return null;
   const published = { ...(content || { drives: [], photos: [] }), hasCounts: Boolean(metrics) || designPreview, completed: metrics?.completed ?? null, pending: metrics?.pending ?? null };
   const total = Number.isSafeInteger(published.completed) && Number.isSafeInteger(published.pending) ? published.completed + published.pending : null;
+  const wigsDonated = Number.isSafeInteger(content?.wigsDonated) ? content.wigsDonated : 242;
   const indiaDateParts = new Intl.DateTimeFormat("en-GB", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Asia/Kolkata" }).formatToParts(new Date());
   const indiaPart = (type) => indiaDateParts.find((part) => part.type === type)?.value || "";
   const indiaToday = `${indiaPart("year")}-${indiaPart("month")}-${indiaPart("day")}`;
@@ -161,6 +163,18 @@ export default function WebsiteUpdates() {
               <ImpactNumber amount={published.pending} label="Pending donations" />
             </div>
             <p className="mcct-public-disclaimer">Figures are verified and published by Mamta Care Charitable Trust.</p>
+          </div>
+        )}
+
+        {(published.hasCounts || designPreview) && (
+          <div className="mcct-public-wigs" aria-label="Wigs donated to date">
+            <div className="mcct-public-wigs-icon" aria-hidden="true">♡</div>
+            <div className="mcct-public-wigs-info">
+              <p className="mcct-public-overline">A LITTLE COMFORT. A LOT OF HOPE.</p>
+              <h3>Wigs donated to date</h3>
+              <p>Bringing confidence and care to cancer patients.</p>
+            </div>
+            <div className="mcct-public-wigs-number"><ImpactNumber amount={wigsDonated} label="Wigs donated" /></div>
           </div>
         )}
 
