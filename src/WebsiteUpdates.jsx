@@ -187,7 +187,6 @@ export default function WebsiteUpdates() {
             <p className="mcct-public-disclaimer">Figures are verified and published by Mamta Care Charitable Trust.</p>
           </div>
         )}
-        {(published.hasCounts || designPreview) && <div className="mcct-wig-manual" aria-label="Wig donation impact"><span>Wigs donated</span><strong>2,189</strong><small>Manually maintained figure</small></div>}
 
         {!!upcoming.length && (
           <div className="mcct-public-block">
