@@ -6,6 +6,7 @@ import { motion, useInView, useReducedMotion } from "framer-motion";
  * or handles donor records. Publishing is controlled independently.
  */
 const FEED = "https://mamta-website-content-control.bharathairseva-in.workers.dev/api/public";
+const HAIR_METRICS_FEED = "/api/hair-impact";
 const PUBLIC_MEDIA_BASE = "https://mamta-website-content-control.bharathairseva-in.workers.dev";
 
 function safeLink(value) {
@@ -44,6 +45,7 @@ const dateFormat = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "sh
 
 function usePublishedWebsiteUpdates() {
   const [content, setContent] = useState(null);
+  const [metrics, setMetrics] = useState(null);
   useEffect(() => {
     let live = true;
     let running = false;
@@ -70,7 +72,23 @@ function usePublishedWebsiteUpdates() {
       document.removeEventListener("visibilitychange", get);
     };
   }, []);
-  return content;
+  useEffect(() => {
+    let active = true;
+    const update = async () => {
+      try {
+        const r = await fetch(HAIR_METRICS_FEED, { cache: "no-store" });
+        if (!r.ok) return;
+        const data = await r.json();
+        if (active && data.ok && Number.isSafeInteger(data.total) &&
+            Number.isSafeInteger(data.completed) && Number.isSafeInteger(data.pending) &&
+            data.total === data.completed + data.pending) setMetrics(data);
+      } catch { /* retain most recent valid totals */ }
+    };
+    update();
+    const interval = setInterval(update, 120000);
+    return () => { active = false; clearInterval(interval); };
+  }, []);
+  return { content, metrics };
 }
 
 function ImpactNumber({ amount, label }) {
@@ -156,10 +174,10 @@ function DailyCampaignTargets() {
 }
 
 export default function WebsiteUpdates() {
-  const content = usePublishedWebsiteUpdates();
+  const { content, metrics } = usePublishedWebsiteUpdates();
   const designPreview = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("mcct_preview") === "1";
-  if (!content && !designPreview) return null;
-  const published = content || { hasCounts: true, completed: null, pending: null, drives: [], photos: [] };
+  if (!content && !metrics && !designPreview) return null;
+  const published = { ...(content || { hasCounts: false, completed: null, pending: null, drives: [], photos: [] }), ...(metrics ? {hasCounts: true,completed:metrics.completed,pending:metrics.pending}: {}) };
   const total = Number.isSafeInteger(published.completed) && Number.isSafeInteger(published.pending) ? published.completed + published.pending : null;
   const upcoming = published.drives
     .filter((drive) => drive.date >= new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }))
