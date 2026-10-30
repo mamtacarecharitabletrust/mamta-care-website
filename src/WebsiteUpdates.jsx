@@ -128,66 +128,24 @@ function ImpactNumber({ amount, label }) {
   );
 }
 
-/**
- * Public goal projections, not recorded donations.
- * Campaign model: each India-local calendar day adds goals of
- * 10 registrations, 5 completions and 5 follow-up cases.
- * Verified counts above are NEVER incremented by this model.
- */
-const CAMPAIGN_START_UTC = Date.UTC(2026, 9, 30);
-function campaignDayInIndia() {
-  const parts = new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit"
-  }).formatToParts(new Date());
-  const part = (type) => Number(parts.find((entry) => entry.type === type)?.value);
-  const dayUtc = Date.UTC(part("year"), part("month") - 1, part("day"));
-  return Math.max(1, Math.floor((dayUtc - CAMPAIGN_START_UTC) / 86400000) + 1);
-}
-function DailyCampaignTargets() {
-  const [day, setDay] = useState(campaignDayInIndia);
-  useEffect(() => {
-    const interval = setInterval(() => setDay(campaignDayInIndia()), 60000);
-    return () => clearInterval(interval);
-  }, []);
-  return (
-    <div className="mcct-daily-campaign" aria-labelledby="mcct-goal-heading">
-      <div className="mcct-daily-head">
-        <div>
-          <p className="mcct-public-overline">DAILY CAMPAIGN · TARGETS</p>
-          <h3 id="mcct-goal-heading">Our ambition grows every day.</h3>
-          <p>Campaign projection since 30 October 2026 · day {numberFormat.format(day)}</p>
-        </div>
-        <div className="mcct-daily-pace">+10 <span>planned per day</span></div>
-      </div>
-      <div className="mcct-daily-targets">
-        <ImpactNumber amount={day * 10} label="Target registrations" />
-        <ImpactNumber amount={day * 5} label="Target completions" />
-        <ImpactNumber amount={day * 5} label="Target follow-ups" />
-      </div>
-      <div className="mcct-daily-distribution" aria-hidden="true"><span /><span /></div>
-      <p className="mcct-daily-explanation">
-        Illustrative campaign goals (+10 registrations, +5 completions and +5 follow-ups per day).
-        These projections are not actual donor submissions or completed donations.
-      </p>
-    </div>
-  );
-}
-
 export default function WebsiteUpdates() {
   const { content, metrics } = usePublishedWebsiteUpdates();
   const designPreview = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("mcct_preview") === "1";
   if (!content && !metrics && !designPreview) return null;
-  const published = { ...(content || { hasCounts: false, completed: null, pending: null, drives: [], photos: [] }), ...(metrics ? {hasCounts: true,completed:metrics.completed,pending:metrics.pending}: {}) };
+  const published = { ...(content || { drives: [], photos: [] }), hasCounts: Boolean(metrics) || designPreview, completed: metrics?.completed ?? null, pending: metrics?.pending ?? null };
   const total = Number.isSafeInteger(published.completed) && Number.isSafeInteger(published.pending) ? published.completed + published.pending : null;
-  const upcoming = published.drives
-    .filter((drive) => drive.date >= new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }))
+  const indiaDateParts = new Intl.DateTimeFormat("en-GB", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Asia/Kolkata" }).formatToParts(new Date());
+  const indiaPart = (type) => indiaDateParts.find((part) => part.type === type)?.value || "";
+  const indiaToday = `${indiaPart("year")}-${indiaPart("month")}-${indiaPart("day")}`;
+  const upcoming = (published.drives || [])
+    .filter((drive) => drive.date >= indiaToday)
     .slice(0, 4);
 
   return (
     <section className="mcct-public-impact" aria-labelledby="mcct-public-impact-title">
       <div className="mcct-public-impact-inner">
-        {designPreview && !content && (
-          <p className="mcct-public-preview-note" role="note">Design preview · Actual donation figures have not been published yet.</p>
+        {designPreview && !metrics && (
+          <p className="mcct-public-preview-note" role="note">Design preview · Connected donation figures are unavailable.</p>
         )}
         {published.hasCounts && (
           <div className="mcct-public-impact-card">
@@ -230,7 +188,7 @@ export default function WebsiteUpdates() {
           </div>
         )}
 
-        {!!published.photos.length && (
+        {!!(published.photos || []).length && (
           <div className="mcct-public-block">
             <div className="mcct-public-block-heading">
               <p className="mcct-public-overline">MOMENTS THAT MATTER</p>
