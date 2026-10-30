@@ -1,64 +1,49 @@
-// Public Vercel function: aggregate-only Google Apps Script proxy.
-// Keeps private Sheet data inaccessible and does not query Cloudflare D1.
-const isCount = n => Number.isSafeInteger(n) && n >= 0 && n <= 1000000000;
-export default async function handler(request, response) {
-  response.setHeader("Content-Type", "application/json; charset=utf-8");
-  response.setHeader("X-Content-Type-Options", "nosniff");
-  if (request.method !== "GET") return response.status(405).json({ ok: false });
-  const url = process.env.GOOGLE_HAIR_METRICS_URL || "";
-  if (!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(url)) {
-    response.setHeader("Cache-Control", "no-store");
-    return response.status(503).json({ ok: false, error: "Google metrics source not configured" });
+// Mamta Care public hair donation impact. Read-only Google Sheets aggregate; no D1.
+const valid = n => Number.isSafeInteger(n) && n >= 0 && n <= 1000000000;
+const SOURCE_TOTAL = 2469, SOURCE_PENDING = 53;
+const BASE_TOTAL = 986, BASE_PENDING = 70;
+export default async function handler(req, res) {
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  if (req.method !== "GET") return res.status(405).json({ok:false});
+  const endpoint = process.env.GOOGLE_HAIR_METRICS_URL || "";
+  if (!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(endpoint)) {
+    res.setHeader("Cache-Control","no-store");
+    return res.status(503).json({ok:false,error:"Google Sheets counter not configured"});
   }
+  const abort = new AbortController();
+  const timer = setTimeout(() => abort.abort(), 10000);
   try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 10000);
-    let upstream;
+    const upstream = await fetch(endpoint,{redirect:"follow",signal:abort.signal,headers:{Accept:"application/json"}});
+    if (!upstream.ok) throw new Error("Sheet endpoint failed");
+    const sheet = await upstream.json();
+    if (sheet.ok!==true || !valid(sheet.total) || !valid(sheet.completed) ||
+        !valid(sheet.pending) || sheet.completed+sheet.pending!==sheet.total)
+      throw new Error("Invalid source counts");
+    let baseTotal = BASE_TOTAL, pendingOffset = BASE_PENDING-SOURCE_PENDING;
     try {
-      upstream = await fetch(url, { redirect: "follow", signal: controller.signal,
-        headers: { Accept: "application/json" } });
-    } finally { clearTimeout(timer); }
-    if (!upstream.ok) throw new Error("Upstream unavailable");
-    const data = await upstream.json();
-    if (data?.ok !== true || !isCount(data.total) || !isCount(data.completed) ||
-        !isCount(data.pending) || data.completed + data.pending !== data.total) {
-      throw new Error("Invalid aggregate payload");
-    }
-    // Administrator corrections are stored in Cloudflare KV, never Donor Desk D1.
-    // Google Sheets remains authoritative for new registrations and verifications.
-    let total = data.total;
-    let pending = data.pending;
-    try {
-      const configController = new AbortController();
-      const timeout = setTimeout(() => configController.abort(), 4000);
-      let configResponse;
+      const cAbort = new AbortController();
+      const cTimer = setTimeout(() => cAbort.abort(), 2800);
       try {
-        configResponse = await fetch(
-          "https://mamta-website-content-control.bharathairseva-in.workers.dev/api/counter-config",
-          { signal: configController.signal, headers: { Accept: "application/json" } }
-        );
-      } finally { clearTimeout(timeout); }
-      if (configResponse.ok) {
-        const cfg = await configResponse.json();
-        if (cfg?.ok === true && isCount(cfg.baselineTotal) &&
-            Number.isSafeInteger(cfg.pendingAdjustment) &&
-            Math.abs(cfg.pendingAdjustment) <= 100000) {
-          const newTotal = total + cfg.baselineTotal - 2469;
-          const newPending = pending + cfg.pendingAdjustment;
-          if (isCount(newTotal) && isCount(newPending) && newPending <= newTotal) {
-            total = newTotal;
-            pending = newPending;
+        const response = await fetch("https://mamta-website-content-control.bharathairseva-in.workers.dev/api/counter-config",
+          {signal:cAbort.signal,headers:{Accept:"application/json"}});
+        if (response.ok) {
+          const config = await response.json();
+          if (config.ok === true && valid(config.baselineTotal) &&
+              Number.isSafeInteger(config.pendingAdjustment) && Math.abs(config.pendingAdjustment)<=100000) {
+            baseTotal = config.baselineTotal;
+            pendingOffset = config.pendingAdjustment;
           }
         }
-      }
-    } catch {
-      // Retain the Google Sheets-only totals if settings are temporarily unavailable.
-    }
-    response.setHeader("Cache-Control", "public, s-maxage=120, stale-while-revalidate=240");
-    return response.status(200).json({ ok: true, total,
-      completed: total - pending, pending, source: "google_sheets" });
+      } finally { clearTimeout(cTimer); }
+    } catch { /* Historical owner baseline is the safe fallback. */ }
+    const total = baseTotal + sheet.total - SOURCE_TOTAL;
+    const pending = sheet.pending + pendingOffset;
+    if (!valid(total)||!valid(pending)||pending>total) throw new Error("Counter reconciliation required");
+    res.setHeader("Cache-Control","public, s-maxage=45, stale-while-revalidate=90");
+    return res.status(200).json({ok:true,total,completed:total-pending,pending,source:"google_sheets"});
   } catch {
-    response.setHeader("Cache-Control", "no-store");
-    return response.status(503).json({ ok: false, error: "Metrics temporarily unavailable" });
-  }
+    res.setHeader("Cache-Control","no-store");
+    return res.status(503).json({ok:false,error:"Counters unavailable"});
+  } finally { clearTimeout(timer); }
 }
