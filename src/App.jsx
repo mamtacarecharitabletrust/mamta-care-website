@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import HairDonationRegistration from "./HairDonationRegistration";
+import OfficialDocuments from "./OfficialDocuments";
 
 import {
 
@@ -395,6 +396,7 @@ function Layout({ children }) {
               Our Work
 
             </Link>
+            <Link to="/official-documents">Official Documents</Link>
 
             <a
 
@@ -545,6 +547,8 @@ function Layout({ children }) {
               Go Green
 
             </Link>
+            <br />
+            <Link to="/official-documents">Official Documents</Link>
 
             <br />
 
@@ -4594,6 +4598,7 @@ function AppRoutes() {
 
           />
 
+          <Route path="/official-documents" element={<OfficialDocuments />} />
           <Route path="/hair-registration" element={<HairDonationRegistration />} />
 
           <Route
