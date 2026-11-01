@@ -13,6 +13,40 @@ const CATEGORIES = {
 };
 const PUBLIC_PATH = /^\/documents\/[0-9a-f-]{36}\.pdf$/i;
 
+const OFFICIAL_COPIES = [
+  {
+    id: "official-trust-registration-2022",
+    category: "trust_registration",
+    title: "Trust Registration Certificate",
+    issuer: "Assistant Charity Commissioner, Jalgaon, Maharashtra",
+    reference: "E-1613/Jalgaon",
+    issuedOn: "2022-11-02",
+    note: "Original Marathi registration certificate. Single-page public copy; reference translation excluded.",
+    url: "/official-documents/Mamta_Care_Original_Marathi_Registration_Certificate.pdf"
+  },
+  {
+    id: "official-ngo-darpan-2025",
+    category: "darpan",
+    title: "NGO Darpan Portal Record",
+    issuer: "Government of India · NITI Aayog",
+    reference: "MH/2025/0518578",
+    issuedOn: "2025-02-09",
+    note: "Original two-page Darpan portal record provided by the Trust. The supplied record shows Active.",
+    url: "/official-documents/NPODARPAN.pdf"
+  },
+  {
+    id: "official-pan-trust",
+    category: "pan",
+    title: "Trust PAN Card",
+    issuer: "Income Tax Department · Government of India",
+    reference: "Trust PAN (view original copy)",
+    note: "Public copy of the PAN card supplied and approved by the Trust for publication.",
+    url: "/official-documents/pan.pdf"
+  }
+];
+const documentURL = (doc) =>
+  doc.url.startsWith("/official-documents/") ? doc.url : CONTENT_ORIGIN + doc.url;
+
 function displayDate(value) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value || "")) return "";
   const d = new Date(value + "T00:00:00Z");
@@ -20,7 +54,7 @@ function displayDate(value) {
 }
 
 export default function OfficialDocuments() {
-  const [state, setState] = useState({ loading: true, documents: [], error: false });
+  const [state, setState] = useState({ loading: false, documents: OFFICIAL_COPIES, error: false });
   useEffect(() => {
     const ctrl = new AbortController();
     fetch(CONTENT_ORIGIN + "/api/public", { signal: ctrl.signal, cache: "no-store" })
@@ -33,10 +67,10 @@ export default function OfficialDocuments() {
         const documents = Array.isArray(payload.documents) ? payload.documents.filter(
           (item) => item && PUBLIC_PATH.test(item.url || "") && typeof item.title === "string"
         ).slice(0, 16) : [];
-        setState({ loading: false, documents, error: false });
+        setState({ loading: false, documents: [...OFFICIAL_COPIES, ...documents.filter(d => !OFFICIAL_COPIES.some(x => x.category === d.category))], error: false });
       })
       .catch((err) => {
-        if (err.name !== "AbortError") setState({ loading: false, documents: [], error: true });
+        if (err.name !== "AbortError") setState({ loading: false, documents: OFFICIAL_COPIES, error: false });
       });
     return () => ctrl.abort();
   }, []);
@@ -74,7 +108,7 @@ export default function OfficialDocuments() {
                 {doc.reference && <p><strong>Public reference:</strong> {doc.reference}</p>}
                 {displayDate(doc.issuedOn) && <p><strong>Issued:</strong> {displayDate(doc.issuedOn)}</p>}
                 {doc.note && <p className="mc-legal-note">{doc.note}</p>}
-                <a href={CONTENT_ORIGIN + doc.url} target="_blank" rel="noopener noreferrer">View public PDF <span aria-hidden="true">↗</span></a>
+                <a className="mc-official-view-pdf" href={documentURL(doc)} target="_blank" rel="noopener noreferrer" type="application/pdf">View Original Document (PDF) <span aria-hidden="true">↗</span></a>
               </article>
             ))}
           </div>
