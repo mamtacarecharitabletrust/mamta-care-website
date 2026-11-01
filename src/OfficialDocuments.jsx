@@ -108,7 +108,8 @@ export default function OfficialDocuments() {
                 {doc.reference && <p><strong>Public reference:</strong> {doc.reference}</p>}
                 {displayDate(doc.issuedOn) && <p><strong>Issued:</strong> {displayDate(doc.issuedOn)}</p>}
                 {doc.note && <p className="mc-legal-note">{doc.note}</p>}
-                <a className="mc-official-view-pdf" href={documentURL(doc)} target="_blank" rel="noopener noreferrer" type="application/pdf">View Original Document (PDF) <span aria-hidden="true">↗</span></a>
+                <a className="mc-official-view-pdf" href={documentURL(doc)} target="_blank" rel="noopener noreferrer" type="application/pdf">{doc.category === "trust_registration" ? "View Original Marathi Certificate (PDF)" : "View Original Document (PDF)"} <span aria-hidden="true">↗</span></a>
+                {doc.category === "trust_registration" && <a className="mc-official-view-pdf" style={{marginTop:"10px",background:"#edf5ef",color:"#1e5845",border:"1px solid #bfd8c7"}} href="/official-documents/Mamta_Care_Registration_English_Translation.pdf" target="_blank" rel="noopener noreferrer" type="application/pdf">View English Translation (PDF) <span aria-hidden="true">↗</span></a>}
               </article>
             ))}
           </div>
