@@ -1,0 +1,96 @@
+.mcct-occasion-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  padding: clamp(10px, 2vw, 32px);
+  background: rgba(10, 23, 28, .82);
+  backdrop-filter: blur(12px);
+  display: grid;
+  place-items: center;
+}
+.mcct-occasion-panel {
+  position: relative;
+  width: min(100%, 1020px);
+  min-height: min(720px, calc(100dvh - 22px));
+  max-height: calc(100dvh - 22px);
+  overflow-y: auto;
+  border-radius: clamp(16px, 2vw, 30px);
+  background: radial-gradient(ellipse at 65% 3%, #38766f 0, transparent 43%), linear-gradient(135deg, #0d3436, #09272c 58%, #0c3037);
+  color: #fff;
+  box-shadow: 0 24px 90px rgba(0,0,0,.36);
+  isolation: isolate;
+}
+.mcct-occasion-panel::after {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(235, 213, 155, .28);
+  pointer-events: none;
+}
+.mcct-occasion-ambient {
+  position: absolute;
+  inset: auto -110px -190px auto;
+  width: 440px;
+  height: 440px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(229,190,98,.19), transparent 68%);
+  pointer-events: none;
+}
+.mcct-occasion-close {
+  position: absolute;
+  z-index: 2;
+  top: 22px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.37);
+  background: rgba(0,0,0,.17);
+  color: #fff;
+  cursor: pointer;
+  font: 32px/1 sans-serif;
+}
+.mcct-occasion-close:focus-visible, .mcct-occasion-actions a:focus-visible, .mcct-occasion-actions button:focus-visible {
+  outline: 3px solid #e6c783;
+  outline-offset: 3px;
+}
+.mcct-occasion-content {
+  position: relative;
+  z-index: 1;
+  min-height: inherit;
+  margin: auto;
+  padding: clamp(72px, 10vh, 104px) clamp(24px, 7vw, 90px) 42px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+}
+.mcct-occasion-kicker { font-size: 12px; font-weight: 800; letter-spacing: .21em; margin: 0 0 22px; color: #e4d5af; }
+.mcct-occasion-symbol { font-size: clamp(52px, 7vw, 82px); line-height: 1.3; color: #f1d99a; }
+.mcct-occasion-eyebrow { margin: 12px 0; font-size: 12px; letter-spacing: .2em; color: #dfc995; font-weight: 700; }
+.mcct-occasion-content h1 { font-size: clamp(38px, 6vw, 76px); line-height: 1.12; letter-spacing: -.035em; color: #fff; margin: 12px auto 18px; max-width: 850px; }
+.mcct-occasion-message { max-width: 660px; font-size: clamp(16px, 2.1vw, 22px); line-height: 1.65; color: #f6f3eb; margin: 0 auto 20px; }
+.mcct-occasion-mission { max-width: 670px; font-size: clamp(14px, 1.6vw, 17px); line-height: 1.7; color: #e5e8e1; margin: 0 auto 28px; }
+.mcct-occasion-mission strong { color: #f6d998; }
+.mcct-occasion-actions { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; }
+.mcct-occasion-register, .mcct-occasion-continue {
+  min-height: 49px; display: inline-flex; justify-content: center; align-items: center;
+  text-decoration: none; padding: 12px 24px; border-radius: 999px;
+  font-weight: 800; font-size: 14px; cursor: pointer;
+}
+.mcct-occasion-register { background: #f3d89b; color: #17383c; border: 1px solid #f3d89b; }
+.mcct-occasion-continue { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.58); }
+@media (max-width: 600px) {
+  .mcct-occasion-overlay { padding: 0; }
+  .mcct-occasion-panel { min-height: 100dvh; max-height: 100dvh; border-radius: 0; }
+  .mcct-occasion-panel::after { inset: 8px; border-radius: 0; }
+  .mcct-occasion-content { padding: 80px 22px 36px; }
+  .mcct-occasion-close { top: 17px; right: 16px; }
+  .mcct-occasion-actions { width: 100%; flex-direction: column; }
+  .mcct-occasion-register, .mcct-occasion-continue { width: min(100%, 360px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mcct-occasion-overlay { backdrop-filter: none; }
+}
