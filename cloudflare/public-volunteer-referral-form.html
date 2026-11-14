@@ -1,0 +1,104 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#165c4d"><meta name="referrer" content="no-referrer">
+<title>Join as a Volunteer | Mamta Care Charitable Trust</title>
+<style nonce="MCCT_WIG_NONCE_PLACEHOLDER">
+:root{font:15px/1.52 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#23483a;background:#faf8f1}
+*{box-sizing:border-box}body{margin:0;min-height:100dvh;background:linear-gradient(140deg,#f5faf6,#faf1e0)}
+header{background:#fffef9;border-bottom:1px solid #e2dfd0;padding:13px clamp(14px,4vw,50px);display:flex;gap:12px;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px}.brand img{width:84px;height:76px;border:1px solid #e4e0d4;background:#fff;object-fit:contain;border-radius:12px}
+.brand strong{display:block;font:700 19px Georgia,serif;color:#145844}.brand small{color:#708372;letter-spacing:.05em;font-size:10px}
+header a{color:#165f4c;border:1px solid #bed7c5;border-radius:9px;text-decoration:none;padding:9px 12px;font-weight:700;font-size:12px}
+main{max-width:1090px;margin:0 auto;padding:26px 17px 55px;display:grid;grid-template-columns:.85fr 1.15fr;gap:27px}
+.intro{padding:28px 14px}
+.eyebrow{color:#ae8549;letter-spacing:.14em;font-size:11px;font-weight:850}
+h1{font:700 clamp(36px,5vw,53px)/1.1 Georgia,serif;color:#155948;letter-spacing:-.025em;margin:12px 0 20px}
+.intro p{font-size:16px;color:#587061;line-height:1.65}
+.info{background:#ecf4e9;border:1px solid #d6e5d5;border-radius:16px;padding:19px;margin:25px 0}
+.info strong{color:#135b45}.info p{font-size:13px;margin:7px 0}
+.card{background:#fff;border:1px solid #dce2d7;border-radius:21px;padding:clamp(18px,3vw,33px);box-shadow:0 17px 42px #1143341a}
+h2{font:700 27px Georgia,serif;margin:0;color:#165745}
+.muted{font-size:12px;color:#688174}
+label{display:block;margin:13px 0;color:#285243;font-weight:750;font-size:12px}
+label span{display:block;margin-bottom:5px}.req{color:#a07c40}
+input,select,textarea{display:block;width:100%;border-radius:10px;border:1px solid #c7dace;min-height:46px;padding:11px 12px;background:white;color:#254c3d;font:inherit}
+textarea{min-height:78px;resize:vertical}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #aad3b7;outline-offset:2px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.consent{display:flex;align-items:flex-start;gap:9px;font-size:12px;font-weight:500;line-height:1.5;color:#48685a}
+.consent input{flex:none;width:19px;height:19px;min-height:19px;margin:2px 0}
+.turnstile{margin:18px 0;min-height:65px}
+button{width:100%;cursor:pointer;background:#125a47;color:white;border:0;border-radius:10px;min-height:49px;font-size:15px;font-weight:750;padding:12px}
+button:disabled{opacity:.6;cursor:wait}
+#response{display:none;background:#edf7ec;color:#215741;padding:13px;border:1px solid #badabf;border-radius:10px;margin:12px 0;font-size:13px}
+#response.show{display:block}#response.bad{background:#fff1ed;color:#933831;border-color:#e7bfb7}
+footer{text-align:center;border-top:1px solid #e5e0d5;color:#6d8475;padding:20px;font-size:11px}
+@media(max-width:850px){main{grid-template-columns:1fr;gap:5px;padding:14px}.intro{padding:14px 7px}.intro p{font-size:15px}h1{font-size:38px}.brand img{width:63px;height:57px}.brand strong{font-size:15px}}
+@media(max-width:480px){.fields{grid-template-columns:1fr}.brand small{font-size:9px}.card{padding:18px}header{padding:10px}.info{margin:15px 0}}
+</style>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</head><body>
+<header><div class="brand"><img src="/volunteer-logo.jpeg" alt="Official unchanged Mamta Care Charitable Trust logo"><div><strong>Mamta Care Charitable Trust</strong><small>VOLUNTEER ENROLLMENT · PAN INDIA</small></div></div><a href="https://mamta-care-website.vercel.app/">Back to Website</a></header>
+<main>
+<section class="intro">
+<div class="eyebrow">ONE ACT OF SERVICE CAN CHANGE MANY LIVES</div>
+<h1>Join the community of care.</h1>
+<p>Help Mamta Care promote voluntary hair donation and compassionate wig support for people affected by cancer. Whether you are a trained hairstylist, community organizer or awareness volunteer, you can express your interest here.</p>
+<div class="info"><strong>What happens after registration?</strong>
+<p>1. Your application enters our existing private volunteer referral queue.</p>
+<p>2. Mamta Care reviews your details, location, role, consent and any necessary agreements.</p>
+<p>3. An official volunteer ID is issued only after authorization and verification; this form alone does not create a login or ID card.</p></div>
+<div class="info"><strong>Hair donation guidance</strong><p>Usable donated hair must measure at least <b>14 inches, excluding split ends</b>. Complete head shaving is also an accepted donation method. Only authorized professionals should undertake haircuts or shaves.</p></div>
+<p>Need help? Call <strong>8500012190</strong>.</p>
+</section>
+<section class="card">
+<h2>Volunteer interest form</h2>
+<p class="muted">Please do not upload Aadhaar, PAN, medical records or other identity documents here. Those are requested privately only if needed during onboarding.</p>
+<form id="volunteer" novalidate>
+<label><span>Full name <b class="req">*</b></span><input name="full_name" autocomplete="name" minlength="3" maxlength="110" required placeholder="Your full name"></label>
+<div class="fields">
+<label><span>Phone number <b class="req">*</b></span><input name="phone" autocomplete="tel" inputmode="tel" maxlength="30" required placeholder="+91 9876543210"></label>
+<label><span>Email (optional)</span><input name="email" type="email" autocomplete="email" maxlength="180" placeholder="you@example.com"></label>
+<label><span>City / district <b class="req">*</b></span><input name="city" autocomplete="address-level2" minlength="2" maxlength="100" required placeholder="City and state"></label>
+<label><span>Profession / role <b class="req">*</b></span><input name="profession" minlength="2" maxlength="80" required placeholder="Hairstylist, student, teacher…"></label>
+</div>
+<label><span>How would you like to help? <b class="req">*</b></span>
+<select name="interest" required>
+<option value="Hair Collection">Hair Collection</option>
+<option value="Hair Styling">Hair Styling</option>
+<option value="Cancer Awareness">Cancer Awareness</option>
+<option value="Community Outreach">Community Outreach</option>
+<option value="Other">Other</option>
+</select>
+</label>
+<label><span>Other details (optional)</span><textarea name="note" maxlength="100" placeholder="A short note about your experience or availability"></textarea></label>
+<label class="consent"><input type="checkbox" name="consent_confirmed" required><span>I consent to Mamta Care contacting me for volunteer screening, safety training, agreement and identity verification where applicable.</span></label>
+<label class="consent"><input type="checkbox" name="privacy_accepted" required><span>I understand the form is an expression of interest, not a guarantee of approval, employment, salary or an official volunteer ID card.</span></label>
+<div class="turnstile"><div class="cf-turnstile" data-sitekey="MCCT_WIG_SITEKEY_PLACEHOLDER" data-theme="light" data-appearance="always"></div></div>
+<button type="submit" id="submit">Submit Volunteer Interest</button>
+<div id="response" role="status" aria-live="polite"></div>
+</form>
+</section>
+</main>
+<footer>Mamta Care Charitable Trust · Your details are reviewed privately and never published in a volunteer directory without authorization.</footer>
+<script nonce="MCCT_WIG_NONCE_PLACEHOLDER">
+(function(){"use strict";
+const form=document.getElementById("volunteer"),btn=document.getElementById("submit"),box=document.getElementById("response");
+function info(text,bad=false){box.textContent=text;box.className="show"+(bad?" bad":"");box.scrollIntoView({behavior:"smooth",block:"nearest"});}
+form.addEventListener("submit",async e=>{
+ e.preventDefault();if(!form.reportValidity())return;
+ const f=Object.fromEntries(new FormData(form).entries()),token=form.querySelector('[name="cf-turnstile-response"]')?.value||"";
+ if(token.length<10){info("Please complete the security verification.",true);return;}
+ const payload={full_name:f.full_name,phone:f.phone,email:f.email||"",city:f.city,profession:f.profession,interest:f.interest,note:f.note||"",consent_confirmed:f.consent_confirmed==="on",privacy_accepted:f.privacy_accepted==="on",cf_turnstile_response:token};
+ btn.disabled=true;
+ try{
+  const r=await fetch("/api/public/volunteer-referrals",{method:"POST",credentials:"same-origin",cache:"no-store",headers:{"Content-Type":"application/json","X-Mamta-Public":"1"},body:JSON.stringify(payload)});
+  const d=await r.json().catch(()=>({ok:false,error:"Unexpected response"}));
+  if(!r.ok||!d.ok)throw Error(d.error||"Unable to submit interest");
+  info("Your interest has been recorded for review."+(d.reference?" Reference: "+d.reference+".":"")+" Mamta Care will contact eligible volunteers. No official ID is issued yet.");
+  form.reset();
+ }catch(err){info(err.message||"Unable to submit. Please call Mamta Care for assistance.",true);}
+ finally{btn.disabled=false;try{window.turnstile?.reset()}catch{}}
+});
+})();
+</script></body></html>
