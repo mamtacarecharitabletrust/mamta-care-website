@@ -26,7 +26,7 @@ test("status transitions cannot mutate completed or binned donor records",()=>{
   assert.match(worker,/mcct_ops_donor_status_events/);
 });
 test("notifications and expiry are not falsely marked sent",()=>{
-  assert.match(worker,/PENDING_CONFIGURATION/);
+  assert.match(migration,/PENDING_CONFIGURATION/);
   assert.match(worker,/automatic_expiry:false,email_delivery:false/);
   assert.match(worker,/Automated expiry is disabled/);
   assert.doesNotMatch(worker,/fetch\(['"]https?:\/\/.*send/i);
