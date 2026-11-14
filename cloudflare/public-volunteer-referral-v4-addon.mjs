@@ -36,7 +36,7 @@ async function mcctVolV4Submit(req,env){
  const rate=await env.DB.prepare("INSERT INTO mcct_public_volunteer_rate(bucket,day_ist,submissions,updated_at) VALUES(?,?,1,?) ON CONFLICT(bucket) DO UPDATE SET submissions=submissions+1,updated_at=excluded.updated_at WHERE submissions<5").bind(bucket,today,ts).run();
  if((rate.meta?.changes||0)!==1)return mcctVolV4Fail("Daily submission limit reached. Contact Mamta Care directly.",429);
  const id=crypto.randomUUID();
- const summary="Profession: "+profession+"; Interest: "+interest+(notes?"; Additional: "+notes:"");
+ const summary="Profession: "+profession+"; Interest: "+interest+(notes?"; Additional: "+notes:"")).slice(0,250);
  try{
   const inserted=await env.DB.batch([
     env.DB.prepare("INSERT INTO mca_referrals(id,referrer_type,referrer_id,name,email,phone,city,note,consent_confirmed,status,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)")
