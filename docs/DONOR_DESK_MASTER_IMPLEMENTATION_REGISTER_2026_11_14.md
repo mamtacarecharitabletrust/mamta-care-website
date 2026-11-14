@@ -18,6 +18,7 @@ This document is the canonical list of outstanding work reported in previous Mam
 - Worker V4 deployed through Cloudflare content-only API, preserving all **21 bindings**, scheduled \`*/2 * * * *\`, all 160 existing donors, 31 binned records, two Wig Desk requests, and existing V2/V3 routes. Production Worker version \`71273fa0-3627-493a-931a-e5e0f1392c8c\`; previous V3 version \`d818734d-748c-4f2f-8c4a-de266cd232d0\` available for rollback.
 - GitHub PR #17 merged after three green test workflows and successful Vercel production deployment \`dpl_4mmRRjW9ehg99uQzLtwnFU8etS64\`. Cloudflare staging compilation validated the entire 1.76 MB Worker and preserved fetch + scheduled exports.
 - No fabricated volunteer requests were submitted. Real Turnstile, signed-in volunteer-review browser flow and actual phone tests remain **not verified** in this tool environment.
+- Immediately audited and corrected one wrong volunteer review shortcut from `/premium-v3/volunteers` (unrouted) to the existing administrator-only `/premium-v3/volunteer-review` route. GitHub PR #18 merged after passing CI; updated production Worker version `f129a892-9fac-407a-9bff-80cd59491fe5`. The direct review shortcut is now grounded in the actual Worker route, not a generic overview link.
 
 
 
