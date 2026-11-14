@@ -168,6 +168,10 @@ async function mcctOpsAPI(req,env,user,path){
  const method=req.method;
  if(method==="GET"&&path==="/summary")return json(await mcctOpsSummary(env.DB));
  if(method==="GET"&&path==="/inactive")return json(await mcctOpsIdle(env.DB));
+ if(method==="GET"&&path==="/statuses"){
+   const x=await env.DB.prepare("SELECT d.id,d.full_name,d.registration_id,d.followup_status,d.updated_at,d.version FROM donors d WHERE d.followup_status IN ('Cancelled','Expired') AND NOT EXISTS(SELECT 1 FROM mc_donor_recycle b WHERE b.donor_id=d.id) ORDER BY d.updated_at DESC LIMIT 120").all();
+   return json({ok:true,records:x.results||[]});
+ }
  if(method==="GET"&&path==="/hair")return json(await mcctOpsHairList(env.DB));
  if(method==="GET"&&path==="/outbox"){
   const q=await env.DB.prepare("SELECT kind,delivery_state,COUNT(*) AS n FROM mcct_ops_notification_outbox GROUP BY kind,delivery_state ORDER BY kind").all();
