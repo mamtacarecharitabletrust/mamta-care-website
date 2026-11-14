@@ -16,6 +16,8 @@ test("volunteer registration preserves original session, Worker and approvals",(
  assert.match(addon,/MCCT_VOL_V4_PREV_FETCH\.call\(this,req,env,ctx\)/);
  assert.doesNotMatch(addon,/\.scheduled=/);
  assert.match(addon,/INSERT INTO mca_referrals/);
+ assert.ok(addon.includes('href="/premium-v3/volunteer-review"'));
+ assert.doesNotMatch(addon,/\/premium-v3\/volunteers/);
  assert.match(addon,/\"pending\",ts/);
  assert.doesNotMatch(addon,/INSERT INTO mcvol_people|INSERT INTO mcvol_accounts|UPDATE mcvol_people/);
 });
