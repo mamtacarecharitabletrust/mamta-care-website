@@ -1,7 +1,813 @@
 {
   "schemaVersion": 1,
-  "generatedAt": null,
-  "generator": "scripts/generate-occasion-dates.mjs",
-  "note": "Dates after 2027 are computed automatically by scheduled GitHub Actions and may differ from moon-sighting announcements.",
-  "entries": {}
+  "generatedAt": "2026-11-14T11:29:48.225Z",
+  "generator": "python-holidays@0.108 (calculated, not an official notice)",
+  "note": "Islamic and some Hindu lunar dates are provisional; official government and moon-sighting announcements take precedence.",
+  "entries": {
+    "2028-01-15": {
+      "id": "magh-bihu",
+      "source": "IN-AS",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-02-23": {
+      "id": "maha-shivratri",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-02-27": {
+      "id": "eid-ul-fitr",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-03-11": {
+      "id": "holi",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-03-27": {
+      "id": "gudi-padwa",
+      "source": "IN-GA",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-04-03": {
+      "id": "ram-navami",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-04-13": {
+      "id": "vaisakhi",
+      "source": "IN-HR",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-04-14": {
+      "id": "good-friday",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-04-16": {
+      "id": "easter",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-05-06": {
+      "id": "eid-ul-adha",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-05-08": {
+      "id": "buddha-purnima",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-06-04": {
+      "id": "muharram",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-08-04": {
+      "id": "milad-un-nabi",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-08-05": {
+      "id": "raksha-bandhan",
+      "source": "IN-GJ",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-08-13": {
+      "id": "janmashtami",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-08-23": {
+      "id": "ganesh-chaturthi",
+      "source": "IN-GA",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-08-24": {
+      "id": "ganesh-chaturthi",
+      "source": "IN-GA",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-09-01": {
+      "id": "onam",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-09-02": {
+      "id": "onam",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-09-03": {
+      "id": "onam",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-09-04": {
+      "id": "onam",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-09-27": {
+      "id": "dussehra",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-10-17": {
+      "id": "diwali",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-10-18": {
+      "id": "diwali",
+      "source": "IN-MH",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-10-19": {
+      "id": "bhai-dooj",
+      "source": "IN-GJ",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-10-23": {
+      "id": "chhath-puja",
+      "source": "IN-WB",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2028-11-02": {
+      "id": "guru-nanak",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-01-14": {
+      "id": "magh-bihu",
+      "source": "IN-AS",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-02-11": {
+      "id": "maha-shivratri",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-02-15": {
+      "id": "eid-ul-fitr",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-03-01": {
+      "id": "holi",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-03-30": {
+      "id": "good-friday",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-04-01": {
+      "id": "easter",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-04-14": {
+      "id": "gudi-padwa",
+      "source": "IN-GA",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-04-15": {
+      "id": "bengali-new-year",
+      "source": "IN-WB",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-04-25": {
+      "id": "eid-ul-adha",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-05-24": {
+      "id": "muharram",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-05-27": {
+      "id": "buddha-purnima",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-07-25": {
+      "id": "milad-un-nabi",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-08-22": {
+      "id": "onam",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-08-23": {
+      "id": "raksha-bandhan",
+      "source": "IN-GJ",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-08-24": {
+      "id": "onam",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-08-25": {
+      "id": "onam",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-09-01": {
+      "id": "janmashtami",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-09-11": {
+      "id": "ganesh-chaturthi",
+      "source": "IN-GA",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-09-12": {
+      "id": "ganesh-chaturthi",
+      "source": "IN-GA",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-10-16": {
+      "id": "dussehra",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-11-05": {
+      "id": "diwali",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-11-06": {
+      "id": "diwali",
+      "source": "IN-MH",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-11-07": {
+      "id": "bhai-dooj",
+      "source": "IN-GJ",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-11-11": {
+      "id": "chhath-puja",
+      "source": "IN-WB",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2029-11-21": {
+      "id": "guru-nanak",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-01-14": {
+      "id": "magh-bihu",
+      "source": "IN-AS",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-02-05": {
+      "id": "eid-ul-fitr",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-03-02": {
+      "id": "maha-shivratri",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-03-20": {
+      "id": "holi",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-04-03": {
+      "id": "gudi-padwa",
+      "source": "IN-GA",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-04-12": {
+      "id": "ram-navami",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-04-14": {
+      "id": "eid-ul-adha",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-04-15": {
+      "id": "vishu",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-04-19": {
+      "id": "good-friday",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-04-21": {
+      "id": "easter",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-05-13": {
+      "id": "muharram",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-05-17": {
+      "id": "buddha-purnima",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-07-14": {
+      "id": "milad-un-nabi",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-08-13": {
+      "id": "raksha-bandhan",
+      "source": "IN-GJ",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-08-21": {
+      "id": "janmashtami",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-09-01": {
+      "id": "ganesh-chaturthi",
+      "source": "IN-GA",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-09-02": {
+      "id": "ganesh-chaturthi",
+      "source": "IN-GA",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-09-09": {
+      "id": "onam",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-09-10": {
+      "id": "onam",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-09-11": {
+      "id": "onam",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-09-12": {
+      "id": "onam",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-10-06": {
+      "id": "dussehra",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-10-26": {
+      "id": "diwali",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-10-27": {
+      "id": "diwali",
+      "source": "IN-MH",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-10-28": {
+      "id": "bhai-dooj",
+      "source": "IN-GJ",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-11-01": {
+      "id": "chhath-puja",
+      "source": "IN-WB",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2030-11-10": {
+      "id": "guru-nanak",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-01-15": {
+      "id": "magh-bihu",
+      "source": "IN-AS",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-01-25": {
+      "id": "eid-ul-fitr",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-02-20": {
+      "id": "maha-shivratri",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-03-09": {
+      "id": "holi",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-03-24": {
+      "id": "gudi-padwa",
+      "source": "IN-GA",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-04-01": {
+      "id": "ram-navami",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-04-03": {
+      "id": "eid-ul-adha",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-04-11": {
+      "id": "good-friday",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-04-13": {
+      "id": "easter",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-04-14": {
+      "id": "vaisakhi",
+      "source": "IN-HR",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-04-15": {
+      "id": "vishu",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-05-03": {
+      "id": "muharram",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-05-07": {
+      "id": "buddha-purnima",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-07-03": {
+      "id": "milad-un-nabi",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-08-02": {
+      "id": "raksha-bandhan",
+      "source": "IN-GJ",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-08-10": {
+      "id": "janmashtami",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-08-30": {
+      "id": "onam",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-08-31": {
+      "id": "onam",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-09-01": {
+      "id": "onam",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-09-02": {
+      "id": "onam",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-09-20": {
+      "id": "ganesh-chaturthi",
+      "source": "IN-GA",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-09-21": {
+      "id": "ganesh-chaturthi",
+      "source": "IN-GA",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-10-25": {
+      "id": "dussehra",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-11-14": {
+      "id": "diwali",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-11-15": {
+      "id": "diwali",
+      "source": "IN-MH",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-11-16": {
+      "id": "bhai-dooj",
+      "source": "IN-GJ",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-11-20": {
+      "id": "chhath-puja",
+      "source": "IN-WB",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2031-11-28": {
+      "id": "guru-nanak",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-01-15": {
+      "id": "eid-ul-fitr",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-03-10": {
+      "id": "maha-shivratri",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-03-23": {
+      "id": "eid-ul-adha",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-03-26": {
+      "id": "good-friday",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-03-27": {
+      "id": "holi",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-03-28": {
+      "id": "easter",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-04-11": {
+      "id": "gudi-padwa",
+      "source": "IN-GA",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-04-13": {
+      "id": "vaisakhi",
+      "source": "IN-HR",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-04-14": {
+      "id": "vishu",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-04-19": {
+      "id": "ram-navami",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-04-21": {
+      "id": "muharram",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-05-25": {
+      "id": "buddha-purnima",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-06-21": {
+      "id": "milad-un-nabi",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-08-20": {
+      "id": "raksha-bandhan",
+      "source": "IN-GJ",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-08-21": {
+      "id": "onam",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-08-22": {
+      "id": "onam",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-08-23": {
+      "id": "onam",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-08-28": {
+      "id": "janmashtami",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-09-08": {
+      "id": "ganesh-chaturthi",
+      "source": "IN-GA",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-09-09": {
+      "id": "ganesh-chaturthi",
+      "source": "IN-GA",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-10-14": {
+      "id": "dussehra",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-11-02": {
+      "id": "diwali",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-11-03": {
+      "id": "diwali",
+      "source": "IN-MH",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-11-04": {
+      "id": "bhai-dooj",
+      "source": "IN-GJ",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-11-09": {
+      "id": "chhath-puja",
+      "source": "IN-WB",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2032-11-17": {
+      "id": "guru-nanak",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-01-03": {
+      "id": "eid-ul-fitr",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-01-14": {
+      "id": "magh-bihu",
+      "source": "IN-AS",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-02-27": {
+      "id": "maha-shivratri",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-03-12": {
+      "id": "eid-ul-adha",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-03-16": {
+      "id": "holi",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-03-31": {
+      "id": "gudi-padwa",
+      "source": "IN-GA",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-04-07": {
+      "id": "ram-navami",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-04-11": {
+      "id": "muharram",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-04-14": {
+      "id": "vaisakhi",
+      "source": "IN-HR",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-04-15": {
+      "id": "good-friday",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-04-17": {
+      "id": "easter",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-05-14": {
+      "id": "buddha-purnima",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-06-10": {
+      "id": "milad-un-nabi",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-08-10": {
+      "id": "raksha-bandhan",
+      "source": "IN-GJ",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-08-17": {
+      "id": "janmashtami",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-08-28": {
+      "id": "ganesh-chaturthi",
+      "source": "IN-GA",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-08-29": {
+      "id": "ganesh-chaturthi",
+      "source": "IN-GA",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-09-06": {
+      "id": "onam",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-09-07": {
+      "id": "onam",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-09-08": {
+      "id": "onam",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-09-09": {
+      "id": "onam",
+      "source": "IN-KL",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-10-03": {
+      "id": "dussehra",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-10-22": {
+      "id": "diwali",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-10-23": {
+      "id": "diwali",
+      "source": "IN-MH",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-10-24": {
+      "id": "bhai-dooj",
+      "source": "IN-GJ",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-10-29": {
+      "id": "chhath-puja",
+      "source": "IN-WB",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-11-06": {
+      "id": "guru-nanak",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    },
+    "2033-12-24": {
+      "id": "eid-ul-fitr",
+      "source": "IN",
+      "note": "Computed holiday; subject to state notifications and lunar observation."
+    }
+  }
 }
