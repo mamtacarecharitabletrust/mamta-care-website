@@ -6,6 +6,10 @@ on:
       - "cloudflare/donor-desk-ops-console.html"
       - "cloudflare/migrations/20261114_donor_ops_v1.sql"
       - "tests/donor-ops-safety.test.mjs"
+      - "cloudflare/donor-desk-v2-unified-addon.mjs"
+      - "cloudflare/donor-desk-v2-unified-console.html"
+      - "cloudflare/migrations/20261114_unified_donor_desk.sql"
+      - "tests/donor-desk-unified-release.test.mjs"
       - ".github/workflows/donor-ops-safety.yml"
   workflow_dispatch:
 jobs:
