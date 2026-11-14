@@ -60,7 +60,7 @@ launch_wig_maker_portal_worker_default.fetch=async function(req,env,ctx){
   const res=await MCCT_VOL_V4_PREV_FETCH.call(this,req,env,ctx);
   if(!res.ok||!String(res.headers.get("Content-Type")||"").includes("text/html"))return res;
   const text=await res.text(),anchor='<a class="tile" href="/app/volunteer-onboarding">';
-  const extra='<a class="tile" href="/premium-v3/volunteers"><b>Volunteer Interest Reviews</b><small>Website applications enter existing volunteer referral and approval workflows</small></a>';
+  const extra='<a class="tile" href="/premium-v3/volunteer-review"><b>Volunteer Interest Reviews</b><small>Website applications enter existing volunteer referral and approval workflows</small></a>';
   return new Response(text.includes(anchor)?text.replace(anchor,extra+anchor):text,{status:res.status,headers:res.headers});
  }
  return MCCT_VOL_V4_PREV_FETCH.call(this,req,env,ctx);
