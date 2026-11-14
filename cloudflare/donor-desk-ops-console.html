@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b5748"><meta name="referrer" content="no-referrer">
+<title>Mamta Care | Donor Desk Admin Operations</title>
+<style nonce="MCCT_OPS_NONCE_PLACEHOLDER">
+:root{font:15px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,sans-serif;color:#173d34;background:#f4f8f5}
+*{box-sizing:border-box}body{margin:0;min-height:100dvh}
+header{background:#0c594b;color:#fff;padding:12px clamp(15px,4vw,44px);display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:0 6px 22px #0e412d25}
+.brand{display:flex;align-items:center;gap:12px}.brand img{width:70px;height:64px;object-fit:contain;background:#fff;border-radius:11px;border:1px solid #e0efdf}
+.brand small{display:block;font-size:10px;letter-spacing:.12em;opacity:.9}.brand strong{font-size:17px}header a{color:white;text-decoration:none;font-weight:800;padding:11px 14px;border:1px solid #ffffff75;border-radius:10px}
+main{width:min(1200px,100%);margin:22px auto;padding:0 14px 40px}
+.hero{border-radius:20px;background:linear-gradient(120deg,#164b40,#277b64);color:white;padding:26px 25px;margin-bottom:16px}
+.hero h1{margin:0 0 7px;font:700 clamp(24px,4vw,35px)/1.14 Georgia,serif}.hero p{margin:0;max-width:900px;color:#ebf6ed}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:14px 0}
+.kpi{border-radius:14px;background:white;border:1px solid #d8e8db;padding:16px;box-shadow:0 8px 24px #153d2610}
+.kpi strong{font:750 clamp(26px,4vw,36px)/1.1 system-ui;display:block;color:#12634f}.kpi span{font-size:12px;color:#527364}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:15px}
+.panel{background:white;border:1px solid #dce9df;border-radius:17px;padding:19px;box-shadow:0 5px 20px #123b2110;min-width:0}
+.panel.full{grid-column:1/-1}h2{margin:0 0 8px;font-size:19px}h3{margin:12px 0 4px;font-size:14px}
+p{margin:6px 0 12px}.muted{color:#5e7569;font-size:13px}.warn{background:#fff5e6;border:1px solid #ead3a3;color:#775421;padding:11px 13px;border-radius:10px;font-size:12px}
+.ok{background:#eef9f1;border:1px solid #c4e2cb;padding:11px 13px;border-radius:10px}
+label{font-size:12px;font-weight:700;display:block;color:#3d5d50}input,select,textarea{width:100%;min-height:42px;border:1px solid #bfd4c6;border-radius:10px;padding:10px;font:inherit;background:white;color:#203e32}
+textarea{min-height:68px;resize:vertical}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+button,.btn{border:1px solid #0a624d;border-radius:10px;background:#096c52;color:white;min-height:43px;padding:10px 16px;cursor:pointer;font:750 13px system-ui;display:inline-flex;justify-content:center;align-items:center;text-decoration:none}
+button.secondary,.btn.secondary{background:#f4faf4;color:#17604e;border-color:#b6d6c4}
+button.danger{background:#a2363a;border-color:#a2363a}
+button:focus-visible,a:focus-visible{outline:3px solid #d3b86e;outline-offset:2px}button:disabled{opacity:.5;cursor:wait}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}.scroll{overflow:auto;max-width:100%}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:600px}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid #e5ede8;vertical-align:top}
+th{font-size:11px;color:#557160;letter-spacing:.03em;background:#f7faf8}
+.status{display:inline-flex;max-width:100%;border-radius:100px;background:#e7f2ec;color:#12634e;font-weight:750;padding:4px 9px}
+code{font:12px ui-monospace,monospace;word-break:break-word}
+#notice{position:sticky;top:4px;z-index:3;display:none;box-shadow:0 8px 20px #18462d1c}
+#notice.show{display:block}footer{text-align:center;color:#789081;font-size:11px;margin:20px 0}
+@media(max-width:840px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:1fr}.panel.full{grid-column:auto}}
+@media(max-width:470px){.fields{grid-template-columns:1fr}.hero{padding:19px}.brand img{width:55px;height:54px}.brand strong{font-size:15px}.kpi strong{font-size:27px}.kpi{padding:12px}.panel{padding:14px}}
+</style></head><body>
+<header><div class="brand"><img src="/volunteer-logo.jpeg" alt="Original official Mamta Care logo"><div><small>MAMTA CARE CHARITABLE TRUST</small><strong>Donor Operations</strong></div></div>
+<nav><a href="/">Back to Donor Desk</a></nav></header>
+<main>
+<section class="hero"><h1>Donor Desk · Admin Operations</h1><p>Verified audit history, donor status controls, hair custody records, 30-day inactivity review and actionable queues—without changing certificates, courier sync or existing registration IDs.</p></section>
+<div class="warn" id="notice" role="status" aria-live="polite"></div>
+<section class="kpis" aria-label="Donor desk metrics">
+<div class="kpi"><strong id="kTotal">—</strong><span>All historical donor records</span></div>
+<div class="kpi"><strong id="kPending">—</strong><span>Active pending (excludes Bin)</span></div>
+<div class="kpi"><strong id="kBin">—</strong><span>In Bin, history retained</span></div>
+<div class="kpi"><strong id="kPieces">—</strong><span>Recorded hair pieces in stock</span></div>
+</section>
+<section class="grid">
+<article class="panel"><h2>Applications and status</h2>
+<p class="muted">Cancelled and Expired are distinct statuses. Completed donors are protected. Changes require an admin session, a reason and the current record version.</p>
+<div class="actions"><button id="reload" type="button">Refresh totals</button><a class="btn secondary" href="/app/photo-decisions">Review donor photographs</a></div>
+<div id="statusCounts" class="ok">Loading status counts…</div>
+<h3>Cancelled / Expired applications</h3>
+<div class="scroll"><table><thead><tr><th>Donor</th><th>Status</th><th>Action</th></tr></thead><tbody id="statusRows"></tbody></table></div>
+</article>
+<article class="panel"><h2>30-day inactivity checks</h2>
+<p class="muted">Applicants with no activity for 30+ days and no recorded courier/hand collection, fabrication receipt or verified certificate are flagged for review.</p>
+<div class="warn">Automatic rejection and emails remain off until the email bridge is verified. Detection and review run safely without deleting records.</div>
+<div class="actions"><button type="button" id="scan">Scan for inactivity</button><button type="button" id="loadIdle" class="secondary">Show candidates</button></div>
+<p id="idleSummary" class="muted"></p>
+<div class="scroll"><table><thead><tr><th>Donor</th><th>Last update</th><th>Action</th></tr></thead><tbody id="idleRows"></tbody></table></div>
+</article>
+<article class="panel full"><h2>Hair inventory · Custody and transfers</h2>
+<p class="muted">Track who currently holds received hair, the number of ponytails or braids, location and collection mode. A movement is always recorded in a separate audit trail. These entries begin from zero and do not estimate unrecorded older stock.</p>
+<form id="newHair" class="fields">
+<label>Source type<select name="source_type"><option>donor</option><option>salon</option><option>volunteer</option><option>hospital</option><option>drive</option><option>other</option></select></label>
+<label>Source description<input name="source_label" maxlength="160" placeholder="Donor, salon or collection drive"></label>
+<label>Hair form<select name="hair_form"><option>ponytail</option><option>braid</option><option>mixed</option><option>loose</option></select></label>
+<label>Number of pieces<input type="number" min="1" max="10000" name="piece_count" required value="1"></label>
+<label>Hair length (inches, optional)<input type="number" min="1" max="80" step="0.5" name="length_inches" placeholder="14"></label>
+<label>Collection mode<select name="collection_mode"><option>courier</option><option>hand</option><option>salon</option><option>drive</option><option>other</option></select></label>
+<label>Current custodian<select name="custodian_type"><option>center</option><option>volunteer</option><option>staff</option><option>salon</option><option>hospital</option><option>fabricator</option><option>other</option></select></label>
+<label>Custodian name/reference<input name="custodian_ref" maxlength="140" placeholder="Name or centre reference"></label>
+<label>Location<input name="location" required maxlength="120" value="Nashik"></label>
+<label>Donor UUID (optional)<input name="donor_id" maxlength="36" placeholder="Existing Donor Desk UUID"></label>
+<label>Notes<textarea name="note" maxlength="500"></textarea></label>
+<div class="actions"><button type="submit">Record hair received</button></div>
+</form>
+<div class="actions"><button type="button" id="reloadHair" class="secondary">Refresh hair stock</button></div>
+<div class="scroll"><table><thead><tr><th>Form / Qty</th><th>Collection</th><th>Custodian / Place</th><th>Stage</th><th>Action</th></tr></thead><tbody id="hairRows"></tbody></table></div>
+</article>
+<article class="panel"><h2>Feedback and communication</h2>
+<p class="muted">The system queues feedback only after a donation is Completed and a certificate URL exists. Notification delivery has not been enabled: no WhatsApp, SMS or email is marked as sent.</p>
+<div id="outboxCounts" class="ok">Checking delivery queue…</div>
+</article>
+<article class="panel"><h2>Live website counts</h2>
+<p class="muted">Donor Desk counts are calculated from D1 and exclude binned, cancelled and expired records from pending. The website's all-time public totals still depend on the historical Google Sheets registry and require a separate reconciliation step.</p>
+<a class="btn secondary" href="https://mamta-care-website.vercel.app/" target="_blank" rel="noopener noreferrer">Open public website</a>
+</article>
+</section><footer>Authorized Mamta Care administrator only · No photographs or donor contact details are public</footer>
+</main>
+<script nonce="MCCT_OPS_NONCE_PLACEHOLDER">
+(function(){"use strict";
+const $=id=>document.getElementById(id);
+const apiBase="/api/admin/ops";
+const safeDate=ts=>ts?new Date(ts*1000).toLocaleDateString("en-IN"):"—";
+let pending=false;
+function notice(msg,bad){const n=$("notice");n.className="warn show";n.textContent=msg;n.style.color=bad?"#9b262a":"#21614e";}
+async function api(path,options){
+const cfg={credentials:"same-origin",cache:"no-store",...(options||{})};
+const r=await fetch(apiBase+path,cfg);const x=await r.json().catch(()=>({ok:false,error:"Unexpected server response"}));
+if(!r.ok||!x.ok)throw Error(x.error||"Request failed");return x;
+}
+function post(data){return {method:"POST",headers:{"Content-Type":"application/json","X-Mamta-Desk":"1"},body:JSON.stringify(data)};}
+function node(tag,text,parent,cls){const el=document.createElement(tag);if(text!==undefined)el.textContent=String(text);if(cls)el.className=cls;if(parent)parent.append(el);return el;}
+function button(label,fn,cls){const el=document.createElement("button");el.type="button";el.textContent=label;el.className=cls||"secondary";el.onclick=fn;return el;}
+async function refresh(){
+try{const x=await api("/summary");
+$("kTotal").textContent=x.status.historical_total||0;
+$("kPending").textContent=x.status.pending||0;
+$("kBin").textContent=x.status.in_bin||0;
+$("kPieces").textContent=x.hair.available_pieces||0;
+$("statusCounts").textContent="Completed: "+(x.status.completed||0)+" · Old Cleared: "+(x.status.old_cleared||0)+" · Cancelled: "+(x.status.cancelled||0)+" · Expired: "+(x.status.expired||0)+" · Photos waiting for review: "+x.photos_to_review;
+$("outboxCounts").textContent=x.notifications.length?x.notifications.map(r=>r.kind+" · "+r.delivery_state+": "+r.n).join(" | "):"No queued feedback or expiry notifications.";
+}catch(e){notice(e.message,true)}
+}
+async function statuses(){
+try{const x=await api("/statuses");const host=$("statusRows");host.replaceChildren();
+for(const d of x.records){const tr=node("tr",undefined,host),cell=node("td",undefined,tr);
+node("strong",d.full_name||"Donor",cell);node("div",d.registration_id||d.id,cell,"muted");
+node("td",d.followup_status,tr);
+const actions=node("td",undefined,tr);
+actions.append(button("Reopen",()=>changeStatus(d,"reopen")));
+}
+if(!x.records.length)node("tr","No cancelled or expired applications",host);
+}catch(e){notice(e.message,true)}
+}
+async function changeStatus(d,action){
+const reason=prompt("Please enter a detailed reason for "+action+" (at least 8 characters):","");
+if(reason===null)return;
+if(reason.trim().length<8){notice("Please enter a meaningful reason of at least 8 characters",true);return;}
+if(!confirm("Confirm "+action+" for "+(d.full_name||d.registration_id||d.id)+"?"))return;
+try{await api("/donors/"+encodeURIComponent(d.id)+"/"+action,post({version:d.version,reason:reason.trim()}));notice("Status updated successfully.");await Promise.all([refresh(),statuses(),idle()]);}catch(e){notice(e.message,true)}
+}
+async function idle(){
+try{const x=await api("/inactive");$("idleSummary").textContent=x.count+" potentially inactive donors. Showing up to "+x.candidates.length+". These have not been automatically expired.";
+const host=$("idleRows");host.replaceChildren();
+for(const d of x.candidates){const tr=node("tr",undefined,host),cell=node("td",undefined,tr);node("strong",d.full_name,cell);node("div",d.registration_id||d.id,cell,"muted");
+node("td",safeDate(d.updated_at),tr);const actions=node("td",undefined,tr);actions.append(button("Cancel with reason",()=>changeStatus(d,"cancel"),"danger"));}
+if(!x.candidates.length)node("tr","No inactive unreceived applicants",host);
+}catch(e){notice(e.message,true)}
+}
+async function hair(){
+try{const x=await api("/hair");const host=$("hairRows");host.replaceChildren();
+for(const d of x.lots){const tr=node("tr",undefined,host);
+node("td",d.hair_form+" · "+d.piece_count,tr);node("td",d.collection_mode,tr);
+node("td",d.custodian_type+" · "+(d.custodian_ref||"—")+" · "+d.location,tr);
+node("td",d.stage,tr);
+const controls=node("td",undefined,tr);
+if(!["consumed","closed"].includes(d.stage))controls.append(button("Transfer",()=>transfer(d)));
+}
+if(!x.lots.length)node("tr","No stock recorded yet — older inventory is not inferred automatically",host);
+}catch(e){notice(e.message,true)}
+}
+async function transfer(d){
+const dest=prompt("New current custodian type (staff, volunteer, salon, hospital, center, fabricator, other)",d.custodian_type);if(dest===null)return;
+const where=prompt("New location",d.location);if(where===null)return;
+const ref=prompt("Custodian name/reference",d.custodian_ref||"");if(ref===null)return;
+const stage=prompt("Stage (received, in_transit, with_custodian, at_fabricator, consumed, closed)",d.stage);if(stage===null)return;
+const note=prompt("Transfer note",d.note||"");if(note===null)return;
+if(!confirm("Move all "+d.piece_count+" pieces to "+ref+" in "+where+"?"))return;
+try{await api("/hair/"+encodeURIComponent(d.id)+"/move",post({version:d.version,custodian_type:dest.trim(),location:where.trim(),custodian_ref:ref.trim(),stage:stage.trim(),note:note.trim()}));notice("Hair custody transfer recorded.");await Promise.all([hair(),refresh()]);}catch(e){notice(e.message,true)}
+}
+$("newHair").onsubmit=async function(ev){ev.preventDefault();const form=ev.currentTarget;
+const data=Object.fromEntries(new FormData(form).entries());data.piece_count=Number(data.piece_count);
+try{await api("/hair",post(data));notice("Hair lot added with full audit history.");form.reset();await Promise.all([hair(),refresh()]);}catch(e){notice(e.message,true)}
+};
+$("reload").onclick=()=>{refresh();statuses()};
+$("reloadHair").onclick=hair;
+$("loadIdle").onclick=idle;
+$("scan").onclick=async()=>{try{const x=await api("/scan",post({}));notice("Reviewed "+x.review_queue+" queued records. No donors were expired or notified.");await Promise.all([idle(),refresh()]);}catch(e){notice(e.message,true)}};
+Promise.all([refresh(),statuses(),idle(),hair()]).catch(e=>notice(e.message,true));
+})();
+</script>
+</body></html>
