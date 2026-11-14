@@ -9,6 +9,18 @@ This document is the canonical list of outstanding work reported in previous Mam
 
 ## Release history and production facts
 
+
+### 14 November 2026: Free Wig Intake & Permanent Photo Auto-Reconciliation V3
+- Existing Google Form free-wig entry is replaced on the public website with a **consent-attested, Turnstile-protected Cloudflare request page** at \`/request-free-wig\`. The original Mamta Care logo remains unchanged and separate from the form artwork.
+- D1 public request staging uses two new **additive-only** tables: \`mcct_public_wig_intakes\` (private recipient/contact information, consent and state) and \`mcct_public_wig_rate\` (HMAC-pseudonymized daily request rate). Five requests per daily hashed-IP bucket; duplicate contact/day safe. No diagnosis or identity-proof upload is requested.
+- Admin \`/admin-wig-intakes\` privately reviews new requests; accepted requests are inserted idempotently into existing \`wig_requests\` with status **pending**, and a \`wig_events\` audit. Rejected requests require an admin note. No wig allocation, payment or recipient email is falsely reported.
+- Existing accepted website photo reviews are now **automatically reconciled by the current two-minute cron** once a genuine official registration ID exists on the intake and a single matching donor has been imported. This does not create a new registration ID or an artificial donor.
+- Recovered an accepted registration missing its official ID from Form Responses row 143, after verifying the dated sequence, consent and hidden intake-ledger identity. Assigned unique \`2026-101104/M/2022\`; repaired hidden ledger row 71 and D1 intake registration link. Existing two-minute import successfully added the donor. Linked it plus another already registered accepted photo case to the donor directory with audited \`mcct_ops_review_links\` and \`donor_events\`.
+- Verified after recovery: **160 donor records, 31 binned, 2 accepted photo reviews linked, 4 accepted reviews without authoritative form/ledger matches**. These four cannot safely be assigned official IDs until their source registration is recovered. Previously 54 feedback notifications remain queued and **unsent**.
+- The future-year festival calendar and official website artwork are unrelated and untouched.
+- Real Turnstile submission and signed-in mobile-browser acceptance testing remain unverified through automated tools; don't mark these as passed without a real user test.
+
+
 ### 14 November 2026: Unified Operations V2 production release
 - Deployed the consolidated private administrator hub at `/admin-ops` on the **existing Cloudflare Donor Desk Worker** (GitHub PR #15). Its links route directly to the established donor, photo, courier, hand collection, certificate, salon, hospital, volunteer and wig maker workspaces, subject to their original role and session checks.
 - Added a receipt-to-inventory reconciliation queue, audited partial hair-lot splitting (piece-count conservation and retry keys), stock CSV export, camera/photo AWB lookup where browser BarcodeDetector is supported, and manual fallback.
@@ -42,7 +54,7 @@ This document is the canonical list of outstanding work reported in previous Mam
 | D03 | Automatically expire dormant, not-donated registrations after 30 days without progress | **Review scanner deployed, actual expiry OFF** | Exclude received, in-transit, verified, binned and completed; email must deliver or retry before completing expiry |
 | D04 | Expiry emails with reason and safe re-registration link; retain ID/history, reopenable queue | **Not delivered** | Verified outbound mail, idempotent expiry, retry history, no deletions, re-registration preserves source lineage |
 | D05 | Admin photo review: visible Reviewed/Accept/Reject buttons after inspecting two photos | **Existing review decisions plus V2 queue links; full official workflow pending** | Reviewed accepts one real record, locks decision, stores audit and handles corrections |
-| D06 | Reviewed applicant automatically enters assignable donor list, receives official registration ID in Sheet column M, state in N, consistent with website form | **Partial V2: manual verified link to existing ID; automatic Sheet ID generation still outstanding** | Test with synthetic application, no duplicate registration ID, no premature certificate or email |
+| D06 | Reviewed applicant automatically enters assignable donor list, receives official registration ID in Sheet column M, state in N, consistent with website form | **V3 partial: two reviewed applications reconciled, one missing official ID issued; cron now auto-links if official ID exists; four remain unregistered and Apps Script generation still outstanding** | Test with synthetic application, no duplicate registration ID, no premature certificate or email |
 | D07 | Two-photo intake (front hair forward and back), camera upload, minimum 14 inches or complete head shave, consent, optional email | **Partially existing** | Android/iOS camera and gallery work, independent of social or website source, source metadata preserved |
 | D08 | Volunteer/staff allocation by city and state, first-come-first-served, hours-ago display, phone visibility restriction | **Existing but integration review pending** | All donors viewable, only assigned donors editable, admin-only actions blocked |
 | D09 | Unique official registration IDs and 2022-series formatting, never overwrite existing IDs | **Existing and must be preserved** | Idempotent Google Sheet scripts, import and Cloudflare donor IDs map one-to-one |
@@ -78,7 +90,7 @@ This document is the canonical list of outstanding work reported in previous Mam
 
 | ID | Requirement | Current status | Required acceptance test |
 | --- | --- | --- | --- |
-| P01 | "Request a Free Wig" replaces Google Form with Cloudflare while preserving cases | **Outstanding migration** | End-to-end intake, consent, maker allocation and recipient privacy |
+| P01 | "Request a Free Wig" replaces Google Form with Cloudflare while preserving cases | **V3 deployed pending live user acceptance check: public secure form, admin review and existing Wig Desk import** | End-to-end intake, consent, maker allocation and recipient privacy |
 | P02 | Wig requests and inventory visible in Donor Desk, maker logins, maker progress and delivery | **Existing modules with navigation/reporting bugs** | Wig Desk and Fabricator buttons open real pages, not return to overview |
 | P03 | Hospital partner login, wig requests and agreement/document workflows | **Partially existing** | Hospital request reaches maker, consent recorded, patient identity restricted |
 | P04 | Salon collaboration, ₹249 one-time non-refundable onboarding, partner login and donor submission review | **Partially existing** | Only approved salon records can submit; admin approvals create correct pending donor; no refund logic |
@@ -129,5 +141,7 @@ This document is the canonical list of outstanding work reported in previous Mam
 - Recycle/Bin: 31 rows (29 have pending-type follow-up statuses historically).
 - After Operations V1 scheduled run: 3 safely flagged inactivity-review candidates; 54 queued feedback-email records **not sent**.
 - Newly recorded physical hair-stock lots: zero at deployment. This is an empty **new ledger**, not a claim that Mamta Care has no existing hair stock.
+
+Latest donor-count point-in-time after V3 reconciliation: 160 D1 donor rows, 31 recycle/bin rows, two photo-review donor links, four unmatched accepted photo cases. Wig intake has no manufactured test-patient records.
 
 This register is the authoritative remaining-work checklist. It should be revised only after verified deployment and cross-system testing.
