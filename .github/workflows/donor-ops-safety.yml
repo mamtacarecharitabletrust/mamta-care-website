@@ -10,6 +10,11 @@ on:
       - "cloudflare/donor-desk-v2-unified-console.html"
       - "cloudflare/migrations/20261114_unified_donor_desk.sql"
       - "tests/donor-desk-unified-release.test.mjs"
+      - "cloudflare/public-wig-intake-v3-addon.mjs"
+      - "cloudflare/public-wig-intake-form.html"
+      - "cloudflare/public-wig-intake-admin.html"
+      - "cloudflare/migrations/20261114_public_wig_intakes.sql"
+      - "tests/public-wig-intake-and-review-link.test.mjs"
       - ".github/workflows/donor-ops-safety.yml"
   workflow_dispatch:
 jobs:

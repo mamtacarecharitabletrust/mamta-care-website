@@ -79,7 +79,7 @@ const info = {
 
   wigRequestForm:
 
-    "https://forms.gle/dUsSyhYEC37SsRTe6",
+    "https://mamta-donor-desk-launch-new.bharathairseva-in.workers.dev/request-free-wig",
 
   volunteerForm:
 

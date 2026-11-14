@@ -1,0 +1,108 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#165d4c"><meta name="referrer" content="no-referrer">
+<title>Wig Support Review | Mamta Care Admin</title>
+<style nonce="MCCT_WIG_NONCE_PLACEHOLDER">
+:root{font:14px/1.55 Inter,ui-sans-serif,system-ui,sans-serif;color:#194036;background:#f2f7f4}*{box-sizing:border-box}
+body{margin:0;min-height:100dvh}
+header{background:#145d4b;color:white;padding:13px clamp(14px,4vw,45px);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+header .brand{display:flex;align-items:center;gap:11px}header img{width:69px;height:65px;object-fit:contain;background:white;border-radius:10px}
+header b{display:block;font:700 19px Georgia,serif}header small{font-size:11px;opacity:.88}
+header a{color:white;text-decoration:none;border:1px solid #b7d2c8;padding:10px 12px;border-radius:9px;font-weight:700;font-size:12px}
+main{max-width:1190px;padding:22px 16px 55px;margin:0 auto}
+.hero{background:linear-gradient(125deg,#135e4d,#2a876d);color:white;border-radius:18px;padding:22px;display:flex;gap:20px;justify-content:space-between;align-items:center}
+.hero h1{font:700 clamp(24px,4vw,34px)/1.1 Georgia,serif;margin:0 0 8px}.hero p{margin:0;color:#e3f0e9}
+.pill{border:1px solid #d4e6b8;border-radius:100px;padding:9px 14px;font-weight:800;white-space:nowrap}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}
+.stat{padding:18px;background:white;border:1px solid #d5e2d9;border-radius:13px}.stat strong{display:block;font-size:30px;color:#0d664f}.stat span{font-size:12px;color:#668174}
+.panel{background:white;border-radius:17px;border:1px solid #d3e3d8;padding:20px;box-shadow:0 7px 25px #18392d0b}
+.panel h2{margin:0 0 5px;font:700 22px Georgia,serif}
+.note{padding:12px;margin:13px 0;border-radius:10px;background:#fff6e5;color:#7b5a2b;font-size:12px}
+button{cursor:pointer;padding:10px 14px;font-weight:750;font-size:12px;border-radius:9px;border:1px solid #17644d;background:#166e52;color:white;min-height:40px}
+button.secondary{background:#eff7f0;color:#17644d;border-color:#b1d3bc}
+button.warn{background:#fff3f2;color:#873936;border-color:#e9b6ac}
+button:disabled{opacity:.55;cursor:wait}button:focus-visible,a:focus-visible{outline:3px solid #d7be81;outline-offset:2px}
+.actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin:12px 0}
+.table-wrap{overflow:auto}
+table{border-collapse:collapse;width:100%;min-width:690px;font-size:12px}
+th,td{text-align:left;vertical-align:top;padding:11px 9px;border-bottom:1px solid #e2eee6}
+th{font-size:11px;color:#68796d;background:#f6fbf7}
+.case{font-weight:800;color:#175744}.muted{color:#6b8072;font-size:11px}
+.status{display:inline-block;padding:4px 10px;border-radius:100px;background:#eff6ee;color:#176748;font-weight:750}
+.status.imported{background:#e0f5e7;color:#14563f}.status.rejected{background:#fff0ee;color:#8e423b}
+#message{display:none;padding:13px;margin:12px 0;border-radius:10px;background:#edf9ed;color:#17553d;border:1px solid #c5e2c5}
+#message.show{display:block}#message.bad{background:#fff1f0;border-color:#e6bfbb;color:#882f30}
+footer{font-size:11px;color:#6a8173;text-align:center;margin:24px}
+@media(max-width:690px){.hero .pill{display:none}.stats{grid-template-columns:repeat(2,1fr)}.panel{padding:14px}.stat{padding:14px}.stat strong{font-size:25px}}
+</style></head>
+<body>
+<header><div class="brand"><img src="/volunteer-logo.jpeg" alt="Original official Mamta Care Charitable Trust logo"><div><b>Mamta Care · Wig Support</b><small>CONFIDENTIAL ADMINISTRATOR REVIEW</small></div></div>
+<nav><a href="/admin-ops">Unified Admin</a> <a href="/">Donor Desk</a></nav>
+</header>
+<main><div class="hero"><div><h1>Public wig support applications</h1><p>Review consent, urgency and requested preferences before importing a case to the existing Wig Desk. No case is automatically approved or allocated.</p></div><div class="pill">ADMIN ONLY</div></div>
+<section class="stats" aria-label="Application status">
+<div class="stat"><strong id="pending">—</strong><span>Pending review</span></div>
+<div class="stat"><strong id="imported">—</strong><span>Imported to Wig Desk</span></div>
+<div class="stat"><strong id="rejected">—</strong><span>Rejected with reason</span></div>
+</section>
+<section class="panel">
+<h2>Request review queue</h2><p class="muted">Only authorized Mamta Care administrators can see recipient details.</p>
+<div class="note">Importing places the request into the existing Wig Desk with status <b>pending</b>. It does not promise availability, automatically approve a wig or send a donor message. Contact recipients according to your established privacy policy.</div>
+<div class="actions"><button type="button" id="refresh">Refresh requests</button><a href="/request-free-wig" target="_blank" rel="noopener noreferrer" style="font-size:12px;color:#17644d">View public form</a></div>
+<div id="message" role="status" aria-live="polite"></div>
+<div class="table-wrap"><table><thead><tr><th>Recipient</th><th>Contact / City</th><th>Preferences</th><th>Status</th><th>Action</th></tr></thead><tbody id="records"></tbody></table></div>
+</section>
+<footer>Mamta Care Charitable Trust · Wig request data private · No diagnosis or identity proof required by this form</footer>
+</main>
+<script nonce="MCCT_WIG_NONCE_PLACEHOLDER">
+(function(){"use strict";
+const $=id=>document.getElementById(id),url="/api/admin/ops/v3/wig-intakes";
+function show(text,bad=false){const n=$("message");n.textContent=text;n.className="show"+(bad?" bad":"");}
+function node(tag,text,parent,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=String(text);if(cls)n.className=cls;if(parent)parent.append(n);return n;}
+async function api(path="",options={}){
+ const r=await fetch(url+path,{credentials:"same-origin",cache:"no-store",...options});
+ const d=await r.json().catch(()=>({ok:false,error:"Unexpected server response"}));if(!r.ok||!d.ok)throw Error(d.error||"Unable to read Wig Desk");return d;
+}
+function post(v){return {method:"POST",headers:{"Content-Type":"application/json","X-Mamta-Desk":"1"},body:JSON.stringify(v)};}
+async function decide(row,action){
+ const label=action==="import"?"import into existing Wig Desk":"reject";
+ const reason=prompt("Reason to "+label+" this case (at least 8 characters):","");
+ if(reason===null)return;
+ if(reason.trim().length<8){show("A meaningful review reason is required.",true);return;}
+ if(!confirm("Confirm "+label+" for "+row.recipient_name+"? No automated message will be sent."))return;
+ try{
+  const r=await api("/"+encodeURIComponent(row.id)+"/"+action,post({reason:reason.trim()}));
+  show(action==="import"?"Request transferred to Wig Desk as pending. Reference: "+r.wig_request_id:"Request marked rejected with audit details. Recipient has not been notified.");
+  await load();
+ }catch(e){show(e.message,true);}
+}
+async function load(){
+ try{
+  const d=await api(),sum=Object.fromEntries(d.stats.map(x=>[x.status,x.n]));
+  $("pending").textContent=sum.PENDING||0;$("imported").textContent=sum.IMPORTED||0;$("rejected").textContent=sum.REJECTED||0;
+  const host=$("records");host.replaceChildren();
+  for(const row of d.requests){
+   const tr=node("tr",undefined,host),who=node("td",undefined,tr);
+   node("b",row.recipient_name,who,"case");node("div",new Date(row.created_at*1000).toLocaleDateString("en-IN"),who,"muted");
+   const contact=node("td",undefined,tr);node("div",row.recipient_phone,contact);node("small",row.city,contact,"muted");
+   const prefs=node("td",undefined,tr);node("div",row.hair_material+" · "+row.urgency,prefs);
+   if(row.cap_size)node("small","Cap: "+row.cap_size,prefs,"muted");
+   if(row.note)node("div",row.note,prefs,"muted");
+   const stat=node("td",undefined,tr);node("span",row.status,stat,"status "+row.status.toLowerCase());
+   const act=node("td",undefined,tr);
+   if(row.status==="PENDING"){
+    act.append(node("div",undefined,undefined,"actions"));
+    act.firstChild.append(Object.assign(document.createElement("button"),{type:"button",textContent:"Import to Wig Desk",onclick:()=>decide(row,"import")}));
+    act.firstChild.append(Object.assign(document.createElement("button"),{type:"button",textContent:"Reject with reason",className:"warn",onclick:()=>decide(row,"reject")}));
+   }else{
+    node("div",row.review_note||"Reviewed",act,"muted");
+    if(row.wig_request_id)node("code",row.wig_request_id,act,"muted");
+   }
+  }
+  if(!d.requests.length)node("tr","No public wig support requests have been submitted yet.",host);
+ }catch(e){show(e.message,true);}
+}
+$("refresh").onclick=load;
+void load();
+})();
+</script></body></html>
