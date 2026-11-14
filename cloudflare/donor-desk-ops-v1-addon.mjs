@@ -4,6 +4,19 @@
    Original Worker module default remains unchanged.
    The separately maintained HTML source is embedded as MCCT_OPS_HTML at deploy time.
 */
+// Add a small, admin-only navigation entry to the EXISTING Donor Desk.
+// The existing page, registration and certificate controls are not replaced.
+if(typeof PAGE==="string"&&!PAGE.includes('id="mcctOpsLink"')){
+  const anchor='<span id="who"></span>';
+  const menu='<a id="mcctOpsLink" href="/admin-ops" hidden style="background:#e7f4eb;color:#185e49;padding:10px 12px;border-radius:10px;text-decoration:none;font-size:12px;font-weight:850;margin-right:8px">Admin Operations</a>';
+  if(PAGE.includes(anchor))PAGE=PAGE.replace(anchor,menu+anchor);
+  const onLogin="me=m.user;$('login').classList.add('hide');";
+  const show="me=m.user;const mcctOpsNav=document.getElementById('mcctOpsLink');if(mcctOpsNav)mcctOpsNav.hidden=me.role!=='admin';$('login').classList.add('hide');";
+  if(PAGE.includes(onLogin))PAGE=PAGE.replace(onLogin,show);
+  const onLogout="$('who').textContent='';";
+  const hide="const mcctOpsNav=document.getElementById('mcctOpsLink');if(mcctOpsNav)mcctOpsNav.hidden=true;$('who').textContent='';";
+  if(PAGE.includes(onLogout))PAGE=PAGE.replace(onLogout,hide);
+}
 const MCCT_OPS_PREVIOUS_FETCH=launch_wig_maker_portal_worker_default.fetch;
 const MCCT_OPS_PREVIOUS_SCHEDULED=launch_wig_maker_portal_worker_default.scheduled;
 const MCCT_OPS_PENDING="('Pending','Not answered','Call again')";
