@@ -60,7 +60,7 @@ footer{color:#6c8073;text-align:center;margin:25px 0;font-size:11px}
 <header class="header"><div class="brand">
 <img src="/volunteer-logo.jpeg" alt="Original approved Mamta Care logo, unchanged">
 <div><small>MAMTA CARE CHARITABLE TRUST</small><strong>Unified Donor Desk</strong></div></div>
-<nav class="nav-top"><a href="/app">Donor Desk</a><a href="/app/mission">Mission Control</a><a href="/api/logout">Sign out</a></nav></header>
+<nav class="nav-top"><a href="/app">Donor Desk</a><a href="/app/mission">Mission Control</a><button id="signout" type="button" style="background:#f5f9f6;color:#165942;border:1px solid #b9d9c7;border-radius:9px;padding:9px 12px;font-weight:750">Sign out</button></nav></header>
 <main class="container">
 <section class="hero"><div><span class="eyebrow">AUTHORIZED ADMINISTRATION · RELEASE V2</span><h1>Everything in one workspace.</h1>
 <p>Donor follow-up, photo verification, hair custody, couriers, certificates, wig support, salons, volunteers and safe communication workflows—without changing original registrations.</p></div>
@@ -198,6 +198,7 @@ footer{color:#6c8073;text-align:center;margin:25px 0;font-size:11px}
 (function(){"use strict";
 const $=s=>document.getElementById(s);
 const base="/api/admin/ops/v2";
+$("signout").onclick=async()=>{try{await fetch("/api/logout",{method:"POST",headers:{"Content-Type":"application/json","X-Mamta-Desk":"1"},body:"{}",credentials:"same-origin"});}finally{location.assign("/");}};
 let currentTab="overview",cameraStream=null,scannerLoop=0,detecting=false;
 function alertUser(t,bad=false){const x=$("msg");x.textContent=t;x.className="alert show"+(bad?" bad":"");x.scrollIntoView({block:"nearest",behavior:"smooth"});}
 function elem(tag,text,parent,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=String(text);if(cls)n.className=cls;if(parent)parent.appendChild(n);return n;}
