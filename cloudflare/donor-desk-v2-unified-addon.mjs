@@ -10,7 +10,7 @@ const MCCT_V2_STAGES=new Set(["received","in_transit","with_custodian","at_fabri
 const MCCT_V2_CUSTODIANS=new Set(["staff","volunteer","salon","hospital","center","fabricator","other"]);
 function mcctV2Str(v,len=160){return String(v??"").trim().slice(0,len)}
 function mcctV2Err(message,status=400){return json({ok:false,error:message},status)}
-function mcctV2IST(){return new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Kolkata",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date())}
+function mcctV2IST(){const p=new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Kolkata",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());const v=k=>p.find(x=>x.type===k)?.value||"";return v("year")+"-"+v("month")+"-"+v("day")}
 function mcctV2SafeCsv(v){
  const s=String(v??"").replace(/\r?\n/g," ").slice(0,1200);
  const f=/^[=+\-@]/.test(s)?"'"+s:s;
