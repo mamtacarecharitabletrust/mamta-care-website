@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": null,
+  "generator": "scripts/generate-occasion-dates.mjs",
+  "note": "Dates after 2027 are computed automatically by scheduled GitHub Actions and may differ from moon-sighting announcements.",
+  "entries": {}
+}

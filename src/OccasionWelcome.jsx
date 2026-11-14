@@ -1,6 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { occasionOn } from "./lib/occasionCalendar";
 import ChildrensDayWelcome from "./ChildrensDayWelcome";
+import PremiumOccasionWelcome from "./PremiumOccasionWelcome";
 import mamtaCareLogo from "./assets/mamta-care-logo.jpeg";
 import "./styles/occasion-welcome.css";
 
@@ -123,6 +124,9 @@ export default function OccasionWelcome({ registrationUrl }) {
             closeRef={closeRef}
             contentRef={contentRef}
           />
+        ) : occasion?.artworkId ? (
+          <PremiumOccasionWelcome occasion={occasion} registrationUrl={registrationUrl}
+            onDismiss={dismiss} closeRef={closeRef} contentRef={contentRef} />
         ) : (
         <>
         <button ref={closeRef} className="mcct-occasion-close" type="button" onClick={dismiss} aria-label="Close greeting and continue to website">×</button>

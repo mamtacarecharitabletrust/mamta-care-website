@@ -18,7 +18,7 @@ test("Children's Day greeting is active from 00:00 to 23:59 IST", () => {
 
 test("Diwali appears only on its configured day", () => {
   assert.equal(occasionOn(new Date("2026-11-07T18:30:00Z"))?.id, "diwali");
-  assert.equal(occasionOn(new Date("2026-11-08T18:30:00Z")), null);
+  assert.equal(occasionOn(new Date("2026-11-08T18:30:00Z"))?.id, "govardhan-puja");
   assert.equal(occasionOn(new Date("2027-10-28T18:30:00Z"))?.id, "diwali");
 });
 

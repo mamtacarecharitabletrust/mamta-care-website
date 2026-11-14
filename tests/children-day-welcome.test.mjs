@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync, statSync } from "node:fs";
 
 const child = readFileSync("src/ChildrensDayWelcome.jsx", "utf8");
-const calendar = readFileSync("src/lib/occasionCalendar.js", "utf8");
+const catalog = readFileSync("src/lib/occasionCatalog.js", "utf8");
 const parent = readFileSync("src/OccasionWelcome.jsx", "utf8");
 const css = readFileSync("src/styles/children-day-welcome.css", "utf8");
 
@@ -23,7 +23,7 @@ test("approved children's illustration is a separate small web asset without an 
 test("Children's Day design replaces the generic occasion without affecting other festivals", () => {
   assert.match(parent, /occasion\?\.id === "childrens-day"/);
   assert.match(parent, /<ChildrensDayWelcome/);
-  assert.match(calendar, /"11-14":\s*\{ id: "childrens-day"/);
+  assert.match(catalog, /"11-14":"childrens-day"/);
 });
 
 test("no overlapping logo labels, stars, or internal popup scrollbars", () => {
