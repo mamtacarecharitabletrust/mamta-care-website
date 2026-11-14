@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { occasionOn } from "./lib/occasionCalendar";
+import ChildrensDayWelcome from "./ChildrensDayWelcome";
 import mamtaCareLogo from "./assets/mamta-care-logo.jpeg";
 import "./styles/occasion-welcome.css";
 
@@ -35,6 +36,7 @@ export default function OccasionWelcome({ registrationUrl }) {
   }, []);
 
   const visible = occasion && !dismissed;
+  const isChildrensDay = occasion?.id === "childrens-day";
 
   useLayoutEffect(() => {
     if (!visible) return undefined;
@@ -50,11 +52,12 @@ export default function OccasionWelcome({ registrationUrl }) {
     // Fit the entire greeting inside the viewport instead of adding scrollbars.
     // scrollHeight/scrollWidth are unaffected by the visual scale transform.
     const fit = () => {
+      const host = isChildrensDay ? content.parentElement : panel;
       const width = Math.max(1, content.scrollWidth);
       const height = Math.max(1, content.scrollHeight);
-      const topAndBottomRoom = panel.clientHeight < 520 ? 62 : 84;
-      const availableHeight = Math.max(1, panel.clientHeight - topAndBottomRoom);
-      const availableWidth = Math.max(1, panel.clientWidth - 28);
+      const room = isChildrensDay ? 30 : panel.clientHeight < 520 ? 62 : 84;
+      const availableHeight = Math.max(1, host.clientHeight - room);
+      const availableWidth = Math.max(1, host.clientWidth - (isChildrensDay ? 8 : 28));
       const scale = Math.min(1, availableHeight / height, availableWidth / width);
       content.style.setProperty("--mcct-occasion-fit", String(scale));
     };
@@ -62,6 +65,7 @@ export default function OccasionWelcome({ registrationUrl }) {
     const observer = typeof ResizeObserver === "function" ? new ResizeObserver(fit) : null;
     observer?.observe(panel);
     observer?.observe(content);
+    if (isChildrensDay) observer?.observe(content.parentElement);
     window.addEventListener("resize", fit);
     return () => {
       observer?.disconnect();
@@ -106,12 +110,21 @@ export default function OccasionWelcome({ registrationUrl }) {
     <div className="mcct-occasion-overlay" role="presentation">
       <section
         ref={panelRef}
-        className="mcct-occasion-panel"
+        className={`mcct-occasion-panel${isChildrensDay ? " mcct-occasion-panel--child" : ""}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="mcct-occasion-title"
         aria-describedby="mcct-occasion-message"
       >
+        {isChildrensDay ? (
+          <ChildrensDayWelcome
+            registrationUrl={registrationUrl}
+            onDismiss={dismiss}
+            closeRef={closeRef}
+            contentRef={contentRef}
+          />
+        ) : (
+        <>
         <button ref={closeRef} className="mcct-occasion-close" type="button" onClick={dismiss} aria-label="Close greeting and continue to website">×</button>
         <div className="mcct-occasion-ambient" aria-hidden="true" />
         <div ref={contentRef} className="mcct-occasion-content">
@@ -127,6 +140,8 @@ export default function OccasionWelcome({ registrationUrl }) {
             <button className="mcct-occasion-continue" type="button" onClick={dismiss}>Continue to Website</button>
           </div>
         </div>
+        </>
+        )}
       </section>
     </div>
   );
