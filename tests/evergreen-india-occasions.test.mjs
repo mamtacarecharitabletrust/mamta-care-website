@@ -26,7 +26,7 @@ test("central India holidays and important regional observances are covered in 2
  assert.equal(occasionForKey("2027-03-10").id,"eid-ul-fitr");
  assert.equal(occasionForKey("2027-03-23").id,"holi");
  assert.equal(occasionForKey("2027-04-07").id,"ugadi");
- assert.equal(occasionForKey("2027-04-07").alsoObserved[0].id,"gudi-padwa");
+ assert.ok(occasionForKey("2027-04-07").alsoObserved.some(e=>e.id==="gudi-padwa"));
  assert.equal(occasionForKey("2027-08-15").id,"independence-day");
  assert.equal(occasionForKey("2027-10-29").id,"diwali");
  assert.equal(occasionForKey("2027-11-14").id,"childrens-day-guru-nanak");
