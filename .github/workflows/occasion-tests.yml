@@ -9,6 +9,8 @@ on:
       - "src/styles/premium-occasion-welcome.css"
       - "src/assets/christmas-care-illustration.webp"
       - "scripts/generate-occasion-dates.mjs"
+      - "scripts/indian-holiday-candidates.py"
+      - ".github/workflows/india-holiday-calendar.yml"
       - "tests/evergreen-india-occasions.test.mjs"
       - "src/lib/occasionCalendar.js"
       - "src/styles/occasion-welcome.css"
@@ -28,5 +30,11 @@ jobs:
           node-version: "24"
           cache: npm
       - run: npm ci
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --disable-pip-version-check holidays==0.108
+      - run: python scripts/indian-holiday-candidates.py
+      - run: node scripts/generate-occasion-dates.mjs
       - run: npm test
       - run: npm run build
