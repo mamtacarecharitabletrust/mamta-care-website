@@ -1,0 +1,25 @@
+name: Website occasion checks
+on:
+  pull_request:
+    paths:
+      - "src/OccasionWelcome.jsx"
+      - "src/lib/occasionCalendar.js"
+      - "src/styles/occasion-welcome.css"
+      - "src/App.jsx"
+      - "tests/occasion-calendar.test.mjs"
+      - ".github/workflows/occasion-tests.yml"
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build

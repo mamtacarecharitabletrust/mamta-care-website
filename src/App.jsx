@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import HairDonationRegistration from "./HairDonationRegistration";
 import OfficialDocuments from "./OfficialDocuments";
+import OccasionWelcome from "./OccasionWelcome";
 
 import {
 
@@ -4500,8 +4501,12 @@ function AppRoutes() {
 
     useLocation();
 
+  const isHome = location.pathname === "/";
+
   return (
 
+    <>
+      {isHome && <OccasionWelcome registrationUrl={info.hairDonationForm} />}
     <AnimatePresence
 
       mode="wait"
@@ -4678,6 +4683,7 @@ function AppRoutes() {
       </motion.div>
 
     </AnimatePresence>
+    </>
 
   );
 
