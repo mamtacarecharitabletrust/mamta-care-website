@@ -23,7 +23,7 @@ function harness(user, donor){
     launch_wig_maker_portal_worker_default:worker,
     PAGE:'<header><span id="who"></span></header><script>me=m.user;$(\'login\').classList.add(\'hide\');</script>',
     MCCT_OPS_HTML:'<html><style nonce="MCCT_OPS_NONCE_PLACEHOLDER"></style><script nonce="MCCT_OPS_NONCE_PLACEHOLDER"></script></html>',
-    Response,Request,Headers,crypto:webcrypto,console,
+    Response,Request,Headers,URL,crypto:webcrypto,console,
     now:()=>1_800_000_000,
     json:(obj,status=200)=>new Response(JSON.stringify(obj),{status,headers:{"content-type":"application/json"}}),
     currentUser:async()=>user,
