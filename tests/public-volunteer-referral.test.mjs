@@ -30,7 +30,7 @@ test("public request requires anti-bot verification and consent",()=>{
 });
 test("public form preserves the actual logo, no Aadhaar or sensitive uploads",()=>{
  assert.match(page,/src="\/volunteer-logo\.jpeg"/);
- assert.match(page,/Do not upload Aadhaar/);
+ assert.match(page,/do not upload Aadhaar/i);
  assert.match(page,/cf-turnstile/);
  assert.doesNotMatch(page,/data:image\/jpeg;base64/);
  assert.doesNotMatch(page,/<input[^>]+type="file"/);
