@@ -3,6 +3,13 @@ on:
   pull_request:
     paths:
       - "src/OccasionWelcome.jsx"
+      - "src/PremiumOccasionWelcome.jsx"
+      - "src/lib/occasionCatalog.js"
+      - "src/data/occasionComputedDates.json"
+      - "src/styles/premium-occasion-welcome.css"
+      - "src/assets/christmas-care-illustration.webp"
+      - "scripts/generate-occasion-dates.mjs"
+      - "tests/evergreen-india-occasions.test.mjs"
       - "src/lib/occasionCalendar.js"
       - "src/styles/occasion-welcome.css"
       - "src/App.jsx"
