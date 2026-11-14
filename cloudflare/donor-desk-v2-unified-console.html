@@ -1,0 +1,361 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#103f37"><meta name="referrer" content="no-referrer">
+<title>Mamta Care | Unified Donor Desk Admin</title>
+<style nonce="MCCT_V2_NONCE_PLACEHOLDER">
+:root{font:14px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#193b33;background:#f1f5f2}
+*{box-sizing:border-box}body{margin:0;min-height:100dvh}a{color:inherit}a:hover{text-decoration:underline}button,select,input,textarea{font:inherit}
+button{cursor:pointer}button:disabled{opacity:.55;cursor:wait}
+.header{background:#0d5145;color:white;display:flex;align-items:center;gap:14px;justify-content:space-between;flex-wrap:wrap;padding:13px clamp(14px,4vw,50px);box-shadow:0 8px 28px #073f302b}
+.brand{display:flex;align-items:center;gap:12px}.brand img{width:69px;height:62px;background:#fff;border-radius:12px;object-fit:contain;flex:none}
+.brand small{display:block;font-size:10px;letter-spacing:.18em;opacity:.8;font-weight:750}
+.brand strong{display:block;font:700 20px/1.2 Georgia,serif}
+.nav-top{display:flex;gap:8px;flex-wrap:wrap}.nav-top a{border:1px solid #b8ddd3;color:white;text-decoration:none;border-radius:8px;padding:10px 12px;font-weight:750;font-size:12px}
+.container{max-width:1300px;margin:0 auto;padding:20px clamp(12px,3vw,30px) 55px}
+.hero{background:linear-gradient(117deg,#105847,#186d53);border-radius:20px;color:#fff;padding:clamp(18px,4vw,30px);display:flex;justify-content:space-between;align-items:center;gap:20px}
+.hero h1{font:750 clamp(26px,4vw,36px)/1.15 Georgia,serif;margin:0 0 6px}.hero p{max-width:770px;color:#d8f2e8;margin:0}
+.hero .eyebrow{letter-spacing:.12em;font-size:11px;font-weight:750;color:#d9cc9e}
+.hero .status{border:1px solid #d8ca99;border-radius:100px;padding:10px 12px;color:#f1eddb;font-weight:700;white-space:nowrap}
+.alert{display:none;padding:12px 16px;border:1px solid #e3c58f;background:#fff5dd;color:#714d1f;border-radius:12px;margin:14px 0;font-weight:600}
+.alert.show{display:block}.alert.bad{background:#fff0ed;color:#862a2a;border-color:#e4bbbb}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}
+.kpi{background:#fff;border:1px solid #dbe6de;border-radius:15px;padding:16px;box-shadow:0 8px 25px #1c463b0c}.kpi b{display:block;font-size:30px;color:#0f6651;line-height:1.15}.kpi span{color:#537466;font-size:12px}
+.tabbar{display:flex;gap:7px;flex-wrap:wrap;margin:13px 0 15px}
+.tabbar button{min-height:43px;border-radius:10px;background:white;color:#1c5f4f;border:1px solid #c5d9cd;padding:11px 13px;font-weight:700}
+.tabbar button[aria-selected=true]{background:#176b56;color:white;border-color:#176b56}
+.panel{background:#fff;border:1px solid #dbe6dd;border-radius:17px;padding:clamp(15px,3vw,23px);box-shadow:0 6px 22px #173f2e0d;margin:13px 0}
+.panel[hidden]{display:none}.panel h2{font:700 22px Georgia,serif;margin:0 0 6px;color:#144f3f}
+.panel h3{font-size:16px;margin:14px 0 6px;color:#245947}
+.note{background:#f3f8f3;border:1px solid #d9e5db;padding:12px;border-radius:10px;color:#48685a;font-size:12px;margin:12px 0}
+.warning{background:#fff8e9;color:#80592a;border-color:#ead7ae}
+.columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:12px 0}
+.tile{display:block;text-decoration:none;background:#fff;border:1px solid #d7e7dd;border-radius:14px;padding:16px;min-height:105px;transition:border-color .15s}
+.tile:hover{border-color:#50a588;text-decoration:none;background:#f8fdf9}
+.tile b{display:block;font-size:14px;color:#155d4b}.tile small{display:block;color:#5d7569;margin-top:6px;line-height:1.45;font-size:11px}
+button.primary,.action{background:#11674f;color:#fff;border:1px solid #11674f;border-radius:10px;padding:10px 14px;min-height:44px;font-weight:750}
+button.secondary,.action.secondary{color:#12644d;background:#eef7f0;border:1px solid #aacdbb}
+button.warn{color:#8c2a2f;background:#fff3f1;border:1px solid #ebbabc}
+input,select,textarea{display:block;width:100%;border:1px solid #c6d7cd;background:white;border-radius:9px;min-height:43px;padding:9px 11px;color:#1b3e31}
+label{display:block;font-weight:700;font-size:12px;color:#365f4f;margin:8px 0}
+label span{display:block;margin:4px 0}
+textarea{min-height:70px;resize:vertical}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+.table-wrap{overflow:auto;max-width:100%}
+table{border-collapse:collapse;min-width:550px;width:100%;font-size:12px}
+td,th{padding:9px 8px;vertical-align:top;text-align:left;border-bottom:1px solid #e4eee6}
+th{color:#62756c;font-weight:700;background:#f7fbf8}
+td button{min-height:34px;padding:7px 10px;border-radius:8px}
+.diminished{color:#5b7569;font-size:12px}.mono{font:12px ui-monospace,monospace;word-break:break-word}
+.row-actions{display:flex;flex-wrap:wrap;gap:7px}
+#camera{max-height:260px;width:100%;object-fit:contain;background:#0a1f18;border-radius:10px}
+#camera[hidden]{display:none}
+kbd{background:#eff3ec;border-radius:5px;padding:2px 5px}
+footer{color:#6c8073;text-align:center;margin:25px 0;font-size:11px}
+@media(max-width:950px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.columns{grid-template-columns:1fr}.hero .status{display:none}.brand strong{font-size:17px}}
+@media(max-width:520px){.cards,.fields{grid-template-columns:1fr}.header{padding:11px 13px}.brand img{width:54px;height:54px}.kpi b{font-size:25px}.tabbar button{flex:1 1 45%}.container{padding:13px 10px 36px}.hero{border-radius:14px}.panel{padding:15px}.nav-top a{font-size:11px;padding:8px 10px}}
+</style></head><body>
+<header class="header"><div class="brand">
+<img src="/volunteer-logo.jpeg" alt="Original approved Mamta Care logo, unchanged">
+<div><small>MAMTA CARE CHARITABLE TRUST</small><strong>Unified Donor Desk</strong></div></div>
+<nav class="nav-top"><a href="/app">Donor Desk</a><a href="/app/mission">Mission Control</a><a href="/api/logout">Sign out</a></nav></header>
+<main class="container">
+<section class="hero"><div><span class="eyebrow">AUTHORIZED ADMINISTRATION · RELEASE V2</span><h1>Everything in one workspace.</h1>
+<p>Donor follow-up, photo verification, hair custody, couriers, certificates, wig support, salons, volunteers and safe communication workflows—without changing original registrations.</p></div>
+<span class="status">PRIVATE · ADMIN ONLY</span></section>
+<div id="msg" class="alert" role="status" aria-live="polite"></div>
+<section class="kpis" aria-label="Live donor desk metrics">
+<div class="kpi"><b id="kTotal">—</b><span>Historical donor records</span></div>
+<div class="kpi"><b id="kPending">—</b><span>Active pending (Bin excluded)</span></div>
+<div class="kpi"><b id="kPhoto">—</b><span>Photo cases waiting / accepted unlinked</span></div>
+<div class="kpi"><b id="kStock">—</b><span>Recorded available hair pieces</span></div>
+</section>
+<nav class="tabbar" aria-label="Administration tabs" id="tabs">
+<button data-tab="overview" aria-selected="true" type="button">Overview & Shortcuts</button>
+<button data-tab="photos" aria-selected="false" type="button">Photo Review</button>
+<button data-tab="hair" aria-selected="false" type="button">Hair & Barcode</button>
+<button data-tab="donors" aria-selected="false" type="button">Donor Status</button>
+<button data-tab="communications" aria-selected="false" type="button">Messages & Feedback</button>
+<button data-tab="automation" aria-selected="false" type="button">Automation Health</button>
+</nav>
+<section id="overview" class="panel">
+<h2>All Mamta Care workspaces</h2><p class="diminished">These shortcuts open real existing modules with their original access controls. Nothing redirects to a fake placeholder overview.</p>
+<div class="cards">
+<a class="tile" href="/app"><b>Donor List & Allocation</b><small>Assigned donors, follow-up status, verification and first-come-first-served queue</small></a>
+<a class="tile" href="/app/photo-decisions"><b>Photo Review Decisions</b><small>Review front and back images; accept or reject with an audit trail</small></a>
+<a class="tile" href="/app/receipts"><b>Courier Receiving</b><small>Scan AWBs and confirm parcels received at the fabrication centre</small></a>
+<a class="tile" href="/app/hand-collections"><b>Hand Collections</b><small>Volunteer assignments, handovers and staff collections</small></a>
+<a class="tile" href="/app/operations"><b>Operations & Sync</b><small>Daily tasks, receipts, sheet sync and stage monitoring</small></a>
+<a class="tile" href="/app/print-studio"><b>Certificate Print Studio</b><small>Certificates, label printing, issue history and sticker workflow</small></a>
+<a class="tile" href="/app/print-studio/sticker"><b>Courier Stickers</b><small>Courier address labels and batches</small></a>
+<a class="tile" href="/app/salon-intakes"><b>Salon Donor Reviews</b><small>Partner-submitted donor cases and photograph review</small></a>
+<a class="tile" href="/v3-partner/admin-v135"><b>Salon Partner Accounts</b><small>Onboarding, approval and ₹249 non-refundable setup review</small></a>
+<a class="tile" href="/v3-partner/clinical/admin"><b>Hospital Wig Requests</b><small>Confidential recipient cases and hospital partnership workflow</small></a>
+<a class="tile" href="/app/volunteer-onboarding"><b>Volunteer Onboarding</b><small>Registration, agreement, document and ID issuance workspace</small></a>
+<a class="tile" href="/app/workspace/people"><b>People & Volunteer Profiles</b><small>Volunteer identities, roles, referrals and verification</small></a>
+<a class="tile" href="/app/courier-certificate-sync"><b>Certificate Courier Sync</b><small>AWB updates and Certificate Database synchronization</small></a>
+<a class="tile" href="/app/mission"><b>Mission Control</b><small>Admin overview, tasks and operational alerts</small></a>
+<a class="tile" href="/maker"><b>Wig Maker Portal</b><small>Fabrication jobs and maker progress (separate maker login)</small></a>
+<a class="tile" href="/v3-partner/clinical"><b>Hospital Partner Portal</b><small>Partner-facing wig request workflow (separate hospital login)</small></a>
+</div>
+<div class="note warning">The public website control centre is still a separate Vercel application; this dashboard does not pretend to provide single sign-on until both systems share a tested identity provider.</div>
+<div class="columns">
+<div><h3>Staff allocation snapshot</h3><div id="staffCounts" class="diminished">Loading staff…</div></div>
+<div><h3>Operational attention</h3><div id="attention" class="diminished">Loading queues…</div></div>
+</div>
+</section>
+<section id="photos" class="panel" hidden>
+<h2>Reviewed applications → Official registration</h2>
+<p class="diminished">Existing accept/reject decisions are preserved. Accepted photos are not considered registered donors until their official Google Sheet registration is present and the identity is confirmed. Never invent a registration ID.</p>
+<div class="controls"><a class="action secondary" href="/app/photo-decisions">Inspect photographs & approve</a><button type="button" class="secondary" id="refreshPhotos">Refresh review queue</button></div>
+<div class="table-wrap"><table><thead><tr><th>Submission / Date</th><th>Review</th><th>Registration linkage</th></tr></thead><tbody id="photoRows"></tbody></table></div>
+<h3>Link one accepted review to an already issued official registration</h3>
+<div class="note warning">Check donor identity against the original Google Form and both photos before linking. This action DOES NOT generate a registration number or send an automatic certificate.</div>
+<form id="reviewLink" class="fields">
+<label>Accepted submission UUID <input name="submission_uuid" id="photoUUID" required maxlength="36" placeholder="Select a case above"></label>
+<label>Official registration number <input name="registration_id" required maxlength="110" placeholder="YYYY-DDMMsequence/M/2022"></label>
+<label>Verification note <textarea name="note" required minlength="10" maxlength="450" placeholder="Describe how the photo and registration identity were matched."></textarea></label>
+<label><span>Identity confirmation</span><input type="checkbox" id="photoConfirm" style="display:inline;width:auto;min-height:20px;margin-right:9px">I verified this donor against the official registration.</label>
+<div class="controls"><button type="submit" class="primary">Link Reviewed Application</button></div>
+</form>
+</section>
+<section id="hair" class="panel" hidden>
+<h2>Hair Stock · Pieces, Custody & AWB</h2>
+<div class="columns"><div>
+<h3>Record received hair</h3>
+<form id="hairCreate" class="fields">
+<label>Collection source<select name="source_type"><option>donor</option><option>salon</option><option>volunteer</option><option>hospital</option><option>drive</option><option>other</option></select></label>
+<label>Source name/reference<input name="source_label" maxlength="160"></label>
+<label>Hair form<select name="hair_form"><option>ponytail</option><option>braid</option><option>mixed</option><option>loose</option></select></label>
+<label>Pieces<input type="number" name="piece_count" required min="1" max="10000" value="1"></label>
+<label>Hair length (inches, if measured)<input type="number" name="length_inches" min="1" max="80" step=".5"></label>
+<label>Collection mode<select name="collection_mode"><option>courier</option><option>hand</option><option>salon</option><option>drive</option><option>other</option></select></label>
+<label>Custodian<select name="custodian_type"><option>center</option><option>staff</option><option>volunteer</option><option>salon</option><option>fabricator</option><option>hospital</option><option>other</option></select></label>
+<label>Custodian name<input name="custodian_ref" maxlength="140"></label>
+<label>Current location<input name="location" required maxlength="120" value="Nashik"></label>
+<label>Donor UUID (optional)<input name="donor_id" id="newDonorUUID" maxlength="36"></label>
+<label>Notes<textarea name="note" maxlength="500"></textarea></label>
+<div class="controls"><button type="submit" class="primary">Record hair lot</button></div>
+</form>
+</div><div>
+<h3>Barcode / AWB lookup</h3><p class="diminished">Scan paper labels or a barcode photo. Scanner reads locally, checks the existing courier registry and requires confirmation in the current receiving workflow.</p>
+<label>Courier AWB<input id="awb" autocomplete="off" placeholder="Enter or scan tracking number"></label>
+<div class="controls"><button id="awbLookup" type="button" class="secondary">Find Donor</button><button id="startScanner" type="button" class="secondary">Camera Scan</button><button id="stopScanner" type="button" class="secondary">Stop</button></div>
+<video id="camera" hidden autoplay muted playsinline></video>
+<label>Scan barcode from another phone/photo<input id="barcodePhoto" type="file" accept="image/*"></label>
+<p id="awbResult" class="note" role="status">Nothing scanned yet.</p>
+<div class="controls"><a class="action secondary" href="/app/receipts">Open Received Parcels</a><a class="action secondary" href="/app/hand-collections">Open Hand Collections</a></div>
+<h3>Received hair not yet in stock ledger</h3><p class="diminished">Only receipt/collection already recorded. Quantity is never guessed.</p>
+<button id="refreshUnstocked" class="secondary" type="button">Load unreconciled receipts</button>
+<div class="table-wrap"><table><thead><tr><th>Donor / ID</th><th>Mode</th><th>Action</th></tr></thead><tbody id="unstockedRows"></tbody></table></div>
+</div></div>
+<h3>Inventory and partial transfers</h3>
+<div class="controls"><button id="refreshHair" class="secondary" type="button">Refresh Inventory</button><a class="action secondary" href="/api/admin/ops/v2/hair/export">Export Ledger CSV</a></div>
+<div class="table-wrap"><table><thead><tr><th>Lot & donor</th><th>Pieces</th><th>Current custody</th><th>Stage</th><th>Action</th></tr></thead><tbody id="hairRows"></tbody></table></div>
+</section>
+<section id="donors" class="panel" hidden>
+<h2>Application Status, Bin & 30-Day Review</h2>
+<p class="diminished">Historical Bin records remain recoverable. Cancelled replaces the intended Cleared action for new cancellations. Completed donors cannot be cancelled; all changes require admin confirmation and an audit.</p>
+<div class="controls"><a class="action secondary" href="/app">Open Donor Editor</a><button id="refreshInactive" class="secondary" type="button">Refresh Inactivity</button><button id="scanInactive" class="secondary" type="button">Run Safe Review Scan</button></div>
+<p id="inactivityInfo" class="note warning">Automatic expiry remains OFF until verified donor-email delivery and re-registration are connected.</p>
+<div class="table-wrap"><table><thead><tr><th>Donor</th><th>Last updated</th><th>Action</th></tr></thead><tbody id="inactiveRows"></tbody></table></div>
+<h3>Locate a donor and cancel with reason</h3>
+<label>Search donor name, registration ID or phone<input id="donorSearch" type="search" maxlength="80" placeholder="Authorized admin search"></label>
+<button type="button" id="findDonor" class="secondary">Search Existing Donors</button>
+<div class="table-wrap"><table><thead><tr><th>Donor & registration</th><th>Status</th><th>Action</th></tr></thead><tbody id="donorRows"></tbody></table></div>
+<div class="note warning">The public website's lifetime figures still come from historical Google Sheets. D1-only counts are not silently substituted for the official public metrics.</div>
+</section>
+<section id="communications" class="panel" hidden>
+<h2>Messaging & Certificate Feedback</h2>
+<p class="diminished">Create consent-attested drafts for registration acknowledgements, certificate feedback and inactivity notices. Maximum <strong>50 WhatsApp/SMS drafts per IST day</strong>, shared across both channels. Delivery is NOT automated and drafts are NOT counted as delivered.</p>
+<p id="commQuota" class="note">Loading quota…</p>
+<form id="commCreate" class="fields">
+<label>Existing Donor Desk UUID<input name="donor_id" maxlength="36" required></label>
+<label>Channel<select name="channel"><option>WHATSAPP</option><option>SMS</option><option>EMAIL</option></select></label>
+<label>Purpose<select name="template"><option>REGISTRATION_ACK</option><option>CERTIFICATE_FEEDBACK</option><option>EXPIRY_NOTICE</option></select></label>
+<label><span>Donor contact consent</span><input id="commConsent" type="checkbox" style="display:inline;min-height:20px;width:auto;margin-right:9px">I confirmed this donor consented to communication by the selected channel.</label>
+<div class="controls"><button class="primary" type="submit">Create Message Draft</button></div>
+</form>
+<div class="controls"><button id="refreshComms" class="secondary" type="button">Refresh Drafts</button></div>
+<div class="table-wrap"><table><thead><tr><th>Donor</th><th>Purpose</th><th>State</th><th>Manual action</th></tr></thead><tbody id="commRows"></tbody></table></div>
+<div class="note warning">Email, WhatsApp and SMS automatic sending requires a verified provider, opt-in and delivery webhooks. Do not consider “Opened” a delivery receipt.</div>
+</section>
+<section id="automation" class="panel" hidden>
+<h2>Automation & Integration Health</h2>
+<div id="automationStatus" class="note">Loading live operational readiness…</div>
+<div class="columns">
+<div><h3>Existing automated systems</h3><p>Two-minute Google Sheets donor import, staff push subscriptions and internal notifications, authorized courier/receipt sync, photo review, and visitor website greetings.</p>
+<div class="controls"><a class="action secondary" href="/app/operations">Operations Sync Monitor</a><a class="action secondary" href="/app/courier-certificate-sync">Certificate Sync</a></div></div>
+<div><h3>Outstanding external dependencies</h3><p>Verified donor-email sender; paid/authorized WhatsApp or SMS API; official Photo Review → Google registration-ID bridge; payment gateway webhook; public website impact reconciliation; secure unified SSO provider.</p>
+<div class="note warning">These services cannot safely be reported as complete merely because a table or dashboard exists. Existing donor, certificate and payment data must stay correct.</div></div></div>
+<button type="button" class="secondary" id="healthRefresh">Refresh Automation Health</button>
+</section>
+<footer>Mamta Care Charitable Trust · Private administration only · Original logo preserved · No donor data or photos cached offline</footer>
+</main>
+<script nonce="MCCT_V2_NONCE_PLACEHOLDER">
+(function(){"use strict";
+const $=s=>document.getElementById(s);
+const base="/api/admin/ops/v2";
+let currentTab="overview",cameraStream=null,scannerLoop=0,detecting=false;
+function alertUser(t,bad=false){const x=$("msg");x.textContent=t;x.className="alert show"+(bad?" bad":"");x.scrollIntoView({block:"nearest",behavior:"smooth"});}
+function elem(tag,text,parent,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=String(text);if(cls)n.className=cls;if(parent)parent.appendChild(n);return n;}
+function action(label,cb,cls="secondary"){const b=elem("button",label);b.type="button";b.className=cls;b.onclick=cb;return b;}
+function post(v){return{method:"POST",headers:{"Content-Type":"application/json","X-Mamta-Desk":"1"},body:JSON.stringify(v)};}
+async function req(path,options={},prefix=base){
+ const r=await fetch(prefix+path,{credentials:"same-origin",cache:"no-store",...options});
+ const v=await r.json().catch(()=>({ok:false,error:"Unexpected response"}));if(!r.ok||!v.ok)throw Error(v.error||"Request failed");return v;
+}
+function show(tab){currentTab=tab;for(const id of ["overview","photos","hair","donors","communications","automation"])$(id).hidden=id!==tab;
+ for(const btn of $("tabs").querySelectorAll("button"))btn.setAttribute("aria-selected",String(btn.dataset.tab===tab));
+ if(tab==="photos")void reviews();if(tab==="hair")void Promise.all([loadHair(),unstocked()]);if(tab==="donors")void inactive();if(tab==="communications")void comms();if(tab==="automation")void metrics();
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+$("tabs").onclick=e=>{const b=e.target.closest("button[data-tab]");if(b)show(b.dataset.tab);};
+const date=unix=>unix?new Date(unix*1000).toLocaleDateString("en-IN"):"—";
+async function metrics(){try{
+ const [m,s,o]=await Promise.all([req("/metrics"),req("/summary",{}, "/api/admin/ops"),req("/overview",{},"/api")]);
+ $("kTotal").textContent=s.status.historical_total||0;$("kPending").textContent=s.status.pending||0;
+ $("kPhoto").textContent=m.photo_review_pending+" / "+m.accepted_unlinked;
+ $("kStock").textContent=s.hair.available_pieces||0;
+ $("attention").textContent="Awaiting photo review: "+m.photo_review_pending+" · Accepted but unlinked: "+m.accepted_unlinked+" · Received hair not inventoried: "+m.received_missing_hair_stock+" · 30-day review candidates: "+m.expiry_review+" · Feedback/expiry emails awaiting provider: "+m.undelivered_queued;
+ const people=elem("div");people.className="table-wrap";const table=elem("table",undefined,people),body=elem("tbody",undefined,table);
+ for(const p of o.members||[]){const tr=elem("tr",undefined,body);elem("td",p.display_name||p.username,tr);elem("td","Pending "+(p.pending||0),tr);elem("td","Completed "+(p.completed||0),tr);}
+ $("staffCounts").replaceChildren(people);
+ $("automationStatus").textContent="D1 inventory lots: "+m.active_hair_lots+" · Registration reconciliation needed: "+m.accepted_unlinked+" · Daily message drafts: "+m.messaging_drafts_today+"/50 · Automatic expiry: OFF · Email/SMS/WhatsApp delivery: NOT CONNECTED.";
+}catch(e){alertUser(e.message,true)}}
+async function reviews(){try{const r=await req("/reviews"),host=$("photoRows");host.replaceChildren();
+ for(const q of r.submissions){const tr=elem("tr",undefined,host),cell=elem("td",undefined,tr);
+ elem("div",q.submission_uuid,cell,"mono");elem("small",date(q.created_at),cell,"diminished");
+ elem("td",q.decision||"Awaiting review",tr);const td=elem("td",undefined,tr);
+ if(q.linked_registration_id){elem("span",q.linked_registration_id,td,"mono");}
+ else if(q.decision==="ACCEPTED_FOR_FOLLOWUP"){td.append(action("Link official ID",()=>{$("photoUUID").value=q.submission_uuid;$("reviewLink").scrollIntoView({behavior:"smooth"});}));}
+ else elem("span","Review first",td,"diminished");
+ }
+ if(!r.submissions.length)elem("tr","No review cases",host);
+}catch(e){alertUser(e.message,true)}}
+$("refreshPhotos").onclick=reviews;
+$("reviewLink").onsubmit=async e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.currentTarget).entries());f.identity_confirmed=$("photoConfirm").checked;
+ if(!confirm("Identity confirmed against original Google Sheet and photographs? The official registration ID must already exist."))return;
+ try{const r=await req("/reviews/link",post(f));alertUser("Reviewed case safely linked to "+r.donor_name+" ("+r.registration_id+"). Certificate and email remain unchanged.");$("reviewLink").reset();await Promise.all([reviews(),metrics()]);}catch(err){alertUser(err.message,true)}};
+async function loadHair(){try{const x=await req("/hair",{},"/api/admin/ops"),host=$("hairRows");host.replaceChildren();
+ for(const q of x.lots||[]){const tr=elem("tr",undefined,host),cell=elem("td",undefined,tr);elem("div",q.id,cell,"mono");
+ if(q.donor_id)elem("small","Donor "+q.donor_id,cell,"diminished");
+ elem("td",q.piece_count+" "+q.hair_form,tr);elem("td",q.custodian_type+" — "+(q.custodian_ref||"—")+" / "+q.location,tr);elem("td",q.stage,tr);
+ const td=elem("td",undefined,tr),group=elem("div",undefined,td,"row-actions");
+ if(!["closed","consumed"].includes(q.stage)){group.append(action("Move all",()=>moveAll(q)));
+ if(q.piece_count>1)group.append(action("Split pieces",()=>split(q)));}
+ }
+ if(!x.lots?.length)elem("tr","No physical stock yet recorded in this new ledger",host);
+}catch(e){alertUser(e.message,true)}}
+async function moveAll(q){const where=prompt("Move ALL pieces to location:",q.location);if(where===null)return;
+ const type=prompt("New custodian type (staff,volunteer,salon,hospital,center,fabricator,other):",q.custodian_type);if(type===null)return;
+ const name=prompt("New custodian reference:",q.custodian_ref||"");if(name===null)return;
+ const stage=prompt("New stock stage (received,in_transit,with_custodian,at_fabricator,consumed,closed):",q.stage);if(stage===null)return;
+ const note=prompt("Movement reason (audit log):",q.note||"All-lot transfer");if(note===null)return;
+ if(!confirm("Move all "+q.piece_count+" pieces?"))return;
+ try{await req("/hair/"+q.id+"/move",post({version:q.version,location:where,custodian_type:type,custodian_ref:name,stage,note}),"/api/admin/ops");alertUser("Full-lot movement recorded.");await Promise.all([loadHair(),metrics()]);}catch(e){alertUser(e.message,true)}}
+async function split(q){const n=prompt("How many pieces? Current "+q.piece_count+"; leave at least one in this lot.","1");if(n===null)return;
+ const where=prompt("Destination location:","Nashik");if(where===null)return;
+ const type=prompt("Custodian type:","fabricator");if(type===null)return;
+ const name=prompt("Recipient name/reference:","");if(name===null)return;
+ const stage=prompt("Destination stage:","at_fabricator");if(stage===null)return;
+ const note=prompt("Reason for splitting the lot:","Transfer to fabrication");if(note===null)return;
+ if(!confirm("Split and move "+n+" out of "+q.piece_count+" pieces? Stock total will remain unchanged."))return;
+ try{const r=await req("/hair/"+q.id+"/split",post({request_key:crypto.randomUUID(),version:q.version,pieces:Number(n),location:where,custodian_type:type,custodian_ref:name,stage,note}));alertUser("Split complete: "+r.moved_pieces+" pieces transferred. "+r.remaining_pieces+" remain.");await Promise.all([loadHair(),metrics()]);}catch(e){alertUser(e.message,true)}}
+$("refreshHair").onclick=loadHair;
+$("hairCreate").onsubmit=async e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.currentTarget).entries());d.piece_count=Number(d.piece_count);
+ try{await req("/hair",post(d),"/api/admin/ops");alertUser("Received hair lot recorded and audited. Existing donor record unchanged.");e.currentTarget.reset();await Promise.all([loadHair(),unstocked(),metrics()]);}catch(err){alertUser(err.message,true)}};
+async function unstocked(){try{const r=await req("/unstocked"),host=$("unstockedRows");host.replaceChildren();
+ for(const d of r.records){const tr=elem("tr",undefined,host),td=elem("td",undefined,tr);elem("b",d.full_name,td);elem("div",d.registration_id||d.id,td,"mono");
+ elem("td",d.receipt_mode,tr);const act=elem("td",undefined,tr);act.append(action("Enter stock",()=>{$("newDonorUUID").value=d.id;$("hairCreate").scrollIntoView({behavior:"smooth"});}));}
+ if(!r.records.length)elem("tr","No received parcels awaiting manual quantity entry",host);
+}catch(e){alertUser(e.message,true)}}
+$("refreshUnstocked").onclick=unstocked;
+function awbClean(s){return String(s||"").trim().replace(/\s+/g,"").replace(/[^A-Za-z0-9-]/g,"").slice(0,45)}
+async function lookupAWB(){const awb=awbClean($("awb").value);if(awb.length<5){$("awbResult").textContent="Enter or scan a valid AWB.";return;}
+ $("awbResult").textContent="Checking AWB in existing Donor Desk courier registry…";
+ try{const r=await fetch("/api/parcel-receipts/lookup?awb="+encodeURIComponent(awb),{credentials:"same-origin",cache:"no-store"});
+ const d=await r.json().catch(()=>({}));if(r.status===404){$("awbResult").textContent="AWB not yet in Donor Desk. Enter shipment details in the donor profile before receiving.";return;}
+ if(!r.ok)throw Error(d.error||"AWB lookup failed");
+ $("awbResult").textContent=d.match?"Matched existing donor: "+(d.match.full_name||d.match.registration_id||d.match.donor_id)+". Open Received Parcels to verify receipt.":"Lookup response received. Confirm the AWB on the existing receiving page.";
+ }catch(e){$("awbResult").textContent=e.message;}}
+$("awbLookup").onclick=lookupAWB;
+let detector;
+function beep(){try{const A=window.AudioContext||window.webkitAudioContext;if(!A)return;const c=new A(),o=c.createOscillator(),g=c.createGain();o.frequency.value=950;o.type="sine";g.gain.value=.07;o.connect(g).connect(c.destination);o.start();o.stop(c.currentTime+.12);o.onended=()=>c.close();}catch{}}
+function stopCamera(){if(scannerLoop)cancelAnimationFrame(scannerLoop);scannerLoop=0;
+ if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null;}
+ $("camera").srcObject=null;$("camera").hidden=true;detecting=false;}
+async function acceptAWB(value){const code=awbClean(value);if(code.length<5)return;
+ $("awb").value=code;beep();stopCamera();await lookupAWB();}
+async function cameraTick(){if(!cameraStream||detecting)return;detecting=true;
+ try{const r=await detector.detect($("camera"));if(r.length){await acceptAWB(r[0].rawValue);return;}}
+ catch{}finally{detecting=false;}if(cameraStream)scannerLoop=requestAnimationFrame(()=>setTimeout(cameraTick,110));}
+$("startScanner").onclick=async()=>{
+ if(!("BarcodeDetector" in window)||!navigator.mediaDevices?.getUserMedia){$("awbResult").textContent="Camera barcode scanning is unavailable on this browser. Type the AWB or select a barcode photograph.";return;}
+ try{const formats=await BarcodeDetector.getSupportedFormats();const enabled=["code_128","code_39","ean_13","itf","qr_code"].filter(v=>formats.includes(v));
+ detector=new BarcodeDetector({formats:enabled.length?enabled:formats});cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false});
+ $("camera").hidden=false;$("camera").srcObject=cameraStream;await $("camera").play();$("awbResult").textContent="Point your camera at a courier barcode.";void cameraTick();}
+ catch(e){stopCamera();$("awbResult").textContent="Camera permission or barcode scan unavailable. You can still enter AWB manually.";}};
+$("stopScanner").onclick=stopCamera;
+$("barcodePhoto").onchange=async e=>{const file=e.target.files?.[0];if(!file)return;
+ if(!("BarcodeDetector" in window)){$("awbResult").textContent="Photo barcode reading is unavailable here. Type the AWB shown on the label.";return;}
+ try{const bitmap=await createImageBitmap(file);const formats=await BarcodeDetector.getSupportedFormats();const det=new BarcodeDetector({formats:formats.length?formats:undefined});const hits=await det.detect(bitmap);bitmap.close?.();
+ if(!hits.length)throw Error("No barcode identified in the photo. Try a sharper close-up or type the AWB.");
+ await acceptAWB(hits[0].rawValue);
+ }catch(err){$("awbResult").textContent=err.message||"Unable to scan the selected image.";}}
+async function inactive(){try{const r=await req("/inactive",{},"/api/admin/ops"),host=$("inactiveRows");host.replaceChildren();
+ $("inactivityInfo").textContent=r.count+" potentially inactive applications, after excluding verified, completed, received and binned records. No expiry emails have been sent automatically.";
+ for(const d of r.candidates||[]){const tr=elem("tr",undefined,host),td=elem("td",undefined,tr);elem("b",d.full_name,td);elem("div",d.registration_id||d.id,td,"mono");elem("td",date(d.updated_at),tr);
+ elem("td","Review in Donor Desk before cancellation",tr);}
+ if(!r.candidates.length)elem("tr","No inactive candidates",host);
+}catch(e){alertUser(e.message,true)}}
+$("refreshInactive").onclick=inactive;
+$("scanInactive").onclick=async()=>{try{const r=await req("/scan",post({}),"/api/admin/ops");alertUser("Review scan complete: "+r.review_queue+" candidates. No donors expired and no emails sent.");await Promise.all([inactive(),metrics()]);}catch(e){alertUser(e.message,true)}};
+$("findDonor").onclick=async()=>{const s=$("donorSearch").value.trim();if(s.length<2){alertUser("Enter at least 2 characters",true);return;}
+ try{const r=await req("/donors?q="+encodeURIComponent(s),{},"/api"),host=$("donorRows");host.replaceChildren();
+ for(const d of r.donors||r.records||[]){const tr=elem("tr",undefined,host),td=elem("td",undefined,tr);elem("b",d.full_name,td);elem("div",d.registration_id||d.id,td,"mono");elem("td",d.followup_status,tr);
+ const act=elem("td",undefined,tr);if(d.followup_status!=="Completed")act.append(action("Cancel",()=>cancelDonor(d),"warn"));}
+ if(!host.children.length)elem("tr","No donor records found",host);
+ }catch(e){alertUser(e.message,true)}};
+async function cancelDonor(d){const note=prompt("Reason for cancelling "+d.full_name+" (at least 8 characters):","");if(note===null)return;
+ if(note.trim().length<8){alertUser("A meaningful reason is required",true);return;}
+ if(!confirm("Cancel this donor's active follow-up? Existing certificate and registration records will be preserved."))return;
+ try{await req("/donors/"+d.id+"/cancel",post({version:d.version,reason:note.trim()}),"/api/admin/ops");alertUser("Donor cancelled. Full audit preserved.");await metrics();}catch(e){alertUser(e.message,true)}}
+function messageText(d){
+ const intro="Hello "+(d.full_name||"Donor")+", ";
+ const id=d.registration_id||"";
+ if(d.template==="CERTIFICATE_FEEDBACK")return intro+"thank you for donating hair through Mamta Care Charitable Trust. Your registration ID is "+id+". We would appreciate your feedback about the donation experience. Please reply to this message or contact our official team. — Mamta Care";
+ if(d.template==="EXPIRY_NOTICE")return intro+"this is a gentle follow-up regarding your hair donation registration "+id+". If you still wish to donate, please contact Mamta Care to renew your application. Your existing donation history is not deleted. — Mamta Care";
+ return intro+"thank you for choosing Mamta Care Charitable Trust for hair donation. Your registration ID is "+id+". We have recorded your interest and will guide you through the next steps. — Mamta Care";
+}
+function phoneNumber(s){const d=String(s||"").replace(/\D/g,"");return d.length===10?"91"+d:d.length===12&&d.startsWith("91")?d:null;}
+async function comms(){try{const x=await req("/communications"),host=$("commRows");host.replaceChildren();
+ $("commQuota").textContent=x.queued_today+" / 50 WhatsApp/SMS drafts created today (IST). Messages are manual, and zero are provider-verified as delivered.";
+ for(const d of x.records){const tr=elem("tr",undefined,host),td=elem("td",undefined,tr);elem("b",d.full_name,td);elem("div",d.registration_id||d.donor_id,td,"mono");
+ elem("td",d.channel+" · "+d.template,tr);elem("td",d.state,tr);
+ const act=elem("td",undefined,tr),n=elem("div",undefined,act,"row-actions");
+ n.append(action("Copy text",()=>{navigator.clipboard?.writeText(messageText(d)).then(()=>alertUser("Draft copied. Please verify recipient and consent before sending.")).catch(()=>alertUser("Unable to copy on this browser",true));}));
+ if(d.state==="DRAFT")n.append(action("Open "+d.channel,()=>openMessage(d)));
+ }
+ if(!x.records.length)elem("tr","No manual message drafts yet",host);
+}catch(e){alertUser(e.message,true)}}
+async function openMessage(d){
+ let url;const text=messageText(d);
+ if(d.channel==="WHATSAPP"){const n=phoneNumber(d.phone);if(!n){alertUser("Valid Indian mobile number required; no message opened.",true);return;}url="https://wa.me/"+n+"?text="+encodeURIComponent(text);}
+ else if(d.channel==="SMS"){const n=phoneNumber(d.phone);if(!n){alertUser("Valid Indian mobile number required.",true);return;}url="sms:+"+n+"?body="+encodeURIComponent(text);}
+ else {if(!d.email){alertUser("No email in donor record.",true);return;}url="mailto:"+encodeURIComponent(d.email)+"?subject="+encodeURIComponent("Mamta Care Charitable Trust")+"&body="+encodeURIComponent(text);}
+ if(!confirm("Open the "+d.channel+" application for "+d.full_name+"? The Donor Desk will NOT claim a message was delivered."))return;
+ window.open(url,"_blank","noopener,noreferrer");
+ try{await req("/communications/"+d.id+"/opened",post({}));alertUser("Message app opened. Delivery remains unverified.");await comms();}catch(e){alertUser(e.message,true)}
+}
+$("commCreate").onsubmit=async e=>{e.preventDefault();const v=Object.fromEntries(new FormData(e.currentTarget).entries());v.explicit_consent_attested=$("commConsent").checked;
+ if(!v.explicit_consent_attested){alertUser("Confirm donor-specific communication consent first",true);return;}
+ try{await req("/communications",post(v));alertUser("Draft queued. No WhatsApp/SMS/email has been sent automatically.");e.currentTarget.reset();await Promise.all([comms(),metrics()]);}catch(err){alertUser(err.message,true)}};
+$("refreshComms").onclick=comms;
+$("healthRefresh").onclick=metrics;
+window.addEventListener("beforeunload",stopCamera);
+void metrics();
+})();
+</script></body></html>
