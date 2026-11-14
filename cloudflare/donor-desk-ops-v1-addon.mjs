@@ -17,6 +17,16 @@ if(typeof PAGE==="string"&&!PAGE.includes('id="mcctOpsLink"')){
   const hide="const mcctOpsNav=document.getElementById('mcctOpsLink');if(mcctOpsNav)mcctOpsNav.hidden=true;$('who').textContent='';";
   if(PAGE.includes(onLogout))PAGE=PAGE.replace(onLogout,hide);
 }
+// Keep Cancelled / Expired records readable in the EXISTING donor editor;
+// status creation and reopening remain audited in Admin Operations.
+if(typeof PAGE==="string"){
+ const previous="choices(['Pending','Not answered','Call again','Cleared','Completed'],d.followup_status)";
+ const choices="choices(['Pending','Not answered','Call again',...(d.followup_status==='Cleared'||d.followup_status==='Cancelled'||d.followup_status==='Expired'?[d.followup_status]:[]),'Completed'],d.followup_status)";
+ if(PAGE.includes(previous))PAGE=PAGE.replaceAll(previous,choices);
+ const oldFilter="<option>Cleared</option><option>Completed</option>";
+ const filter="<option>Cleared</option><option>Cancelled</option><option>Expired</option><option>Completed</option>";
+ if(PAGE.includes(oldFilter))PAGE=PAGE.replaceAll(oldFilter,filter);
+}
 const MCCT_OPS_PREVIOUS_FETCH=launch_wig_maker_portal_worker_default.fetch;
 const MCCT_OPS_PREVIOUS_SCHEDULED=launch_wig_maker_portal_worker_default.scheduled;
 const MCCT_OPS_PENDING="('Pending','Not answered','Call again')";
