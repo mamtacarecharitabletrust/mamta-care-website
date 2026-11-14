@@ -10,6 +10,17 @@ This document is the canonical list of outstanding work reported in previous Mam
 ## Release history and production facts
 
 
+### 14 November 2026: Volunteer Interest Intake V4 deployed
+- The website's Volunteer registration button now opens the original-logo Cloudflare page at \`/join-volunteer\`, replacing the previous volunteer Google Form link. No volunteer existing agreement/profile/login is overwritten.
+- Public signup requires privacy/contact consent, valid phone and city, a role/profession and Cloudflare Turnstile verification. It explicitly disallows Aadhaar/PAN/document upload in the public form.
+- Requests enter the existing private \`mca_referrals\` table as \`pending\`, directly available in existing administrator volunteer-referral review. Public submissions are deduplicated per contact/day with HMAC and an IP-based 5/day rate cap. \`mcct_public_volunteer_intakes\` and \`mcct_public_volunteer_rate\` are additive D1 tables.
+- The form **does not issue a volunteer ID, create a login, collect payment, enter signed agreements or approve volunteers automatically**. Existing manual approval and document checks remain authoritative.
+- Worker V4 deployed through Cloudflare content-only API, preserving all **21 bindings**, scheduled \`*/2 * * * *\`, all 160 existing donors, 31 binned records, two Wig Desk requests, and existing V2/V3 routes. Production Worker version \`71273fa0-3627-493a-931a-e5e0f1392c8c\`; previous V3 version \`d818734d-748c-4f2f-8c4a-de266cd232d0\` available for rollback.
+- GitHub PR #17 merged after three green test workflows and successful Vercel production deployment \`dpl_4mmRRjW9ehg99uQzLtwnFU8etS64\`. Cloudflare staging compilation validated the entire 1.76 MB Worker and preserved fetch + scheduled exports.
+- No fabricated volunteer requests were submitted. Real Turnstile, signed-in volunteer-review browser flow and actual phone tests remain **not verified** in this tool environment.
+
+
+
 ### 14 November 2026: Free Wig Intake & Permanent Photo Auto-Reconciliation V3
 - Existing Google Form free-wig entry is replaced on the public website with a **consent-attested, Turnstile-protected Cloudflare request page** at \`/request-free-wig\`. The original Mamta Care logo remains unchanged and separate from the form artwork.
 - D1 public request staging uses two new **additive-only** tables: \`mcct_public_wig_intakes\` (private recipient/contact information, consent and state) and \`mcct_public_wig_rate\` (HMAC-pseudonymized daily request rate). Five requests per daily hashed-IP bucket; duplicate contact/day safe. No diagnosis or identity-proof upload is requested.
@@ -94,7 +105,7 @@ This document is the canonical list of outstanding work reported in previous Mam
 | P02 | Wig requests and inventory visible in Donor Desk, maker logins, maker progress and delivery | **Existing modules with navigation/reporting bugs** | Wig Desk and Fabricator buttons open real pages, not return to overview |
 | P03 | Hospital partner login, wig requests and agreement/document workflows | **Partially existing** | Hospital request reaches maker, consent recorded, patient identity restricted |
 | P04 | Salon collaboration, ₹249 one-time non-refundable onboarding, partner login and donor submission review | **Partially existing** | Only approved salon records can submit; admin approvals create correct pending donor; no refund logic |
-| P05 | Volunteer registration on Cloudflare, secure document collection and optional UPI verification | **Outstanding migration** | Existing profiles/agreements preserved and no manual form duplicate |
+| P05 | Volunteer registration on Cloudflare, secure document collection and optional UPI verification | **Partial V4 deployed: public consent-based interest intake feeds existing referral review; documents, any applicable payments and ID creation still require approval/verified workflows** | Existing profiles/agreements preserved and no manual form duplicate |
 | P06 | Volunteer management, city search, referrals, photo, ID proof, agreements, signatures, one-year QR-verified digital ID | **Partially existing, full QA pending** | Role, QR authenticity, Aadhaar internal-only, no donor personal data leaked |
 | P07 | Staff, volunteer, salon, hospital and website control Single Sign-On | **Outstanding** | Existing sessions migrated securely; roles remain compartmentalized |
 | P08 | Volunteer Wig Request tool and hand collection "Hair collected by me" action directly on donor | **Existing requests; visibility/permissions issues** | Button exists for correct role and updates Donor Desk, Sheet and audit |
@@ -143,5 +154,7 @@ This document is the canonical list of outstanding work reported in previous Mam
 - Newly recorded physical hair-stock lots: zero at deployment. This is an empty **new ledger**, not a claim that Mamta Care has no existing hair stock.
 
 Latest donor-count point-in-time after V3 reconciliation: 160 D1 donor rows, 31 recycle/bin rows, two photo-review donor links, four unmatched accepted photo cases. Wig intake has no manufactured test-patient records.
+
+V4 also added public volunteer interest registration to the existing referral approval queue. External email/SMS, 30-day expiry, payments, historical public counters and cross-platform SSO remain outstanding; no false delivery claim.
 
 This register is the authoritative remaining-work checklist. It should be revised only after verified deployment and cross-system testing.
