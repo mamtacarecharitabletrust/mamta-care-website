@@ -57,7 +57,7 @@ const maxYear = minYear + 5;
 const stats = {};
 for(const item of candidates){
   const date=String(item.date||"").slice(0,10);
-  if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(date))continue;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date))continue;
   const itemYear=Number(date.slice(0,4));
   if(itemYear<minYear||itemYear>maxYear)continue;
   const id=identify(String(item.name||"").trim());
@@ -71,7 +71,7 @@ for(const item of candidates){
   stats[itemYear]=(stats[itemYear]||0)+1;
 }
 const coverage=Array.from({length:6},(_,i)=>minYear+i).map(y=>({year:y,dates:Object.keys(dates).filter(k=>k.startsWith(String(y)+"-")).length}));
-process.stdout.write("Future holiday coverage "+JSON.stringify(coverage)+"\\n");
+process.stdout.write("Future holiday coverage "+JSON.stringify(coverage)+"\n");
 if(coverage.some(item=>item.dates<5))throw new Error("Calendar incomplete for at least one future year; no partial schedule will be published.");
 const rows=Object.fromEntries(Object.entries(dates).sort(([a],[b])=>a.localeCompare(b)).map(([d,x])=>[d,{id:x.id,source:x.source,note:x.note}]));
 if(Object.keys(rows).length<20)throw new Error("Holiday calendar incomplete; refusing to publish sparse cache");
