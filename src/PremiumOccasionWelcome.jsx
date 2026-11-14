@@ -98,6 +98,7 @@ export default function PremiumOccasionWelcome({occasion,registrationUrl,onDismi
       type="button" onClick={onDismiss} aria-label="Close greeting and continue to website">×</button>
     <div ref={contentRef} className="mcct-occasion-content mcct-premium-layout"
       style={themeStyle} data-artwork={occasion.artworkId}>
+      <img className="mcct-premium-mobile-logo" src={officialLogo} alt="Official Mamta Care Charitable Trust logo"/>
       <div className="mcct-premium-art">
         <span className="mcct-premium-orbit" aria-hidden="true" />
         <OccasionIllustration occasion={occasion}/>
