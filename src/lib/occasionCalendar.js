@@ -1,5 +1,5 @@
 import { OCCASIONS, FIXED_ANNUAL, MOVABLE_OFFICIAL, DATE_SECONDARY, NATIONAL_IDS } from "./occasionCatalog.js";
-import computed from "../data/occasionComputedDates.json";
+import computed from "../data/occasionComputedDates.json" with { type: "json" };
 
 export function indiaDateKey(date=new Date()){
   const parts=new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Kolkata",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(date);
