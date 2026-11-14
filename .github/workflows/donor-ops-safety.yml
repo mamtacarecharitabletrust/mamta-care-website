@@ -15,6 +15,10 @@ on:
       - "cloudflare/public-wig-intake-admin.html"
       - "cloudflare/migrations/20261114_public_wig_intakes.sql"
       - "tests/public-wig-intake-and-review-link.test.mjs"
+      - "cloudflare/public-volunteer-referral-v4-addon.mjs"
+      - "cloudflare/public-volunteer-referral-form.html"
+      - "cloudflare/migrations/20261114_public_volunteer_referrals.sql"
+      - "tests/public-volunteer-referral.test.mjs"
       - ".github/workflows/donor-ops-safety.yml"
   workflow_dispatch:
 jobs:
