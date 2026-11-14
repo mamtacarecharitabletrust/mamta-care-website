@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { occasionOn } from "./lib/occasionCalendar";
 import "./styles/occasion-welcome.css";
 
 const seenKey = (event) => "mcct-occasion-dismissed-" + event.date + "-" + event.id;
 
 export default function OccasionWelcome({ registrationUrl }) {
+  const panelRef = useRef(null);
+  const closeRef = useRef(null);
   const [occasion, setOccasion] = useState(() => occasionOn());
   const [dismissed, setDismissed] = useState(() => {
     const event = occasionOn();
@@ -33,14 +35,26 @@ export default function OccasionWelcome({ registrationUrl }) {
   const visible = occasion && !dismissed;
   useEffect(() => {
     if (!visible) return undefined;
+    const previouslyFocused = document.activeElement;
+    closeRef.current?.focus();
     const onKeyDown = (event) => {
+      if (event.key === "Tab") {
+        const focusable = [...(panelRef.current?.querySelectorAll("a[href], button:not([disabled])") || [])];
+        if (!focusable.length) return;
+        const first = focusable[0], last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      }
       if (event.key === "Escape") {
         try { sessionStorage.setItem(seenKey(occasion), "1"); } catch { /* storage is optional */ }
         setDismissed(true);
       }
     };
     document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      if (previouslyFocused?.isConnected && typeof previouslyFocused.focus === "function") previouslyFocused.focus();
+    };
   }, [visible, occasion]);
 
   if (!visible) return null;
@@ -53,13 +67,14 @@ export default function OccasionWelcome({ registrationUrl }) {
   return (
     <div className="mcct-occasion-overlay" role="presentation">
       <section
+        ref={panelRef}
         className="mcct-occasion-panel"
         role="dialog"
         aria-modal="true"
         aria-labelledby="mcct-occasion-title"
         aria-describedby="mcct-occasion-message"
       >
-        <button className="mcct-occasion-close" type="button" onClick={dismiss} aria-label="Close greeting and continue to website">×</button>
+        <button ref={closeRef} className="mcct-occasion-close" type="button" onClick={dismiss} aria-label="Close greeting and continue to website">×</button>
         <div className="mcct-occasion-ambient" aria-hidden="true" />
         <div className="mcct-occasion-content">
           <p className="mcct-occasion-kicker">MAMTA CARE CHARITABLE TRUST</p>
