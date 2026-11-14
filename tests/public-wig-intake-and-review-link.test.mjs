@@ -67,3 +67,10 @@ test("migration is strictly additive; historic Wig Desk records untouched",()=>{
  assert.match(migration,/CREATE TABLE IF NOT EXISTS mcct_public_wig_rate/);
  assert.doesNotMatch(migration,/\b(?:DROP|TRUNCATE|DELETE\s+FROM|UPDATE\s+wig_requests)\b/i);
 });
+
+
+test("public website routes Request a Free Wig to the existing Worker intake",()=>{
+ const app=readFileSync("src/App.jsx","utf8");
+ assert.match(app,/wigRequestForm:\s*"https:\/\/mamta-donor-desk-launch-new\.bharathairseva-in\.workers\.dev\/request-free-wig"/);
+ assert.doesNotMatch(app,/wigRequestForm:\s*"https:\/\/forms\.gle/);
+});
