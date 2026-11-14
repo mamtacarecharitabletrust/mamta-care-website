@@ -1,22 +1,17 @@
 /**
- * Completely unattended date cache generator for the India holiday engine.
- * Install isolated parser in CI with:
- * npm install --prefix .holiday-tools --no-save --ignore-scripts --no-package-lock date-holidays@3.39.1
- *
- * Future Hindu and Islamic lunar-calendar dates are estimates. For 2026/27,
- * verified government notices in occasionCatalog.js override this cache.
- * Never treat these dates as an official government holiday notification.
+ * Compile calculated India public holiday candidates into future-year cache.
+ * Sources: Python holidays 0.108 (MIT) plus explicit government-date overrides.
+ * The official 2026–27 overrides always win. Moon sighting remains provisional.
  */
-import { createRequire } from "node:module";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { OCCASIONS, FIXED_ANNUAL } from "../src/lib/occasionCatalog.js";
 
-const require = createRequire(import.meta.url);
 const cacheFile = resolve("src/data/occasionComputedDates.json");
-const dependencyPath = resolve(".holiday-tools/node_modules/date-holidays");
-if (!existsSync(dependencyPath)) throw new Error("Isolated holiday library not installed. See workflow.");
-const Holidays = require(dependencyPath);
+const candidatesPath = resolve(".holiday-tools/holiday-candidates.json");
+if(!existsSync(candidatesPath)) throw new Error("Python holiday candidate data missing; refusing to publish an empty schedule.");
+const candidates = JSON.parse(readFileSync(candidatesPath,"utf8"));
+if(!Array.isArray(candidates)||candidates.length<100)throw new Error("Insufficient holiday candidates; refusing to publish.");
 const PATTERNS = [
   ["eid-ul-fitr",/\b(eid|id)[ -]?(ul|al)?[ -]?fitr|ram(z|a)an eid/i],
   ["eid-ul-adha",/\b(eid|id)[ -]?(ul|al)?[ -]?(adha|zuha)|bakrid/i],
@@ -56,33 +51,28 @@ const PATTERNS = [
 ];
 const identify = name => PATTERNS.find(([,pattern])=>pattern.test(name))?.[0] || null;
 const dates={};
-const base = new Holidays("IN");
-base.setLanguages("en");
-const states = Object.keys(base.getStates("IN") || {}).filter(code=>/^[A-Z]{2}$/.test(code));
 const year = new Date().getUTCFullYear();
 const minYear = Math.max(2028, year);
 const maxYear = minYear + 5;
-const nameKey = name => String(name||"").trim();
-for(let y=minYear;y<=maxYear;y++){
-  const sources=[{name:"IN",code:null},...states.map(code=>({name:"IN-"+code,code}))];
-  for(const source of sources){
-    const h = source.code ? new Holidays("IN",source.code) : base;
-    h.setLanguages("en");
-    const list = h.getHolidays(y) || [];
-    for(const item of list){
-      const id=identify(nameKey(item.name));
-      if(!id||!OCCASIONS[id])continue;
-      const date=String(item.date||"").slice(0,10);
-      if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!date.startsWith(String(y)+"-"))continue;
-      if(FIXED_ANNUAL[date.slice(5)] === id)continue;
-      const score=(source.code?0:10)+(item.type==="public"?5:0)+(item.type==="optional"?2:0);
-      // Stable preference for nationwide holidays over regional estimates.
-      if(!dates[date] || dates[date].score<score){
-        dates[date]={id,source:source.name,score,note:"Computed; lunar and regional dates may vary."};
-      }
-    }
+const stats = {};
+for(const item of candidates){
+  const date=String(item.date||"").slice(0,10);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date))continue;
+  const itemYear=Number(date.slice(0,4));
+  if(itemYear<minYear||itemYear>maxYear)continue;
+  const id=identify(String(item.name||"").trim());
+  if(!id||!OCCASIONS[id])continue;
+  if(FIXED_ANNUAL[date.slice(5)]===id)continue;
+  const source=String(item.source||"IN");
+  const score=source==="IN"?10:1;
+  if(!dates[date]||dates[date].score<score){
+    dates[date]={id,source,score,note:"Computed holiday; subject to state notifications and lunar observation."};
   }
+  stats[itemYear]=(stats[itemYear]||0)+1;
 }
+const coverage=Array.from({length:6},(_,i)=>minYear+i).map(y=>({year:y,dates:Object.keys(dates).filter(k=>k.startsWith(String(y)+"-")).length}));
+process.stdout.write("Future holiday coverage "+JSON.stringify(coverage)+"\n");
+if(coverage.some(item=>item.dates<5))throw new Error("Calendar incomplete for at least one future year; no partial schedule will be published.");
 const rows=Object.fromEntries(Object.entries(dates).sort(([a],[b])=>a.localeCompare(b)).map(([d,x])=>[d,{id:x.id,source:x.source,note:x.note}]));
 if(Object.keys(rows).length<20)throw new Error("Holiday calendar incomplete; refusing to publish sparse cache");
 const before=existsSync(cacheFile)?JSON.parse(readFileSync(cacheFile,"utf8")):{};
@@ -92,7 +82,7 @@ if(JSON.stringify(before.entries||{})===JSON.stringify(rows)){
   const next={
     schemaVersion:1,
     generatedAt:new Date().toISOString(),
-    generator:"date-holidays@3.39.1 (calculated, not an official notice)",
+    generator:"python-holidays@0.108 (calculated, not an official notice)",
     note:"Islamic and some Hindu lunar dates are provisional; official government and moon-sighting announcements take precedence.",
     entries:rows,
   };
