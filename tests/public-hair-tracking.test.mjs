@@ -129,5 +129,7 @@ test("public page supports old QR registration IDs and original historical track
 });
 test("public website tracking buttons use the new Cloudflare entry point",()=>{
  const app=readFileSync("src/App.jsx","utf8");
- assert.match(app,/trackingApp:\s*"https:\/\/mamta-donor-desk-launch-new\.bharathairseva-in\.workers\.dev\/track-hair-donation"/);
+ assert.match(app,/PUBLIC_TRACKING_BASE = "https:\/\/mamta-donor-desk-launch-new\.bharathairseva-in\.workers\.dev\/track-hair-donation"/);
+ assert.match(app,/trackingApp:\s*PUBLIC_TRACKING_BASE \+ registrationQrSearch\(\)/);
+ assert.match(app,/path="\/track-your-hair-donation"/);
 });
