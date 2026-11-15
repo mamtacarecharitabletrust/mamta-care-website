@@ -218,14 +218,21 @@ export default function HairDonationRegistration() {
         <span className="mchr-preview-note">This is a test preview only. No donor information, photographs, or email is submitted from this page.</span>
       </div>}
       {finished ? <section className="mchr-panel mchr-success" aria-live="polite">
-        <span className="mchr-success-icon">✓</span><h2>Registration received</h2>
-        <p>Your official registration ID is <strong>{testResult?.registration_id}</strong>. Your two photographs were privately received without a manual photo approval. Your confirmation email is handled by Mamta Care’s existing email process. Your donor record will synchronize with Donor Desk.</p>
-        <button type="button" className="mchr-primary" onClick={() => window.location.reload()}>Return to website</button>
-      </section> : syncPending ? <section className="mchr-panel" role="status" aria-live="polite">
-        <span className="mchr-success-icon">✓</span>
-        <h2>Registration received — syncing automatically</h2>
-        <p>Your details and two photographs have been accepted for processing. <strong>No administrator photo approval is required.</strong> Mamta Care is confirming your official registration number and existing confirmation-email workflow.</p>
-        <p className="mchr-note">Submission reference: <strong>{requestId.current}</strong>. Keep this reference until your official number appears. Please do not create a second registration.</p>
+        <span className="mchr-success-icon" aria-hidden="true">✓</span>
+        <h2>Registration successful</h2>
+        <p className="mchr-registration-label">Your official hair donation registration number</p>
+        <div className="mchr-registration-number"><strong>{testResult?.registration_id}</strong></div>
+        <p>Your two photographs were received privately, without administrator photo approval. Your confirmation email follows Mamta Care’s existing email process, and your record will synchronize with Donor Desk.</p>
+        <div className="mchr-contact-instruction">
+          <strong>Kindly contact Mamta Care Charitable Trust with your registration number</strong> if you need assistance or want to arrange the next steps of your hair donation.
+          <a href="tel:+918500012190">Call Mamta Care: 8500012190</a>
+        </div>
+        <button type="button" className="mchr-secondary" onClick={() => window.location.reload()}>Return to website</button>
+      </section> : syncPending ? <section className="mchr-panel mchr-pending" role="status" aria-live="polite" aria-busy="true">
+        <span className="mchr-loading-ring" aria-hidden="true" />
+        <h2>Finalizing your registration…</h2>
+        <p>Your details and two private photos have been received. We’re checking the existing registration system for your <strong>official registration number</strong>. No administrator photo approval is required.</p>
+        <p className="mchr-note">Submission reference (not your registration number): <strong>{requestId.current}</strong>. Please keep this page open and avoid creating another registration.</p>
         <p>{uploadState}</p>
         <div className="mchr-footer-actions">
           <button type="button" className="mchr-secondary" disabled={statusChecking} onClick={checkRegistrationStatus}>{statusChecking ? "Checking…" : "Check registration status"}</button>
@@ -295,7 +302,7 @@ export default function HairDonationRegistration() {
               <StepTitle number="04" title="Review and consent" help="Please read each declaration before submitting your registration." />
               <div className="mchr-summary"><div>Method: <strong>{method === "haircut" ? "Haircut · " + values.hair_length : "Complete Head Shave · BALD(FULL LENGTH)"}</strong></div><div>Front and back photos: <strong>{files.front && files.back ? "Selected" : "Missing"}</strong></div></div>
               <label className="mchr-check"><input type="checkbox" checked={values.voluntary} onChange={e => set("voluntary", e.target.checked)}/><span>I voluntarily wish to donate my hair to help make wigs for cancer patients through Mamta Care Charitable Trust. I confirm that no one has pressured me and that I have read the donation conditions. <b>Required</b></span></label>
-              <label className="mchr-check"><input type="checkbox" checked={values.private_photos} onChange={e => set("private_photos", e.target.checked)}/><span>I permit the Trust to collect and privately review my submitted photographs and donor details for registration and coordination under its privacy notice. <b>Required</b></span></label>
+              <label className="mchr-check"><input type="checkbox" checked={values.private_photos} onChange={e => set("private_photos", e.target.checked)}/><span>I permit the Trust to securely collect and use my submitted photographs and donor details for registration and coordination under its privacy notice. <b>Required</b></span></label>
               <div className="mchr-note" style={{margin:"14px 0"}}>
                 <strong>Hair donation terms</strong>
                 <p>For haircut donations, Mamta Care requires at least 14 inches of usable hair, excluding split ends and uneven ends. A full head shave is optional and must be entirely your choice. Submit accurate contact details and clear front/back photographs so our team can coordinate the donation. Submitted photos are stored privately for donation coordination and will not be published without separate permission. A donation does not guarantee a particular wig recipient.</p>
@@ -305,7 +312,11 @@ export default function HairDonationRegistration() {
               <p className="mchr-image-note">Publicity permission is optional and separate from registration. Your photos are used privately for donor registration and coordination. To ask about your data or request withdrawal, contact Mamta Care through our Contact page. Requests are reviewed under the Trust's applicable procedures.</p>
             </>}
             {step === 4 && WEBSITE_REGISTRATION_ENABLED && <div ref={securityRef} aria-label="Security verification" />}
-            {uploadState !== "idle" && <p role="status" className="mchr-note">{uploadState}</p>}
+            {step === 4 && submitting && <div className="mchr-submitting-progress" role="status" aria-live="polite" aria-busy="true">
+              <span className="mchr-loading-ring mchr-loading-ring-small" aria-hidden="true" />
+              <div><strong>Submitting your hair donation registration…</strong><span>Please keep this page open. Your photos and details are being processed securely.</span></div>
+            </div>}
+            {uploadState !== "idle" && !submitting && <p role="status" className="mchr-note">{uploadState}</p>}
             {error && <p role="alert" className="mchr-error">{error}</p>}
             <div className="mchr-footer-actions">
               <button type="button" className="mchr-secondary" onClick={() => step === 1 ? null : (setStep(step - 1), setError(""))} disabled={step === 1}>Back</button>

@@ -34,6 +34,8 @@ on:
       - "cloudflare/custom-photo-auto-link-v11-addon.mjs"
       - "cloudflare/custom-registration-sync-v11-admin.html"
       - "tests/custom-registration-auto-approval.test.mjs"
+      - "tests/registration-progress.test.mjs"
+      - "src/styles/hair-registration.css"
       - "src/App.jsx"
       - "src/HairDonationRegistration.jsx"
       - "vercel.json"
