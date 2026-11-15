@@ -54,7 +54,8 @@ test("uncertain messages are not sent again; 32-character original D1 outbox IDs
  assert.match(worker,/delivery_state='READY'/);
  assert.match(worker,/desk_notification_status/);
  assert.match(worker,/delivery_state='PENDING_CONFIGURATION'/);
- assert.match(worker,/20-Number\(count\?\.n\|\|0\)/);
+ assert.match(worker,/mcctMailV8DailyCap\(env\)-Number\(count\?\.n\|\|0\)/);
+ assert.match(worker,/MC_NOTIFICATION_EMAIL_DAILY_CAP/);
  assert.match(worker,/mail_quota_remaining\)-10/);
 });
 test("full existing donor desk and scheduled imports remain untouched",()=>{
