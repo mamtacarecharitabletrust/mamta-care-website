@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import HairDonationRegistration from "./HairDonationRegistration";
+// New registrations use the authoritative original Google Form without a photo-approval gate.
 import OfficialDocuments from "./OfficialDocuments";
 import OccasionWelcome from "./OccasionWelcome";
 
@@ -64,6 +64,7 @@ import wigProcessPhoto9 from "./assets/55.jpg.jpeg";
 ========================================================= */
 
 const PUBLIC_TRACKING_BASE = "https://mamta-donor-desk-launch-new.bharathairseva-in.workers.dev/track-hair-donation";
+const OFFICIAL_DONATION_FORM = "https://forms.gle/VpKSKJoichRqyTvH9";
 function registrationQrSearch() {
   if (typeof window === "undefined") return "";
   const params = new URLSearchParams(window.location.search);
@@ -85,7 +86,7 @@ const info = {
 
   hairDonationForm:
 
-    import.meta.env.VITE_HAIR_REGISTRATION_ENABLED === "true" ? "/hair-registration" : "https://forms.gle/VpKSKJoichRqyTvH9",
+    OFFICIAL_DONATION_FORM,
 
   wigRequestForm:
 
@@ -4505,6 +4506,17 @@ function WigMakingProcess() {
 
 ========================================================= */
 
+function OfficialRegistrationRedirect() {
+  React.useEffect(() => {
+    window.location.replace(OFFICIAL_DONATION_FORM);
+  }, []);
+  return <div style={{maxWidth:720,margin:"80px auto",padding:24,textAlign:"center"}}>
+    <h1>Mamta Care Hair Donation Registration</h1>
+    <p>Opening the official donor registration form. No photograph approval is required to register.</p>
+    <a href={OFFICIAL_DONATION_FORM}>Open the official registration form</a>
+  </div>;
+}
+
 function TrackingRedirect() {
   const url = PUBLIC_TRACKING_BASE + registrationQrSearch();
   React.useEffect(() => {
@@ -4634,7 +4646,7 @@ function AppRoutes() {
           <Route path="/official-documents" element={<OfficialDocuments />} />
           <Route path="/track" element={<TrackingRedirect />} />
           <Route path="/track-your-hair-donation" element={<TrackingRedirect />} />
-          <Route path="/hair-registration" element={<HairDonationRegistration />} />
+          <Route path="/hair-registration" element={<OfficialRegistrationRedirect />} />
 
           <Route
 
