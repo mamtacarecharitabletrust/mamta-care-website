@@ -71,6 +71,55 @@
 .mchr-success p {font-size:14px;color:#597268;max-width:470px;}
 .mchr-footnote {text-align:center;margin:23px auto 0;color:#7b8981;line-height:1.6;font-size:12px;}
 .mchr-footnote a {color:#116c50;text-decoration:underline;}
+
+/* Registration-only progress and confirmation: existing four-step form preserved. */
+@keyframes mchr-registration-spin {to{transform:rotate(360deg)}}
+.mchr-loading-ring {
+  width:76px;height:76px;display:inline-block;flex:none;border-radius:50%;
+  border:6px solid #dcece3;border-top-color:#156f50;border-right-color:#7cb995;
+  animation:mchr-registration-spin .9s linear infinite;
+}
+.mchr-loading-ring-small{width:42px;height:42px;border-width:4px}
+.mchr-submitting-progress{
+  display:flex;align-items:center;gap:15px;margin:20px 0 8px;padding:18px;
+  border-radius:15px;border:1px solid #bfdfca;background:#edf8f0;color:#175a45;
+}
+.mchr-submitting-progress strong{display:block;font-size:14px}
+.mchr-submitting-progress div>span{display:block;margin-top:5px;color:#526f60;font-size:12px;line-height:1.5}
+.mchr-pending{
+  display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center;
+  gap:12px;min-height:380px;
+}
+.mchr-pending h2{color:#174b38;font-size:clamp(22px,3vw,30px);margin:4px 0}
+.mchr-pending>p{font-size:14px;color:#516f60;max-width:650px;margin:0}
+.mchr-pending .mchr-note{max-width:680px;overflow-wrap:anywhere}
+.mchr-pending .mchr-footer-actions{width:100%;justify-content:center;flex-wrap:wrap}
+.mchr-registration-label{font-size:13px!important;margin:0!important;color:#547362!important}
+.mchr-registration-number{
+  border:1px solid #a3d3b5;border-radius:13px;padding:15px 19px;
+  background:#eaf8ee;color:#145c44;font-size:clamp(20px,3vw,28px);
+  line-height:1.35;letter-spacing:.015em;max-width:100%;overflow-wrap:anywhere;
+  font-variant-numeric:tabular-nums;
+}
+.mchr-contact-instruction{
+  width:min(100%,640px);border:1px solid #d2e6d8;border-radius:14px;
+  background:#f4f9f5;padding:16px 19px;text-align:left;color:#305e49;
+  font-size:13px;line-height:1.65;
+}
+.mchr-contact-instruction strong{display:block;color:#15543f;font-size:14px;margin-bottom:6px}
+.mchr-contact-instruction a{
+  display:inline-flex;align-items:center;justify-content:center;margin-top:12px;
+  min-height:44px;padding:9px 15px;border-radius:9px;text-decoration:none;
+  color:white;background:#176749;font-weight:800;
+}
+.mchr-contact-instruction a:focus-visible{outline:3px solid #cb9f48;outline-offset:3px}
+@media(max-width:680px){
+  .mchr-submitting-progress{padding:13px;gap:12px}
+  .mchr-loading-ring-small{width:35px;height:35px}
+  .mchr-contact-instruction{text-align:center;padding:14px}
+  .mchr-pending .mchr-footer-actions{gap:10px}
+}
+
 @keyframes mchr-fall {0%,30%{opacity:0;transform:translateY(0) rotate(-14deg)}45%{opacity:1}85%,100%{opacity:0;transform:translateY(90px) rotate(45deg)}}
 @keyframes mchr-snip {0%,30%,100%{transform:rotate(-10deg)}40%,50%{transform:rotate(28deg)}60%{transform:rotate(-15deg)}}
 @keyframes mchr-razor {0%,100%{transform:translate(-17px,-4px) rotate(-17deg)}48%{transform:translate(0,19px) rotate(12deg)}}
