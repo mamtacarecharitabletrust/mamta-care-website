@@ -20,7 +20,7 @@ async function mcctNoReviewV10Backfill(env){
  const now=Date.now();
  // An old "review" state never represents rejection of a donor.
  // Registration remains valid only when the real Google Form ID exists.
- await db.prepare("UPDATE website_form_intakes SET state='FORM_SYNC_PENDING',updated_at=? WHERE state='REVIEW_REQUIRED' AND (registration_id IS NULL OR TRIM(registration_id)='')").bind(now).run();
+ await db.prepare("UPDATE website_form_intakes SET state='FORM_SYNC_PENDING',updated_at=? WHERE state='REVIEW_REQUIRED'").bind(now).run();
  const candidates=await db.prepare(
   "SELECT i.submission_uuid,i.front_key,i.back_key,i.registration_id,d.id AS donor_id,d.registration_id AS official_id "+
   "FROM website_form_intakes i JOIN donors d "+
