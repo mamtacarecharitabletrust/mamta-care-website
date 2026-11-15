@@ -7,6 +7,7 @@ import { motion, useInView, useReducedMotion } from "framer-motion";
  */
 const FEED = "https://mamta-website-content-control.bharathairseva-in.workers.dev/api/public";
 const HAIR_METRICS_FEED = "/api/hair-impact";
+const DONOR_DESK_OPERATIONS_FEED = "https://mamta-donor-desk-launch-new.bharathairseva-in.workers.dev/api/public/operational-impact";
 const PUBLIC_MEDIA_BASE = "https://mamta-website-content-control.bharathairseva-in.workers.dev";
 
 function safeLink(value) {
@@ -49,6 +50,7 @@ const dateFormat = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "sh
 function usePublishedWebsiteUpdates() {
   const [content, setContent] = useState(null);
   const [metrics, setMetrics] = useState(null);
+  const [operational, setOperational] = useState(null);
   useEffect(() => {
     let live = true;
     let running = false;
@@ -91,7 +93,31 @@ function usePublishedWebsiteUpdates() {
     const interval = setInterval(update, 120000);
     return () => { active = false; clearInterval(interval); };
   }, []);
-  return { content, metrics };
+  useEffect(() => {
+    let active = true;
+    const update = async () => {
+      try {
+        const response = await fetch(DONOR_DESK_OPERATIONS_FEED, {
+          cache: "no-store", headers: { Accept: "application/json" }
+        });
+        if (!response.ok) return;
+        const next = await response.json();
+        const valid = (n) => Number.isSafeInteger(n) && n >= 0;
+        if (active && next?.ok === true && next.scope === "donor_desk_operational_queue" &&
+            [next.active_pending, next.active_donor_rows, next.stored_total, next.in_bin].every(valid) &&
+            next.active_pending <= next.active_donor_rows &&
+            next.active_donor_rows + next.in_bin === next.stored_total) {
+          setOperational(next);
+        }
+      } catch {
+        // Keep the last valid count rather than inventing values during an outage.
+      }
+    };
+    update();
+    const interval = setInterval(update, 120000);
+    return () => { active = false; clearInterval(interval); };
+  }, []);
+  return { content, metrics, operational };
 }
 
 function ImpactNumber({ amount, label }) {
@@ -132,9 +158,9 @@ function ImpactNumber({ amount, label }) {
 }
 
 export default function WebsiteUpdates() {
-  const { content, metrics } = usePublishedWebsiteUpdates();
+  const { content, metrics, operational } = usePublishedWebsiteUpdates();
   const designPreview = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("mcct_preview") === "1";
-  if (!content && !metrics && !designPreview) return null;
+  if (!content && !metrics && !operational && !designPreview) return null;
   const published = { ...(content || { drives: [], photos: [] }), hasCounts: Boolean(metrics) || designPreview, completed: metrics?.completed ?? null, pending: metrics?.pending ?? null };
   const total = Number.isSafeInteger(published.completed) && Number.isSafeInteger(published.pending) ? published.completed + published.pending : null;
   const wigsDonated = Number.isSafeInteger(content?.wigsDonated) ? content.wigsDonated : 242;
@@ -170,10 +196,33 @@ export default function WebsiteUpdates() {
               <ImpactNumber amount={published.completed} label="Completed donations" />
               <ImpactNumber amount={published.pending} label="Pending donations" />
             </div>
+            {operational && (
+              <div className="mcct-public-ops-snapshot" aria-label="Current Donor Desk active pending applications">
+                <span className="mcct-public-ops-label"><span aria-hidden="true">●</span> LIVE DONOR DESK</span>
+                <div className="mcct-public-ops-value">
+                  <strong>{numberFormat.format(operational.active_pending)}</strong>
+                  <span>current active follow-ups</span>
+                </div>
+                <p>Excludes Bin, Cancelled, Expired and Completed cases. This is the current Donor Desk operational register—not the historical all-time Google Sheets total shown above.</p>
+              </div>
+            )}
             <p className="mcct-public-disclaimer">Figures are verified and published by Mamta Care Charitable Trust.</p>
           </div>
         )}
 
+        {!published.hasCounts && operational && (
+          <div className="mcct-public-impact-card">
+            <p className="mcct-public-overline">CURRENT DONOR DESK</p>
+            <h2>Active hair donation applications</h2>
+            <div className="mcct-public-ops-snapshot">
+              <div className="mcct-public-ops-value">
+                <strong>{numberFormat.format(operational.active_pending)}</strong>
+                <span>current active follow-ups</span>
+              </div>
+              <p>Bin, Cancelled, Expired and Completed cases excluded. Historical public counters are temporarily unavailable.</p>
+            </div>
+          </div>
+        )}
         {(published.hasCounts || designPreview) && (
           <div className="mcct-public-wigs" aria-label="Wigs donated to date">
             <div className="mcct-public-wigs-icon" aria-hidden="true">♡</div>
