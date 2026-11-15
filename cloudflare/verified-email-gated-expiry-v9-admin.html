@@ -1,0 +1,97 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="referrer" content="no-referrer"><meta name="theme-color" content="#155b4a">
+<title>30-Day Donor Expiry Safeguards | Mamta Care Administrator</title>
+<style nonce="MCCT_WIG_NONCE_PLACEHOLDER">
+:root{font:14px/1.55 Inter,system-ui,-apple-system,sans-serif;color:#1c4639;background:#f3f7f3}
+*{box-sizing:border-box}body{margin:0}header{background:#115442;color:white;padding:13px clamp(14px,4vw,44px);display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.brand img{width:70px;height:64px;object-fit:contain;background:#fff;border-radius:11px}
+.brand strong{font:700 19px Georgia,serif;display:block}
+.brand small{font-size:10px;letter-spacing:.12em;opacity:.9}
+nav a{color:#fff;text-decoration:none;border:1px solid #a2cab5;border-radius:8px;padding:9px 12px;font-weight:700;font-size:12px}
+main{max-width:1050px;margin:0 auto;padding:23px 14px 50px}
+.hero{padding:25px;background:linear-gradient(115deg,#115743,#24795c);border-radius:19px;color:white}
+.hero h1{font:700 clamp(26px,4vw,36px)/1.15 Georgia,serif;margin:8px 0}
+.hero p{color:#e4f2e8;max-width:850px;margin:0}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0}
+.stat{border-radius:15px;border:1px solid #d5e6d9;background:#fff;padding:18px}
+.stat strong{display:block;font-size:31px;color:#1a644d}.stat span{font-size:12px;color:#5c7767}
+.card{background:white;border:1px solid #d5e5d9;border-radius:16px;padding:23px;margin:14px 0}
+.card h2{font:700 22px Georgia,serif;color:#175c47;margin:0 0 7px}
+.card p{color:#597466;font-size:13px}
+.status{display:inline-block;border:1px solid #e8cbab;background:#fff6e8;color:#795b36;border-radius:100px;padding:7px 12px;font-weight:800;font-size:12px}
+.status.on{background:#e9f8ed;color:#256346;border-color:#b6d9c2}
+.notice{background:#fff7e7;color:#785731;border:1px solid #ecd8b0;border-radius:10px;padding:13px;margin:12px 0}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:14px 0}
+.step{background:#f4f8f5;border:1px solid #dce7de;padding:13px;border-radius:12px;font-size:12px;color:#496c58}
+.step b{display:block;color:#185a45;margin-bottom:5px}
+.controls{display:flex;flex-wrap:wrap;gap:9px;margin-top:13px}
+button,a.button{display:inline-flex;align-items:center;justify-content:center;border:1px solid #13674b;background:#145f48;color:#fff;padding:10px 14px;border-radius:9px;min-height:44px;font-size:13px;font-weight:800;text-decoration:none;cursor:pointer}
+a.button.secondary{background:#edf7ef;color:#20583f;border-color:#b5d7bc}
+button:disabled{opacity:.5;cursor:wait}
+#feedback{display:none;border-radius:9px;background:#eff9ef;border:1px solid #bbdec2;color:#155e45;padding:13px;margin-top:12px}
+#feedback.show{display:block}#feedback.bad{background:#fff1ed;border-color:#e2bdb5;color:#913735}
+table{border-collapse:collapse;width:100%;font-size:12px}th,td{padding:10px;border-bottom:1px solid #e4eee5;text-align:left}
+th{color:#667f6e}footer{text-align:center;font-size:11px;color:#6c8677;padding:18px}
+@media(max-width:720px){.stats{grid-template-columns:repeat(2,1fr)}.steps{grid-template-columns:1fr}.card{padding:16px}main{padding:12px 11px 36px}}
+</style></head><body>
+<header><div class="brand"><img src="/volunteer-logo.jpeg" alt="Official unchanged Mamta Care logo">
+<div><strong>Mamta Care · Inactive Applications</strong><small>ADMINISTRATOR ONLY · REOPENABLE RECORDS</small></div></div>
+<nav><a href="/admin-ops">Admin Dashboard</a></nav>
+</header>
+<main>
+<section class="hero"><small>SAFE 30-DAY FOLLOW-UP POLICY</small>
+<h1>Automatic expiry, with verification.</h1>
+<p>Applications with no recorded status update for at least 30 days can be prepared for closure. Mamta Care must first confirm there is no recorded courier, collection, hair stock or verified donation—and that an authorized email was sent.</p>
+</section>
+<section class="stats">
+<div class="stat"><strong id="review">—</strong><span>Inactive applications awaiting review</span></div>
+<div class="stat"><strong id="notice">—</strong><span>Expiry notices prepared</span></div>
+<div class="stat"><strong id="closed">—</strong><span>Expired records, retained for reopening</span></div>
+</section>
+<section class="card">
+<h2>Safety status</h2><span class="status" id="enabled">Checking automation…</span>
+<div class="steps">
+<div class="step"><b>1 · Confirm inactivity</b>Review original 30-day status and absence of recorded hair movement</div>
+<div class="step"><b>2 · Send genuine notice</b>Use an authorized Apps Script MailApp sender with duplicate prevention and quota guards</div>
+<div class="step"><b>3 · Retain and reopen</b>After a 24-hour grace period, recheck everything and move only eligible cases to Expired</div>
+</div>
+<div class="notice">Expired records are never deleted, and lifetime totals are preserved. A donor already received, in transit, under processing or verified cannot be expired through this workflow. Email acceptance is not proof that the message reached the recipient.</div>
+<div class="controls"><button id="scan" type="button">Prepare Eligible Notices Safely</button>
+<a class="button secondary" href="/admin-notification-outbox">Email Provider &amp; Outbox</a>
+<a class="button secondary" href="/app">View Donors</a></div>
+<p id="feedback" role="status" aria-live="polite"></p>
+</section>
+<section class="card"><h2>Expiry notification queue</h2>
+<p>These are real pending, reserved and sender-acknowledged notices, not simulated messages. Until an authorized sender is working and approved, they stay queued.</p>
+<div style="overflow:auto"><table><thead><tr><th>Notification status</th><th>Count</th></tr></thead><tbody id="queue"></tbody></table></div>
+</section>
+<footer>Mamta Care Charitable Trust · Audit history, official registration numbers and previous donor cases preserved</footer>
+</main>
+<script nonce="MCCT_WIG_NONCE_PLACEHOLDER">
+(function(){"use strict";const $=id=>document.getElementById(id),base="/api/admin/ops/v9";
+function show(message,bad=false){const n=$("feedback");n.textContent=message;n.className="show"+(bad?" bad":"");}
+async function api(path,options={}){
+ const r=await fetch(base+path,{credentials:"same-origin",cache:"no-store",...options});
+ const d=await r.json().catch(()=>({ok:false,error:"Unexpected response"}));
+ if(!r.ok||!d.ok)throw Error(d.error||"Request failed");return d;
+}
+async function status(){try{
+ const d=await api("/status"),counts=Object.fromEntries((d.review_states||[]).map(x=>[x.decision,x.n]));
+ $("review").textContent=counts.PENDING||0;
+ $("notice").textContent=(d.notification_states||[]).reduce((sum,x)=>sum+Number(x.n||0),0);
+ $("closed").textContent=d.expired_record_count;
+ $("enabled").textContent=d.expiry_automatic_enabled?"Email-gated closure enabled":"Expiry changes disabled pending verified email";
+ $("enabled").className="status"+(d.expiry_automatic_enabled?" on":"");
+ const rows=$("queue");rows.replaceChildren();
+ for(const item of d.notification_states||[]){const tr=document.createElement("tr");const td=document.createElement("td");td.textContent=item.delivery_state;const n=document.createElement("td");n.textContent=item.n;tr.append(td,n);rows.append(tr);}
+ if(!rows.children.length){const tr=document.createElement("tr");const td=document.createElement("td");td.textContent="No expiry notifications staged";tr.append(td);rows.append(tr);}
+ }catch(e){show(e.message,true);}}
+$("scan").onclick=async()=>{const b=$("scan");b.disabled=true;try{
+ const r=await api("/scan",{method:"POST",headers:{"Content-Type":"application/json","X-Mamta-Desk":"1"},body:"{}"});
+ show("Prepared "+r.queued+" new expiry notices for review. Zero emails sent and zero donor records expired by this action.");await status();
+ }catch(e){show(e.message,true)}finally{b.disabled=false}};
+void status();
+})();
+</script></body></html>
