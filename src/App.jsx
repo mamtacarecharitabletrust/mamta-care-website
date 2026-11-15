@@ -85,7 +85,7 @@ const info = {
 
   hairDonationForm:
 
-    import.meta.env.VITE_HAIR_REGISTRATION_ENABLED === "true" ? "/hair-registration" : "https://forms.gle/VpKSKJoichRqyTvH9",
+    "/hair-registration",
 
   wigRequestForm:
 
