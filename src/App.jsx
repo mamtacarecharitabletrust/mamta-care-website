@@ -63,6 +63,16 @@ import wigProcessPhoto9 from "./assets/55.jpg.jpeg";
 
 ========================================================= */
 
+const PUBLIC_TRACKING_BASE = "https://mamta-donor-desk-launch-new.bharathairseva-in.workers.dev/track-hair-donation";
+function registrationQrSearch() {
+  if (typeof window === "undefined") return "";
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("registration_id") || params.get("registrationId") || params.get("reg") || params.get("id") || "";
+  return /^[A-Za-z0-9][A-Za-z0-9/_-]{5,74}$/.test(id)
+    ? "?registration_id=" + encodeURIComponent(id)
+    : "";
+}
+
 const info = {
 
   phone: "+91 8500012190",
@@ -86,7 +96,7 @@ const info = {
     "https://mamta-donor-desk-launch-new.bharathairseva-in.workers.dev/join-volunteer",
 
   trackingApp:
-    "https://script.google.com/macros/s/AKfycbxpjK80aue0-rvoVcCTvzrLBL1k3TvHaN0VtNTLC9KeSuy0RIfZnXoHKymnYj1Gbq8pBw/exec",
+    PUBLIC_TRACKING_BASE + registrationQrSearch(),
 
 };
 
@@ -4495,6 +4505,20 @@ function WigMakingProcess() {
 
 ========================================================= */
 
+function TrackingRedirect() {
+  const url = PUBLIC_TRACKING_BASE + registrationQrSearch();
+  React.useEffect(() => {
+    window.location.replace(url);
+  }, [url]);
+  return (
+    <div style={{maxWidth: 720, margin: "80px auto", textAlign: "center", padding: 24}}>
+      <h1>Track Your Hair Donation</h1>
+      <p>Opening Mamta Care's secure donation tracking page.</p>
+      <a href={url}>Open secure tracking</a>
+    </div>
+  );
+}
+
 function AppRoutes() {
 
   const location =
@@ -4502,11 +4526,15 @@ function AppRoutes() {
     useLocation();
 
   const isHome = location.pathname === "/";
+  const isQrTracking = isHome && Boolean(registrationQrSearch());
+  React.useEffect(() => {
+    if (isQrTracking) window.location.replace(PUBLIC_TRACKING_BASE + registrationQrSearch());
+  }, [isQrTracking]);
 
   return (
 
     <>
-      {isHome && <OccasionWelcome registrationUrl={info.hairDonationForm} />}
+      {isHome && !isQrTracking && <OccasionWelcome registrationUrl={info.hairDonationForm} />}
     <AnimatePresence
 
       mode="wait"
@@ -4604,6 +4632,8 @@ function AppRoutes() {
           />
 
           <Route path="/official-documents" element={<OfficialDocuments />} />
+          <Route path="/track" element={<TrackingRedirect />} />
+          <Route path="/track-your-hair-donation" element={<TrackingRedirect />} />
           <Route path="/hair-registration" element={<HairDonationRegistration />} />
 
           <Route
