@@ -96,7 +96,7 @@ async function refresh(){try{
  const badge=$("healthBadge");
  badge.textContent=d.ready_to_send?"Relay configured and enabled":"Sending disabled — donor emails not dispatched";
  badge.className="status"+(d.ready_to_send?"":" off");
- $("healthMessage").textContent=d.ready_to_send?"The 2-minute schedule can process eligible feedback emails at a maximum of 20 per day. MailApp acceptance does not prove recipient delivery.":"The email queue is retained safely. "+(d.reason||"Both sender configuration gates must be enabled.");
+ $("healthMessage").textContent=d.ready_to_send?"The 2-minute schedule can process eligible feedback emails at an owner-selected limit of 1 (initial pilot) or 20 per day. MailApp acceptance does not prove recipient delivery.":"The email queue is retained safely. "+(d.reason||"Both sender configuration gates must be enabled.");
  const table=$("rows");table.replaceChildren();
  for(const item of d.notifications||[]){const row=el("tr",undefined,table);el("td",item.kind,row);el("td",item.delivery_state,row);el("td",item.count,row);}
  if(!table.children.length){const row=el("tr",undefined,table);el("td","No queued donor notices",row);}
