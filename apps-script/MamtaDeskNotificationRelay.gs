@@ -99,7 +99,7 @@ function mcDeskNotificationRelayPost_(p){
         ledger_exists:!!mcDeskNotificationLedger_(false)});
     }
     const id=String(p.outbox_id||'').trim();
-    if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))
+    if(!/^(?:[0-9a-f]{32}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i.test(id))
       return response({ok:false,error:'Invalid outbox reference'});
     const lock=LockService.getScriptLock();
     if(!lock.tryLock(15000))return response({ok:false,pending:true,error:'Email relay is busy'});
