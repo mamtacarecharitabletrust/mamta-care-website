@@ -1,0 +1,111 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="referrer" content="no-referrer"><meta name="theme-color" content="#155a45">
+<title>Donor Notification Outbox | Mamta Care Administrator</title>
+<style nonce="MCCT_WIG_NONCE_PLACEHOLDER">
+:root{font:14px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#1e4236;background:#f2f7f3}
+*{box-sizing:border-box}body{margin:0;min-height:100dvh}
+header{background:#124f3f;color:#fff;padding:13px clamp(13px,4vw,46px);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:11px}
+.brand img{width:72px;height:64px;object-fit:contain;border-radius:11px;background:white}
+.brand strong{font:700 20px/1.2 Georgia,serif;display:block}
+.brand small{font-size:10px;font-weight:800;letter-spacing:.12em;color:#d7ebd6}
+nav a{font-size:12px;font-weight:800;color:#fff;border:1px solid #b2d5c0;border-radius:9px;padding:10px 12px;text-decoration:none}
+main{max-width:1120px;margin:auto;padding:24px 15px 55px}
+.hero{background:linear-gradient(125deg,#155742,#327e5d);color:#fff;padding:25px;border-radius:18px}
+.hero h1{font:700 clamp(26px,4vw,35px)/1.12 Georgia,serif;margin:7px 0}
+.hero p{color:#e2f2e4;max-width:800px;margin:0}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0}
+.stat{background:white;padding:17px 15px;border-radius:14px;border:1px solid #d5e6d9}
+.stat strong{font-size:29px;color:#155b47;display:block}
+.stat span{font-size:12px;color:#5f796b}
+.panel{padding:22px;background:white;border:1px solid #d5e4da;border-radius:16px;margin:15px 0}
+.panel h2{font:700 22px Georgia,serif;color:#14543f;margin:0 0 6px}
+.note{background:#fff7e6;color:#77572c;border:1px solid #ead7b6;border-radius:10px;padding:13px;margin:15px 0}
+.status{display:inline-flex;gap:8px;align-items:center;padding:7px 13px;border-radius:100px;font-size:12px;font-weight:750;background:#e5efeb;color:#215642}
+.status.off{background:#fff0e9;color:#914f30}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.metric{border:1px solid #e0eae2;border-radius:11px;padding:14px}
+.metric strong{font-size:14px;display:block;margin-top:4px}
+.metric small{color:#678075}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+button,a.button{border:1px solid #1a694f;background:#155e49;color:white;border-radius:9px;min-height:44px;padding:10px 14px;font-size:13px;font-weight:800;cursor:pointer;text-decoration:none}
+button.secondary,a.button.secondary{background:#eff7f1;color:#155b45;border-color:#aecfba}
+button:disabled{opacity:.5;cursor:wait}
+#message{display:none;margin-top:14px;padding:12px;border-radius:9px;border:1px solid #bad6bf;background:#eef8ed;color:#255c43}
+#message.show{display:block}#message.bad{color:#872c2f;background:#fff1ed;border-color:#e3bcb1}
+table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:9px 7px;border-bottom:1px solid #dfebe2;text-align:left}th{color:#63796c;text-transform:capitalize}
+footer{font-size:11px;text-align:center;color:#698473;padding:20px}
+@media(max-width:720px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.metrics{grid-template-columns:1fr}.panel{padding:15px}main{padding:12px 10px 32px}.stat strong{font-size:24px}}
+</style></head><body>
+<header>
+<div class="brand"><img src="/volunteer-logo.jpeg" alt="Official unchanged Mamta Care logo">
+<div><strong>Mamta Care · Notification Outbox</strong><small>PRIVATE ADMIN · OFFICIAL DONOR EMAIL</small></div></div>
+<nav><a href="/admin-ops">Admin Dashboard</a></nav>
+</header>
+<main>
+<section class="hero"><small>DELIVERY VERIFIED, NOT GUESSED</small><h1>Donor communication health</h1>
+<p>See which feedback emails are awaiting a real sending service, check Google Apps Script MailApp readiness and prevent duplicate notifications.</p></section>
+<section class="stats">
+<div class="stat"><strong id="pending">—</strong><span>Queued without provider</span></div>
+<div class="stat"><strong id="eligible">—</strong><span>Eligible consented feedback emails</span></div>
+<div class="stat"><strong id="inflight">—</strong><span>Reserved / uncertain checks</span></div>
+<div class="stat"><strong id="accepted">—</strong><span>MailApp send calls acknowledged</span></div>
+</section>
+<section class="panel">
+<h2>Google Apps Script email bridge</h2>
+<div class="status off" id="healthBadge">Checking relay configuration…</div>
+<p id="healthMessage" style="max-width:730px">No email is counted as sent until a real authenticated provider acknowledges it.</p>
+<div class="metrics">
+<div class="metric"><small>Apps Script relay</small><strong id="connected">—</strong></div>
+<div class="metric"><small>Both sending gates</small><strong id="sendEnabled">—</strong></div>
+<div class="metric"><small>Remaining MailApp recipients (reported by Google)</small><strong id="quota">—</strong></div>
+</div>
+<div class="note"><strong>Fail-closed:</strong> bulk sending is disabled until the existing spreadsheet-bound Apps Script includes the verified relay, its daily quota is checked, and both the Script and Cloudflare owner explicitly enable sending. Existing Google Form registration and certificate emails are not replaced. This screen never claims delivery to the recipient.</div>
+<div class="actions"><button type="button" id="refresh">Refresh Readiness</button>
+<button type="button" id="reconcile" class="secondary">Reconcile Uncertain Sends (No New Emails)</button>
+<a class="button secondary" href="/app/operations">Operations Sync</a></div>
+<p id="message" role="status" aria-live="polite"></p>
+</section>
+<section class="panel">
+<h2>Notification queue by type</h2>
+<p>Registration acknowledgements remain with existing Google Sheets automation. Feedback requests require an eligible completed donor with a genuine certificate and existing consent; automatic expiry emails remain held until their safe handling is verified.</p>
+<div style="overflow:auto"><table><thead><tr><th>Purpose</th><th>Queue state</th><th>Count</th></tr></thead><tbody id="rows"></tbody></table></div>
+</section>
+<footer>Mamta Care Charitable Trust · No messages are silently reported as delivered · Original donor and certificate records preserved</footer>
+</main>
+<script nonce="MCCT_WIG_NONCE_PLACEHOLDER">
+(function(){"use strict";const $=id=>document.getElementById(id);
+const url="/api/admin/ops/v8";
+function say(msg,bad=false){const p=$("message");p.className="show"+(bad?" bad":"");p.textContent=msg;}
+async function api(path,options={}){
+ const r=await fetch(url+path,{credentials:"same-origin",cache:"no-store",...options});
+ const j=await r.json().catch(()=>({ok:false,error:"Unexpected response"}));
+ if(!r.ok||!j.ok)throw Error(j.error||"Request failed");return j;
+}
+function el(tag,text,parent){const o=document.createElement(tag);if(text!==undefined)o.textContent=String(text);parent?.appendChild(o);return o;}
+async function refresh(){try{
+ const d=await api("/status"),tot=(state)=>(d.notifications||[]).filter(x=>x.delivery_state===state).reduce((n,x)=>n+Number(x.count||0),0);
+ $("pending").textContent=tot("PENDING_CONFIGURATION");
+ $("eligible").textContent=d.eligible_feedback_email;
+ $("inflight").textContent=d.uncertain_or_in_progress;
+ $("accepted").textContent=d.mailapp_accepted_total;
+ $("connected").textContent=d.relay_connected?"Connected":"Not installed / unverified";
+ $("sendEnabled").textContent=d.ready_to_send?"Configured":"Disabled";
+ $("quota").textContent=d.mail_quota_remaining??"Not available";
+ const badge=$("healthBadge");
+ badge.textContent=d.ready_to_send?"Relay configured and enabled":"Sending disabled — donor emails not dispatched";
+ badge.className="status"+(d.ready_to_send?"":" off");
+ $("healthMessage").textContent=d.ready_to_send?"The 2-minute schedule can process eligible feedback emails at a maximum of 20 per day. MailApp acceptance does not prove recipient delivery.":"The email queue is retained safely. "+(d.reason||"Both sender configuration gates must be enabled.");
+ const table=$("rows");table.replaceChildren();
+ for(const item of d.notifications||[]){const row=el("tr",undefined,table);el("td",item.kind,row);el("td",item.delivery_state,row);el("td",item.count,row);}
+ if(!table.children.length){const row=el("tr",undefined,table);el("td","No queued donor notices",row);}
+ }catch(e){say(e.message,true);}}
+$("refresh").onclick=refresh;
+$("reconcile").onclick=async()=>{const b=$("reconcile");b.disabled=true;try{
+ const r=await api("/reconcile",{method:"POST",headers:{"Content-Type":"application/json","X-Mamta-Desk":"1"},body:"{}"});
+ say(r.reason||("Reconciled "+Number(r.acknowledged||0)+" accepted provider sends; did not send any new email."));await refresh();
+ }catch(e){say(e.message,true)}finally{b.disabled=false}};
+void refresh();
+})();
+</script></body></html>
