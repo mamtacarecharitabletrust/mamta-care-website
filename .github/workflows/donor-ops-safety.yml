@@ -19,6 +19,10 @@ on:
       - "cloudflare/public-volunteer-referral-form.html"
       - "cloudflare/migrations/20261114_public_volunteer_referrals.sql"
       - "tests/public-volunteer-referral.test.mjs"
+      - "cloudflare/public-hair-tracking-v5-addon.mjs"
+      - "cloudflare/public-hair-tracking-form.html"
+      - "cloudflare/migrations/20261115_public_tracking.sql"
+      - "tests/public-hair-tracking.test.mjs"
       - ".github/workflows/donor-ops-safety.yml"
   workflow_dispatch:
 jobs:
