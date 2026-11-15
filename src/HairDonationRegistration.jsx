@@ -110,9 +110,9 @@ export default function HairDonationRegistration() {
     setError(""); if (step < 4) { setStep(step + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }
     else submitTest();
   };
-  // Set VITE_HAIR_REGISTRATION_ENABLED only after the Google Form bridge,
-  // original registration email, and administrator photo viewer pass end to end.
-  // No privileged secret ever belongs in the browser.
+  // Donors use the custom secure app. Official IDs and confirmation emails
+  // remain issued by the existing private registration bridge, never this browser.
+  // Server-side Cloudflare feature/security gates remain authoritative.
   const requestId = useRef(null);
   const checkRegistrationStatus = async () => {
     if (!requestId.current) return false;
