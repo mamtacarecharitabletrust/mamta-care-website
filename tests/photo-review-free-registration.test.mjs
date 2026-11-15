@@ -9,7 +9,7 @@ const publicWorker=readFileSync("cloudflare/website-hair-registration-no-review-
 const website=readFileSync("src/App.jsx","utf8");
 test("donor desk addon, website registration Worker and admin JS parse",()=>{
  assert.doesNotThrow(()=>new Script(addon));
- assert.doesNotThrow(()=>new Script(publicWorker));
+ assert.doesNotThrow(()=>new Script(publicWorker.replace("export default {","const __worker_default__ = {")));
  const script=/<script nonce="MCCT_WIG_NONCE_PLACEHOLDER">([\s\S]*?)<\/script>/i.exec(admin);
  assert.ok(script?.[1]);
  assert.doesNotThrow(()=>new Script(script[1]));
