@@ -1,0 +1,92 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#135743"><meta name="referrer" content="no-referrer">
+<title>Automatic Donor Registration Sync | Mamta Care</title>
+<style nonce="MCCT_WIG_NONCE_PLACEHOLDER">
+:root{font:14px/1.55 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:#f1f7f3;color:#214539}
+*{box-sizing:border-box}body{margin:0;min-height:100dvh}
+header{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:13px clamp(15px,4vw,44px);background:#145643;color:#fff}
+.brand{display:flex;align-items:center;gap:12px}.brand img{width:75px;height:65px;object-fit:contain;border-radius:11px;background:white}.brand strong{font:700 20px/1.2 Georgia,serif;display:block}.brand small{font-size:10px;letter-spacing:.12em;opacity:.85}
+header a{color:white;border:1px solid #a4d7c0;border-radius:9px;text-decoration:none;padding:10px 14px;font-weight:800;font-size:12px}
+main{max-width:1100px;margin:auto;padding:25px 16px 50px}
+.hero{background:linear-gradient(120deg,#115b44,#288160);border-radius:18px;color:white;padding:27px}.eyebrow{font-size:11px;font-weight:850;letter-spacing:.13em;color:#d7efc7}
+h1{font:700 clamp(27px,4vw,36px)/1.12 Georgia,serif;margin:8px 0 12px}.hero p{color:#e0f2e7;max-width:770px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}
+.card{background:white;border:1px solid #d9e7dc;border-radius:15px;padding:18px}
+.card strong{display:block;color:#1a644d;font-size:31px}.card small{color:#688073;font-size:12px}
+.panel{padding:22px;border:1px solid #d6e5d9;border-radius:16px;background:white;margin:18px 0}
+.panel h2{font:700 22px Georgia,serif;margin:0 0 8px;color:#145b45}
+.panel p{font-size:13px;color:#526d5e}.pill{display:inline-flex;border:1px solid #a8d3b7;color:#155a43;background:#eaf7ee;padding:7px 13px;border-radius:100px;font-size:12px;font-weight:800}
+.note{background:#fff6e6;border:1px solid #eddabd;border-radius:10px;padding:13px;color:#775c35;margin:13px 0}
+button,a.action{cursor:pointer;border:1px solid #14674e;background:#14614b;color:white;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;border-radius:9px;padding:11px 16px;text-decoration:none;min-height:44px}
+a.secondary{background:#f0f8f2;color:#155c44;border-color:#c5dccc}
+button:disabled{opacity:.6;cursor:wait}.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:17px}
+#message{display:none;border:1px solid #b4d9bb;background:#edf9ef;padding:13px;color:#165b41;border-radius:9px;margin-top:14px}
+#message.show{display:block}#message.bad{background:#fff0eb;color:#913936;border-color:#e6beb4}
+table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:10px;border-bottom:1px solid #e2eee6;text-align:left}
+th{font-size:11px;color:#657b6d}footer{padding:22px;font-size:11px;color:#667f70;text-align:center}
+@media(max-width:700px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.panel{padding:16px}.brand img{width:61px;height:57px}.brand strong{font-size:16px}main{padding:15px 11px 35px}}
+</style></head><body>
+<header><div class="brand"><img src="/volunteer-logo.jpeg" alt="Original Mamta Care Charitable Trust logo">
+<div><strong>Mamta Care · Donor Registration</strong><small>OFFICIAL GOOGLE FORM · AUTOMATIC PHOTO SYNC</small></div></div>
+<a href="/admin-ops">Back to Admin</a></header>
+<main>
+<section class="hero"><span class="eyebrow">NO PHOTO APPROVAL REQUIRED</span><h1>Every valid donor goes into normal registration.</h1>
+<p>New donors register through Mamta Care’s existing official Google Form, which generates the real registration number and runs the established confirmation-email process. Two optional photographs are associated automatically when the official record is available.</p></section>
+<section class="cards">
+<div class="card"><strong id="official">—</strong><small>Website photo cases linked to official IDs</small></div>
+<div class="card"><strong id="pictures">—</strong><small>Official donor photo pairs</small></div>
+<div class="card"><strong id="pending">—</strong><small>Older photo uploads awaiting a valid Form record</small></div>
+</section>
+<section class="panel">
+<h2>Automatic registration synchronization</h2>
+<p><span class="pill">Every 2 minutes · no staff approval</span></p>
+<p>Applications are matched using the unique reference stored in the original Google Form’s Column S, then the private photos are linked to the same official donor record. Previously recorded photo decisions remain as historical audit evidence but no longer block registration.</p>
+<div class="note">If an older photo upload has no matching original Form response, we cannot generate a genuine registration number or registration email from photographs alone. The donor should use the official Google Form rather than rely on the old photo upload. No invented IDs or duplicate emails will be created.</div>
+<div class="actions">
+<button type="button" id="refresh">Refresh Live Status</button>
+<button type="button" id="sync">Check New Official Imports Now</button>
+<a class="action secondary" href="https://forms.gle/VpKSKJoichRqyTvH9" target="_blank" rel="noopener noreferrer">Official Hair Donation Form</a>
+<a class="action secondary" href="/app">Open Donor Desk</a>
+</div><div id="message" role="status" aria-live="polite"></div></section>
+<section class="panel"><h2>Older upload synchronization states</h2>
+<p>These are technical status counts, not an approval queue. Donors are admitted through the original Form; their photos do not need review.</p>
+<div style="overflow:auto"><table><thead><tr><th>Technical state</th><th>Records</th></tr></thead><tbody id="states"></tbody></table></div>
+</section>
+<footer>Mamta Care Charitable Trust · No photo rejection stage · Official registration IDs preserved · Donor photos remain private</footer>
+</main>
+<script nonce="MCCT_WIG_NONCE_PLACEHOLDER">
+(function(){"use strict";
+const $=id=>document.getElementById(id),root="/api/admin/ops/v10";
+function msg(text,bad=false){const n=$("message");n.textContent=text;n.className="show"+(bad?" bad":"");}
+async function api(path,options={}){
+ const r=await fetch(root+path,{credentials:"same-origin",cache:"no-store",...options});
+ const x=await r.json().catch(()=>({ok:false,error:"Unexpected response"}));
+ if(!r.ok||x.ok!==true)throw Error(x.error||"Registration sync unavailable");return x;
+}
+async function refresh(){
+ try{
+  const r=await api("/status");
+  $("official").textContent=r.official_registered;
+  $("pictures").textContent=r.photo_pairs;
+  $("pending").textContent=r.original_form_sync_pending;
+  const host=$("states");host.replaceChildren();
+  for(const item of r.states){
+   const tr=document.createElement("tr");
+   const a=document.createElement("td"),b=document.createElement("td");
+   a.textContent=item.state;b.textContent=item.n;tr.append(a,b);host.append(tr);
+  }
+ }catch(e){msg(e.message,true)}
+}
+$("refresh").onclick=refresh;
+$("sync").onclick=async()=>{
+ const button=$("sync");button.disabled=true;
+ try{
+  const r=await api("/sync",{method:"POST",headers:{"Content-Type":"application/json","X-Mamta-Desk":"1"},body:"{}"});
+  msg("Matched "+r.linked+" photo applications to official registrations. "+r.skipped+" cases await an authoritative record or already-attached photos. No fake IDs or extra emails were created.");
+  await refresh();
+ }catch(e){msg(e.message,true)}finally{button.disabled=false}
+};
+void refresh();
+})();
+</script></body></html>
