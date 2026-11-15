@@ -20,7 +20,7 @@ test("custom website registration remains the user-facing form, never Google For
  assert.match(ui,/back/);
  assert.match(ui,/0x4AAAAA/);
  assert.match(ui,/\/api\/hair-registration/);
- assert.match(ui,/VITE_HAIR_REGISTRATION_ENABLED/);
+ assert.doesNotMatch(ui,/VITE_HAIR_REGISTRATION_ENABLED/);
 });
 test("donor never sees administrator photo approval on pending registration",()=>{
  assert.doesNotMatch(ui,/Your registration needs Administrator review/);
