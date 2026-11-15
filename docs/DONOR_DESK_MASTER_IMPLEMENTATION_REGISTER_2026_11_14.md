@@ -10,6 +10,37 @@ This document is the canonical list of outstanding work reported in previous Mam
 ## Release history and production facts
 
 
+### 15 November 2026 — V7, V8, V9: Photo source reconciliation, protected donor email relay and safe 30-day expiry
+
+**V7 accepted-photo source matching**
+- Existing approved photo applications are now automatically matched every two minutes ONLY if the imported original Google Form Column S marker is an exact \`WEBSITE:<submission_uuid>\`, there is one authoritative donor record and one official ID, and no existing link. Matching is transactional, audited, idempotent and never creates an ID or sends an email.
+- Administrator-only \`/admin-photo-reconciliation\` shows linked/unlinked state and can trigger a safe check immediately. Four accepted reviews are still missing original source markers and cannot be given invented IDs.
+- 77 existing Google-Sheet-imported donor rows carried \`WEBSITE:\` source markers in the 15 November audit. Markers provide a permanent safe matching path as authoritative registrations arrive.
+
+**V8 notification sender and outbox**
+- Deployed admin-only \`/admin-notification-outbox\` with truthful counts of queued email kinds, sender connectivity, quota/health and no-send reconciliation of uncertain outcomes.
+- Added an additive notification-delivery-events D1 table. Worker can safely use the original \`SOCIAL_BRIDGE_URL\` and \`MC_DESK_SHARED_SECRET\`, but NEVER exposes these credentials to the website or admin UI.
+- Source \`apps-script/MamtaDeskNotificationRelay.gs\` and installation documentation \`docs/DONOR_EMAIL_RELAY_ACTIVATION_2026_11_15.md\` are in GitHub. The relay uses the official spreadsheet-bound Google Apps Script MailApp with a separate hidden dispatch ledger, ScriptLock, ID/recipient validation, pre-send reservation and no automatic uncertain retries.
+- **Emails are NOT yet active.** The original live Apps Script project was inaccessible through the connected Drive account (404), so its \`doPost\` could not be updated or deployed. Both owner-controlled send gates are OFF: \`MC_NOTIFICATION_EMAIL_ENABLED\` (Worker) and \`MCCT_NOTIFICATION_RELAY_ENABLE_SEND\` (Apps Script). The sending pilot is one email/day by default, optionally 20/day after successful validation. \`SENT\` means MailApp accepted, NOT that the recipient mailbox delivered.
+- Existing registration/certificate email systems are untouched and will not be double-sent by the new relay.
+- In production: 54 original donor \`FEEDBACK_EMAIL\` notices still \`PENDING_CONFIGURATION\`, zero sender-acknowledged emails and zero dispatch events as of last audit. Do not claim delivery.
+
+**V9 guarded 30-day expiry**
+- Deployed auto-scan of existing \`mcct_ops_expiry_review\` and automatic staging of \`EXPIRY_EMAIL\` outbox cases. Eligibility requires 30+ days with no donor update, original official registration/email/consent, and zero recorded courier, parcel receipt, hand collection, hair inventory, certificate or verification, with Bin excluded.
+- Verified **three** eligible inactive cases; their notice rows now appear as \`EXPIRY_EMAIL / PENDING_CONFIGURATION\`. Zero emails sent; zero donors expired. The source code and admin page \`/admin-expiry-automation\` are deployed and preserve existing status and registration history.
+- Real automation to send expiry notices and move a case to \`Expired\` is independently gated behind \`MC_NOTIFICATION_EXPIRY_ENABLED=true\` PLUS both V8 sender gates and Google MailApp authorization. After positive MailApp send acknowledgment and a 24-hour grace interval, the Worker re-checks all eligibility conditions and only then changes a donor to Expired with optimistic versioning and two audit trails. Reopen through the existing Admin Operations status action. No automatic rejection without verified sender.
+- The owner must install the Apps Script source, authorize MailApp and test an actual controlled send. Until then all sender/rejection gates remain off.
+
+**Production preservation and verification**
+- PR #21 (V7), #22 (V8) and #23 (V9) merged to \`main\`, each after the Donor Desk safety tests, registration safety checks, Vercel preview and Cloudflare full-Worker staging compilation. Production Vercel deployment READY \`dpl_FaegFQKsBaHPxW3UcrshAhKPi6Wz\`.
+- Current Cloudflare Worker version \`262e36f8-5f1f-4080-9cc5-2b6c33c25ecb\`; **21 existing bindings** intact, original \`*/2 * * * *\` cron intact, original production D1/R2/session/print/certificate handlers preserved.
+- At final 15 November audit: **161** operational D1 donor rows due to normal ongoing Google Sheets synchronization, **31** Bin rows, **2** official reviewed-photo links, **4** accepted unresolved photo cases, **54** feedback notices pending and **3** expiry notices pending. No verified relay emails sent and **0** Expired donors. The V8/V9 code deployment itself did not create a donor, registration or certificate.
+- Existing public tracking V5 and website operational count V6 remain in service; historical all-time Google Sheet totals are still independently scoped, not silently overwritten.
+
+**Still pending external authorization or evidence:** actual Google Apps Script email relay installation/deployment and test; the missing four photo-to-Form identities; real payment gateway webhook and confirmation; authorized WhatsApp/SMS provider and opt-in; federated SSO across Vercel/Cloudflare; full mobile/authenticated end-to-end acceptance testing. These cannot honestly be reported complete without external accounts and actual integration outcomes.
+
+
+
 ### 15 November 2026: V5 Secure Cloudflare Tracking and V6 Live Operational Metrics
 - **V5 tracking:** Current public website Track Donation buttons now point to \`https://mamta-donor-desk-launch-new.bharathairseva-in.workers.dev/track-hair-donation\`. Site aliases \`/track\`, \`/track-your-hair-donation\` and registration-ID query parameters on the homepage forward to the new private verification page. This preserves the registration ID in older QR-derived URLs without altering issued certificates or old QR images.
 - The tracking API reads existing D1 data only after a valid official registration ID, registered phone last four digits, Turnstile and HMAC-IP rate protection (20 lookups/hour). Response contains a factual current stage (registered, courier, collected, transit, received, fabrication, verified or closed) but **never the donor's name, full phone, email, address, AWB, photo or private health data**. A donor merely marked Completed is **not** claimed to have a finished/delivered wig.
