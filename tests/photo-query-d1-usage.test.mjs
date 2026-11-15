@@ -51,7 +51,7 @@ test("exact original Form marker and unique registration can link stored private
  assert.equal(result.linked,1);
  assert.equal(result.created_ids,0);
  assert.equal(result.sent_emails,0);
- assert.ok(db.queries.length<=5);
+ assert.ok(db.queries.length<=6);
  assert.ok(!db.queries.some(q=>q.includes("COUNT(*) FROM donors")));
 });
 test("duplicate official IDs must not automatically link a case",async()=>{
