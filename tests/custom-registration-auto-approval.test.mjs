@@ -69,7 +69,7 @@ test("retries retain the same UUID with a 45-second cooldown and fail closed",()
 });
 test("Donor Desk no-review addon uses imported source marker and never invents IDs",()=>{
  assert.doesNotThrow(()=>new Script(addon));
- assert.match(addon,/WEBSITE:'\|\|i\.submission_uuid/);
+ assert.match(addon,/markers\.get\("WEBSITE:"\+i\.submission_uuid\)/);
  assert.match(addon,/state='FORM_SYNC_PENDING'/);
  assert.match(addon,/d\.source='google_sheet'/);
  assert.match(addon,/DONOR_PHOTOS\.head/);
