@@ -10,6 +10,10 @@
       "destination": "https://mamta-website-hair-registration.bharathairseva-in.workers.dev/api/register"
     },
     {
+      "source": "/api/hair-registration-status",
+      "destination": "https://mamta-website-hair-registration.bharathairseva-in.workers.dev/api/registration-status"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
