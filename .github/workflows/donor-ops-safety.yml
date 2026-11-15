@@ -36,6 +36,8 @@ on:
       - "tests/custom-registration-auto-approval.test.mjs"
       - "cloudflare/patches/d1-row-read-hotfix-v12.mjs"
       - "tests/d1-row-read-hotfix.test.mjs"
+      - "tests/photo-query-d1-usage.test.mjs"
+      - "cloudflare/custom-photo-auto-link-v11-addon.mjs"
       - "tests/registration-progress.test.mjs"
       - "src/styles/hair-registration.css"
       - "src/App.jsx"
