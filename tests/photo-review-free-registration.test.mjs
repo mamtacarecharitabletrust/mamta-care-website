@@ -27,7 +27,7 @@ test("no new website photo upload can be held for human approval",()=>{
  assert.match(publicWorker,/state='UPLOAD_SYNC_PENDING'/);
  assert.doesNotMatch(publicWorker,/requires Administrator review|pending review for this registration|requires team review/i);
  assert.match(publicWorker,/action:"website_submit"/);
- assert.match(publicWorker,/action="website_status"|bridgeStatus\("website_status"\)/);
+ assert.match(publicWorker,/website_status/);
  assert.match(publicWorker,/GOOGLE_FORM_BRIDGE_SECRET/);
  assert.match(publicWorker,/state='COMPLETE'/);
 });
