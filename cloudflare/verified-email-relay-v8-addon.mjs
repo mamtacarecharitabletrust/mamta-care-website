@@ -19,6 +19,7 @@ function mcctMailV8Json(payload,status=200){
 }
 function mcctMailV8Err(message,status=400){return mcctMailV8Json({ok:false,error:message},status)}
 function mcctMailV8Enabled(env){return String(env?.MC_NOTIFICATION_EMAIL_ENABLED||"")==="true"}
+function mcctMailV8DailyCap(env){return String(env?.MC_NOTIFICATION_EMAIL_DAILY_CAP||"")==="20"?20:1}
 function mcctMailV8IST(){return mcctWigV3IST(new Date())}
 function mcctMailV8MidnightUTC(){
  const d=mcctMailV8IST();
@@ -76,7 +77,7 @@ async function mcctMailV8Status(env){
  return mcctMailV8Json({ok:true,notifications:groups.results||[],eligible_feedback_email:eligible?.n||0,
   uncertain_or_in_progress:blocked?.n||0,mailapp_accepted_total:opened?.n||0,
   ...health,registration_emails_not_replaced:true,expiry_notifications_not_activated:true,
-  accepted_is_not_delivered:true,limits:{feedback_emails_per_day:20,min_other_email_quota_reserved:10}});
+  accepted_is_not_delivered:true,limits:{feedback_emails_per_day:mcctMailV8DailyCap(env),min_other_email_quota_reserved:10}});
 }
 async function mcctMailV8Log(db,id,state,detail){
  return db.prepare("INSERT INTO mcct_notification_dispatch_events(id,outbox_id,event_state,detail,happened_at) VALUES(?,?,?,?,?)")
@@ -112,7 +113,7 @@ async function mcctMailV8Pump(env){
  await mcctMailV8ReconcileReserved(env);
  const start=mcctMailV8MidnightUTC(),next=start+86400;
  const count=await db.prepare("SELECT COUNT(*) n FROM mcct_ops_notification_outbox WHERE kind='FEEDBACK_EMAIL' AND delivery_state='SENT' AND sent_at>=? AND sent_at<?").bind(start,next).first();
- let budget=Math.min(5,20-Number(count?.n||0),Number(h.mail_quota_remaining)-10);
+ let budget=Math.min(5,mcctMailV8DailyCap(env)-Number(count?.n||0),Number(h.mail_quota_remaining)-10);
  if(!Number.isSafeInteger(budget)||budget<1)return {enabled:true,ready:true,sent:0,quota_limited:true};
  const list=await db.prepare(
   "SELECT o.id,d.full_name,d.email,d.registration_id FROM mcct_ops_notification_outbox o "+
