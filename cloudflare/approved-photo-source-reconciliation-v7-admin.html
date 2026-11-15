@@ -1,0 +1,87 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="referrer" content="no-referrer"><meta name="theme-color" content="#155c4a">
+<title>Photo Registration Reconciliation | Mamta Care Admin</title>
+<style nonce="MCCT_WIG_NONCE_PLACEHOLDER">
+:root{color:#163f33;font:14px/1.55 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:#f0f5f1}
+*{box-sizing:border-box}body{margin:0}
+header{background:#125644;color:#fff;display:flex;gap:14px;justify-content:space-between;align-items:center;flex-wrap:wrap;padding:13px clamp(14px,4vw,40px)}
+.brand{display:flex;gap:12px;align-items:center}.brand img{height:62px;width:70px;object-fit:contain;background:white;border-radius:11px}
+.brand b{display:block;font:750 20px/1.2 Georgia,serif}.brand small{font-size:10px;letter-spacing:.13em;opacity:.86}
+nav{display:flex;gap:8px;flex-wrap:wrap}nav a{font-weight:750;color:white;text-decoration:none;border-radius:9px;border:1px solid #abd6be;padding:9px 12px}
+main{max-width:1080px;margin:auto;padding:25px 16px 55px}
+.hero{border-radius:18px;background:linear-gradient(122deg,#135e4a,#26795c);padding:23px;color:white}
+.hero small{font-size:10px;letter-spacing:.13em;color:#d3e7c9;font-weight:800}
+h1{font:750 clamp(25px,4vw,35px) Georgia,serif;line-height:1.2;margin:10px 0}
+.hero p{max-width:850px;color:#e5f4ea;margin:0}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin:15px 0}
+.kpi{background:white;padding:18px 14px;border:1px solid #d9e4d7;border-radius:14px;min-height:104px}
+.kpi strong{display:block;font-size:31px;color:#18684f}.kpi span{font-size:12px;color:#60796a}
+.panel{background:white;border:1px solid #d5e4d8;border-radius:15px;padding:22px;margin:16px 0}
+.panel h2{font:750 21px Georgia,serif;margin:0;color:#205b45}
+p{color:#4e6859} .warning{background:#fff6e6;color:#755b38;border:1px solid #ead9b9;border-radius:11px;padding:13px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+button,.action{display:inline-flex;min-height:44px;align-items:center;justify-content:center;padding:10px 14px;border-radius:9px;border:1px solid #17694e;background:#14674d;color:white;font-size:13px;font-weight:800;text-decoration:none;cursor:pointer}
+.action.secondary{background:#eef7f0;color:#165c44;border-color:#b3d3bb}
+button:disabled{cursor:wait;opacity:.6}button:focus-visible,.action:focus-visible{outline:3px solid #e8c27c;outline-offset:2px}
+#message{display:none;margin-top:15px;border:1px solid #bad9c3;border-radius:10px;background:#edf8ec;padding:13px;color:#175b41}
+#message.show{display:block}#message.bad{background:#fff0ee;border-color:#e3b9b4;color:#892f2e}
+footer{text-align:center;color:#627e70;font-size:11px;padding:19px}
+@media(max-width:700px){.grid{grid-template-columns:repeat(2,1fr)}.panel{padding:17px}main{padding:14px 11px 30px}}
+</style></head><body>
+<header><div class="brand">
+<img src="/volunteer-logo.jpeg" alt="Original unchanged Mamta Care logo">
+<div><b>Mamta Care · Registration Integrity</b><small>PRIVATE ADMINISTRATOR REVIEW</small></div></div>
+<nav><a href="/admin-ops">Admin Home</a><a href="/app/photo-decisions">View Photo Decisions</a></nav>
+</header>
+<main>
+<section class="hero"><small>OFFICIAL GOOGLE FORM · EXACT SOURCE LINK</small>
+<h1>Approved photo registration recovery</h1>
+<p>Automatically reconcile approved photographs to genuine registration numbers already issued through the original Google Form. A submitted photo is not a new donor unless an authoritative record is found.</p></section>
+<section class="grid">
+<div class="kpi"><strong id="linked">—</strong><span>Reviews linked to official donor</span></div>
+<div class="kpi"><strong id="awaiting">—</strong><span>Accepted, still awaiting official link</span></div>
+<div class="kpi"><strong id="matching">—</strong><span>Matching source markers available</span></div>
+<div class="kpi"><strong id="missing">—</strong><span>Missing authoritative form marker</span></div>
+</section>
+<section class="panel">
+<h2>Reconciliation runs automatically</h2>
+<p>The existing two-minute Donor Desk synchronization will check new Google Sheet registrations for a specific marker: <code>WEBSITE:[original-submission-UUID]</code>. It also checks that exactly one original donor and one official registration ID match before linking the photo review.</p>
+<div class="warning">If no exact Google Form marker exists, the case is held for your review. Matching by name, phone, location or hair length alone is prohibited. No registration IDs, certificates, donor emails or donor records are created by this tool.</div>
+<div class="actions"><button id="refresh" type="button">Refresh Pending Status</button>
+<button id="reconcile" type="button">Recheck Official Sheet Imports Now</button>
+<a class="action secondary" href="/app/photo-decisions">Review Photos</a></div>
+<p id="message" role="status" aria-live="polite"></p>
+</section>
+<section class="panel"><h2>Why an application can remain pending</h2>
+<p>The photo was accepted, but its original website registration may never have reached the Google Form, or the Google Form response may be awaiting the existing Apps Script registration-number generator. The original form and hidden intake ledger are authoritative; issuing a guessed or duplicate registration ID would risk certificates, emails and donor history.</p>
+<p>Recheck the original Google Form/Sheet for the same submission UUID. Once a unique marker and official registration are imported, this dashboard will link the approved photo case automatically.</p></section>
+<footer>Mamta Care Charitable Trust · Approved photograph privacy and official donor identities preserved</footer>
+</main>
+<script nonce="MCCT_WIG_NONCE_PLACEHOLDER">
+(function(){"use strict";
+const $=id=>document.getElementById(id);
+const base="/api/admin/ops/v7",button=$("reconcile");
+function status(text,bad=false){const o=$("message");o.textContent=text;o.className="show"+(bad?" bad":"");}
+async function call(path,options={}){
+ const response=await fetch(base+path,{credentials:"same-origin",cache:"no-store",...options});
+ const data=await response.json().catch(()=>({ok:false,error:"Unexpected response"}));
+ if(!response.ok||data.ok!==true)throw Error(data.error||"Unable to access reconciliation");return data;
+}
+async function refresh(){
+ try{const x=await call("/summary");
+ $("linked").textContent=x.linked_with_official_record;
+ $("awaiting").textContent=x.accepted_without_link;
+ $("matching").textContent=x.official_imported_marker_available;
+ $("missing").textContent=x.missing_official_form_marker;}
+ catch(e){status(e.message,true);}
+}
+$("refresh").onclick=refresh;
+button.onclick=async()=>{button.disabled=true;try{
+ const x=await call("/reconcile",{method:"POST",headers:{"Content-Type":"application/json","X-Mamta-Desk":"1"},body:"{}"});
+ status(x.linked+" approved cases linked using authoritative registration markers. No new registration IDs, donor emails or certificates were created.");
+ await refresh();
+}catch(e){status(e.message,true);}finally{button.disabled=false;}};
+void refresh();
+})();
+</script></body></html>
