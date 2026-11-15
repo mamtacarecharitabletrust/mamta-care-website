@@ -22,19 +22,50 @@ async function mcctNoReviewV11Backfill(env){
  // An old "review" state never represents rejection of a donor.
  // Registration remains valid only when the real Google Form ID exists.
  await db.prepare("UPDATE website_form_intakes SET state='FORM_SYNC_PENDING',updated_at=? WHERE state='REVIEW_REQUIRED'").bind(now).run();
- const candidates=await db.prepare(
-  "SELECT i.submission_uuid,i.front_key,i.back_key,i.registration_id,d.id AS donor_id,d.registration_id AS official_id "+
-  "FROM website_form_intakes i JOIN donors d "+
-  "ON d.source='google_sheet' AND TRIM(COALESCE(d.sheet_extra,''))='WEBSITE:'||i.submission_uuid "+
-  "AND d.registration_id IS NOT NULL AND TRIM(d.registration_id)<>'' "+
-  "WHERE i.state IN ('REVIEW_REQUIRED','FORM_SYNC_PENDING','RESERVED','CLAIMED','PHOTOS_STORED') "+
-  "AND (i.registration_id IS NULL OR TRIM(i.registration_id)='' OR i.registration_id=d.registration_id) "+
-  "AND (SELECT COUNT(*) FROM donors d2 WHERE d2.source='google_sheet' "+
-  "AND TRIM(COALESCE(d2.sheet_extra,''))='WEBSITE:'||i.submission_uuid)=1 "+
-  "AND (SELECT COUNT(*) FROM donors d3 WHERE LOWER(TRIM(d3.registration_id))=LOWER(TRIM(d.registration_id)))=1 "+
-  "AND NOT EXISTS(SELECT 1 FROM website_form_intakes j WHERE j.submission_uuid<>i.submission_uuid AND j.registration_id=d.registration_id) "+
-  "ORDER BY i.created_at ASC LIMIT 20"
+ // V13: bounded in-memory index — no correlated donor table subqueries.
+ const pending=await db.prepare(
+  "SELECT submission_uuid,front_key,back_key,registration_id FROM website_form_intakes "+
+  "WHERE state IN ('REVIEW_REQUIRED','FORM_SYNC_PENDING','RESERVED','CLAIMED','PHOTOS_STORED') "+
+  "ORDER BY created_at ASC LIMIT 100"
  ).all();
+ if(!(pending.results||[]).length)return {linked:0,failed:0,skipped:0,processed:0,created_ids:0,sent_emails:0};
+ const [donorIndex,intakeIndex]=await Promise.all([
+  db.prepare("SELECT id,source,registration_id,sheet_extra FROM donors WHERE registration_id IS NOT NULL AND TRIM(registration_id)<>''").all(),
+  db.prepare("SELECT submission_uuid,registration_id FROM website_form_intakes WHERE registration_id IS NOT NULL AND TRIM(registration_id)<>''").all()
+ ]);
+ const markers=new Map(),registrationCounts=new Map(),intakeClaims=new Map();
+ for(const d of donorIndex.results||[]){
+  const key=String(d.registration_id||"").trim().toLowerCase();
+  if(!key)continue;
+  registrationCounts.set(key,(registrationCounts.get(key)||0)+1);
+  const marker=String(d.sheet_extra||"").trim();
+  if(d.source==="google_sheet"&&marker.startsWith("WEBSITE:")&&marker.length===44){
+   const slot=markers.get(marker)||{count:0,donor:null};
+   slot.count++;
+   slot.donor=d;
+   markers.set(marker,slot);
+  }
+ }
+ for(const i of intakeIndex.results||[]){
+  const key=String(i.registration_id||"").trim();
+  if(!key)continue;
+  const slot=intakeClaims.get(key)||new Set();
+  slot.add(i.submission_uuid);
+  intakeClaims.set(key,slot);
+ }
+ const rows=[];
+ for(const i of pending.results||[]){
+  const match=markers.get("WEBSITE:"+i.submission_uuid);
+  if(match?.count!==1||!match.donor)continue;
+  const d=match.donor,reg=String(d.registration_id||"");
+  if(registrationCounts.get(reg.trim().toLowerCase())!==1)continue;
+  if(i.registration_id&&String(i.registration_id).trim()!==reg)continue;
+  const claims=intakeClaims.get(reg);
+  if(claims&&!(claims.size===1&&claims.has(i.submission_uuid)))continue;
+  rows.push({...i,donor_id:d.id,official_id:reg});
+  if(rows.length>=20)break;
+ }
+ const candidates={results:rows};
  let linked=0,failed=0,skipped=0;
  for(const i of candidates.results||[]){
   try{
@@ -170,5 +201,8 @@ launch_wig_maker_portal_worker_default.fetch=async function(req,env,ctx){
 launch_wig_maker_portal_worker_default.scheduled=async function(controller,env,ctx){
  if(MCCT_NO_REVIEW_V11_PREVIOUS_SCHEDULED)
   await MCCT_NO_REVIEW_V11_PREVIOUS_SCHEDULED.call(this,controller,env,ctx);
- ctx.waitUntil(mcctNoReviewV11Backfill(env).catch(e=>console.error("MCCT_NO_REVIEW_V11_SCHEDULED",String(e?.name||"Error"))));
+ if(new Date(controller?.scheduledTime||Date.now()).getUTCMinutes()%20===0)
+  ctx.waitUntil(mcctNoReviewV11Backfill(env).catch(e=>console.error("MCCT_NO_REVIEW_V11_SCHEDULED",String(e?.name||"Error"))));
 };
+
+/* MCCT_PHOTO_QUERY_INDEXED_V13_20261115: production query preserved in source control */
