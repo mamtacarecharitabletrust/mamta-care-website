@@ -23,9 +23,11 @@ function FormField({ title, required = true, children }) {
   return <label className="mchr-field"><span>{title}{required ? " *" : ""}</span>{children}</label>;
 }
 
+const WEBSITE_REGISTRATION_ENABLED = true; // Server still checks Cloudflare registration and integration gates.
+
 export default function HairDonationRegistration() {
   useEffect(() => {
-    if (import.meta.env.VITE_HAIR_REGISTRATION_ENABLED !== "true") return;
+    if (!WEBSITE_REGISTRATION_ENABLED) return;
     const script=document.createElement("script");
     script.src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
     script.async=true;script.defer=true;document.head.appendChild(script);
@@ -35,7 +37,7 @@ export default function HairDonationRegistration() {
   const securityRef = useRef(null);
   const widgetId = useRef(null);
   useEffect(() => {
-    if (step !== 4 || import.meta.env.VITE_HAIR_REGISTRATION_ENABLED !== "true") return;
+    if (step !== 4 || !WEBSITE_REGISTRATION_ENABLED) return;
     let disposed = false;
     let frame = 0;
     function mount() {
@@ -75,6 +77,9 @@ export default function HairDonationRegistration() {
   const [testResult, setTestResult] = useState(null);
   const attempted = useRef(false);
   const [uploadState, setUploadState] = useState("idle");
+  const [syncPending, setSyncPending] = useState(false);
+  const [canRetry, setCanRetry] = useState(false);
+  const [statusChecking, setStatusChecking] = useState(false);
   const frontGallery = useRef(null), frontCamera = useRef(null);
   const backGallery = useRef(null), backCamera = useRef(null);
   const refs = useMemo(() => ({ front: { gallery: frontGallery, camera: frontCamera }, back: { gallery: backGallery, camera: backCamera } }), []);
@@ -108,8 +113,50 @@ export default function HairDonationRegistration() {
   // Set VITE_HAIR_REGISTRATION_ENABLED only after the Google Form bridge,
   // original registration email, and administrator photo viewer pass end to end.
   // No privileged secret ever belongs in the browser.
-  const WEBSITE_REGISTRATION_ENABLED = import.meta.env.VITE_HAIR_REGISTRATION_ENABLED === "true";
   const requestId = useRef(null);
+  const checkRegistrationStatus = async () => {
+    if (!requestId.current) return false;
+    setStatusChecking(true);
+    try {
+      const response = await fetch("/api/hair-registration-status?submission_uuid=" + encodeURIComponent(requestId.current), {cache:"no-store"});
+      const result = await response.json().catch(() => null);
+      if (response.ok && result?.ok === true && result?.registered && result?.registration_id) {
+        setTestResult({registration_id:result.registration_id});
+        setFinished(true); setSyncPending(false); setError("");
+        setUploadState("Official registration confirmed");
+        return true;
+      }
+      if (response.status === 404) {
+        setUploadState("Checking the original registration reference. Please do not create a second application.");
+      }
+    } catch {
+      setUploadState("Registration status is temporarily unavailable; automatic checking will continue.");
+    } finally {
+      setStatusChecking(false);
+    }
+    return false;
+  };
+  useEffect(() => {
+    if (!syncPending || finished || !requestId.current) return;
+    let active = true;
+    let count = 0;
+    const poll = async () => {
+      if (!active || count >= 35) return;
+      count++;
+      await checkRegistrationStatus();
+    };
+    poll();
+    const interval = window.setInterval(poll, 12000);
+    const retry = window.setTimeout(() => { if (active) setCanRetry(true); }, 47000);
+    return () => { active = false; window.clearInterval(interval); window.clearTimeout(retry); };
+  }, [syncPending, finished]);
+  const retryOriginalSubmission = () => {
+    // The same submission UUID is reused: no second Google Form registration.
+    attempted.current = false;
+    setSyncPending(false); setCanRetry(false); setError("");
+    setUploadState("Retrying the original registration reference securely");
+    try { window.turnstile?.reset?.(widgetId.current); } catch {}
+  };
   const submitTest = async () => {
     if (!WEBSITE_REGISTRATION_ENABLED) {
       setError("Preview only: no information or photographs have been submitted.");
@@ -139,7 +186,10 @@ export default function HairDonationRegistration() {
       );
       const result = await res.json().catch(() => null);
       if (res.status === 202 || result?.pending === true) {
-        throw new Error("Your registration needs Administrator review. Do not submit again; Mamta Care will reconcile the registration and photographs.");
+        setUploadState("Your application is received. The official registration number is being synchronized automatically.");
+        setSyncPending(true); setCanRetry(false); setError("");
+        try { window.turnstile?.reset?.(widgetId.current); } catch {}
+        return;
       }
       if (!res.ok || result?.ok !== true || !result?.registration_id) {
         throw new Error(result?.error || "Registration not confirmed. Contact Mamta Care before retrying.");
@@ -148,7 +198,9 @@ export default function HairDonationRegistration() {
       setUploadState("Registration received");
       setFinished(true);
     } catch (e) {
-      setError(String(e?.message || "Registration could not be confirmed. Contact Mamta Care before retrying."));
+      attempted.current = false;
+      setError(String(e?.message || "Registration status could not be confirmed. Retry this same submission reference."));
+      try { window.turnstile?.reset?.(widgetId.current); } catch {}
     } finally { setSubmitting(false); }
   };
   const photoNames = { front: "Front photograph", back: "Back photograph" };
@@ -167,8 +219,18 @@ export default function HairDonationRegistration() {
       </div>}
       {finished ? <section className="mchr-panel mchr-success" aria-live="polite">
         <span className="mchr-success-icon">✓</span><h2>Registration received</h2>
-        <p>Your official registration ID is <strong>{testResult?.registration_id}</strong>. Your two photographs were privately received. Your confirmation email is handled by Mamta Care’s existing email process. The team will review the details in Donor Desk.</p>
+        <p>Your official registration ID is <strong>{testResult?.registration_id}</strong>. Your two photographs were privately received without a manual photo approval. Your confirmation email is handled by Mamta Care’s existing email process. Your donor record will synchronize with Donor Desk.</p>
         <button type="button" className="mchr-primary" onClick={() => window.location.reload()}>Return to website</button>
+      </section> : syncPending ? <section className="mchr-panel" role="status" aria-live="polite">
+        <span className="mchr-success-icon">✓</span>
+        <h2>Registration received — syncing automatically</h2>
+        <p>Your details and two photographs have been accepted for processing. <strong>No administrator photo approval is required.</strong> Mamta Care is confirming your official registration number and existing confirmation-email workflow.</p>
+        <p className="mchr-note">Submission reference: <strong>{requestId.current}</strong>. Keep this reference until your official number appears. Please do not create a second registration.</p>
+        <p>{uploadState}</p>
+        <div className="mchr-footer-actions">
+          <button type="button" className="mchr-secondary" disabled={statusChecking} onClick={checkRegistrationStatus}>{statusChecking ? "Checking…" : "Check registration status"}</button>
+          {canRetry && <button type="button" className="mchr-primary" onClick={retryOriginalSubmission}>Retry this same submission securely</button>}
+        </div>
       </section> : <>
         <nav aria-label="Hair donation registration steps" className="mchr-steps">
           {["Donation type", "Your details", "Two photos", "Consent"].map((label, index) =>
@@ -236,11 +298,11 @@ export default function HairDonationRegistration() {
               <label className="mchr-check"><input type="checkbox" checked={values.private_photos} onChange={e => set("private_photos", e.target.checked)}/><span>I permit the Trust to collect and privately review my submitted photographs and donor details for registration and coordination under its privacy notice. <b>Required</b></span></label>
               <div className="mchr-note" style={{margin:"14px 0"}}>
                 <strong>Hair donation terms</strong>
-                <p>For haircut donations, Mamta Care requires at least 14 inches of usable hair, excluding split ends and uneven ends. A full head shave is optional and must be entirely your choice. Submit accurate contact details and clear front/back photographs so our team can coordinate the donation. Submitted photos are privately reviewed and will not be published without separate permission. A donation does not guarantee a particular wig recipient.</p>
+                <p>For haircut donations, Mamta Care requires at least 14 inches of usable hair, excluding split ends and uneven ends. A full head shave is optional and must be entirely your choice. Submit accurate contact details and clear front/back photographs so our team can coordinate the donation. Submitted photos are stored privately for donation coordination and will not be published without separate permission. A donation does not guarantee a particular wig recipient.</p>
               </div>
               <label className="mchr-check"><input type="checkbox" checked={values.terms_accepted} onChange={e => set("terms_accepted", e.target.checked)}/><span>I have read and agree to the hair donation registration terms above. <b>Required</b></span></label>
               <label className="mchr-check"><input type="checkbox" checked={values.awareness} onChange={e => set("awareness", e.target.checked)}/><span>I optionally authorize the Trust to use specific photographs or videos I approve for educational and awareness communications. This choice is not required to donate. <b>Optional</b></span></label>
-              <p className="mchr-image-note">Publicity permission is optional and separate from registration. Your photos are used privately for registration review and donor coordination. To ask about your data or request withdrawal, contact Mamta Care through our Contact page. Requests are reviewed under the Trust's applicable procedures.</p>
+              <p className="mchr-image-note">Publicity permission is optional and separate from registration. Your photos are used privately for donor registration and coordination. To ask about your data or request withdrawal, contact Mamta Care through our Contact page. Requests are reviewed under the Trust's applicable procedures.</p>
             </>}
             {step === 4 && WEBSITE_REGISTRATION_ENABLED && <div ref={securityRef} aria-label="Security verification" />}
             {uploadState !== "idle" && <p role="status" className="mchr-note">{uploadState}</p>}
@@ -252,7 +314,7 @@ export default function HairDonationRegistration() {
           </motion.section>
         </AnimatePresence>
       </>}
-      <p className="mchr-footnote">By submitting, you request review by Mamta Care Charitable Trust. Your official registration number is generated automatically by Mamta Care after a successful submission. <Link to="/">Return to Mamta Care website</Link>.</p>
+      <p className="mchr-footnote">By submitting, you register your hair donation with Mamta Care Charitable Trust. Your official registration number is generated automatically by Mamta Care after a successful submission. <Link to="/">Return to Mamta Care website</Link>.</p>
     </div>
   </div>;
 }
