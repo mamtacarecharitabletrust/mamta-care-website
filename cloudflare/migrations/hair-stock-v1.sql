@@ -68,3 +68,6 @@ CREATE TABLE IF NOT EXISTS mcst_admin_alerts (
  UNIQUE(transfer_id,alert_type)
 );
 CREATE INDEX IF NOT EXISTS mcst_alerts_unread ON mcst_admin_alerts(read_at,created_at);
+
+-- Used only inside an atomic D1 batch: abort the entire transfer if changed row counts differ.
+CREATE TABLE IF NOT EXISTS mcst_tx_checks (id TEXT PRIMARY KEY,expected INTEGER NOT NULL,actual INTEGER NOT NULL,CHECK(expected=actual));
