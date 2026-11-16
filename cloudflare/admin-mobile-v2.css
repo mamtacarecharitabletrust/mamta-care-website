@@ -1,0 +1,126 @@
+
+/* Mamta Care Admin Mobile Navigation V2 — presentation only; original brand logo and routes preserved */
+:root{--mcux-green:#134d3c;--mcux-tint:#eaf5ef;--mcux-ink:#1d3730;--mcux-sky:#ecf4fd;--mcux-border:#dbe7e1;--mcux-shadow:0 10px 30px rgba(23,61,44,.085)}
+body.mcux-admin{background:#f6f8f6;color:var(--mcux-ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+body.mcux-admin .rail{width:272px;min-width:272px;background:linear-gradient(168deg,#123e33,#10352e);padding:18px 14px}
+body.mcux-admin .brand{padding:5px 6px 13px}
+body.mcux-admin .navs{display:flex;flex-direction:column;overflow:visible;gap:14px;padding:17px 0}
+body.mcux-admin .mcux-nav-group{display:flex;flex-direction:column;gap:3px}
+body.mcux-admin .mcux-nav-group h2{margin:0;padding:4px 12px 7px;font-size:10px;text-transform:uppercase;letter-spacing:.13em;color:#a7c8b9;font-weight:800}
+body.mcux-admin .mcux-nav-group .nav{display:flex;align-items:center;gap:12px;font-size:13.5px;padding:12px 13px;border-radius:11px;width:100%;text-align:left;background:transparent;color:#e0f0e8;white-space:normal;text-decoration:none;line-height:1.3;border:1px solid transparent;min-height:47px}
+body.mcux-admin .mcux-nav-group .nav:hover,body.mcux-admin .mcux-nav-group .nav.active{background:#ffffff1d;color:#fff;border-color:#ffffff24}
+body.mcux-admin .mcux-nav-group .nav:focus-visible{outline:3px solid #f6ba6a;outline-offset:2px}
+.mcux-nav-icon{font-size:19px;width:23px;min-width:23px;text-align:center}
+body.mcux-admin .top{background:#fff;border-bottom:1px solid var(--mcux-border);min-height:76px;gap:13px}
+body.mcux-admin #heading{font-size:18px;letter-spacing:-.02em}
+body.mcux-admin .topright{margin-left:auto}
+body.mcux-admin .person{color:#426959}
+body.mcux-admin .work{background:linear-gradient(125deg,#f6faf6,#f8faf9)}
+body.mcux-admin .content{scroll-behavior:smooth}
+body.mcux-admin .pane{max-width:1250px}
+body.mcux-admin .stat,body.mcux-admin .card{box-shadow:var(--mcux-shadow);border:1px solid var(--mcux-border);border-radius:18px}
+body.mcux-admin .stat strong{color:#14573e;font-size:28px}
+body.mcux-admin .stat small{color:#61776a}
+body.mcux-admin .frame{border-radius:18px;background:white;border:1px solid var(--mcux-border)}
+body.mcux-admin .railfoot{font-size:11px;line-height:1.5;padding:15px 10px}
+.mcux-findbar{margin:12px 2px 1px;background:#ffffff14;border:1px solid #ffffff35;color:#effff6;border-radius:12px;padding:12px;font-weight:750;font-size:13px;text-align:left;display:flex;gap:9px;align-items:center;cursor:pointer;width:calc(100% - 4px)}
+.mcux-findbar:hover{background:#ffffff26}
+.mcux-findbar:focus-visible{outline:3px solid #f6ba6a}
+.mcux-topsearch,.mcux-menu-toggle{border-radius:12px;background:#e9f2ec;color:#165340;padding:10px 13px;border:1px solid #d6e8dc;min-height:44px;font-weight:750}
+.mcux-topsearch{display:flex;align-items:center;gap:9px;margin-left:auto;white-space:nowrap}
+.mcux-menu-toggle{display:none}
+.mcux-toplogo{width:34px;height:34px;object-fit:contain;border-radius:10px;display:none}
+.mcux-home{margin-bottom:17px}
+.mcux-hero{position:relative;overflow:hidden;background:linear-gradient(122deg,#124e3a,#1b7054);color:white;border-radius:23px;padding:26px 25px;margin-bottom:18px;box-shadow:0 17px 36px #10563d20}
+.mcux-hero:before{content:"";position:absolute;width:205px;height:205px;right:-68px;top:-125px;border:35px solid #ffffff1a;border-radius:50%;pointer-events:none}
+.mcux-eyebrow{text-transform:uppercase;letter-spacing:.15em;font-size:10px;color:#c7ead6;font-weight:850}
+.mcux-hero h1{font-size:clamp(22px,3vw,29px);line-height:1.15;letter-spacing:-.035em;margin:12px 0}
+.mcux-hero p{font-size:14px;color:#d9ecdf;line-height:1.6;max-width:680px;margin:0 0 15px}
+.mcux-hero .mcux-hero-search{display:inline-flex;align-items:center;gap:9px;background:#fff;color:#185b43;border:0;padding:13px 18px;border-radius:12px;font-weight:850;min-height:46px}
+.mcux-sectionhead{display:flex;align-items:end;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:17px 0 12px}
+.mcux-sectionhead h2{font-size:19px;margin:0;letter-spacing:-.02em;color:#244235}
+.mcux-sectionhead span{font-size:12px;color:#66786e}
+.mcux-shortcuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.mcux-tile{border-radius:18px;padding:19px 18px;border:1px solid #e0e9e2;background:white;text-align:left;box-shadow:0 7px 20px #1e563712;min-height:134px;display:flex;flex-direction:column;align-items:flex-start;gap:9px;cursor:pointer;color:#1c3f31;text-decoration:none;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;animation:mcux-rise .4s both}
+.mcux-tile:nth-child(2){animation-delay:.04s}.mcux-tile:nth-child(3){animation-delay:.08s}.mcux-tile:nth-child(4){animation-delay:.12s}.mcux-tile:nth-child(5){animation-delay:.16s}.mcux-tile:nth-child(6){animation-delay:.2s}
+.mcux-tile:hover,.mcux-tile:focus-visible{transform:translateY(-3px);box-shadow:0 14px 30px #1d513f21;border-color:#b2d4c0}
+.mcux-tile:focus-visible{outline:3px solid #e3ad56;outline-offset:1px}
+.mcux-tile .mcux-tileico{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:13px;background:#e8f5ec;font-size:23px}
+.mcux-tile[data-tone="blue"] .mcux-tileico{background:#ebf1fb}
+.mcux-tile[data-tone="gold"] .mcux-tileico{background:#fcf2e2}
+.mcux-tile strong{display:block;font-size:15px;line-height:1.35}
+.mcux-tile small{font-size:12px;color:#6d7c72;line-height:1.4}
+.mcux-allfeatures{border:1px solid var(--mcux-border);border-radius:18px;background:white;margin:17px 0;padding:4px 16px}
+.mcux-allfeatures>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:11px;font-weight:850;color:#1d5842;padding:15px 4px;min-height:49px}
+.mcux-allfeatures>summary::-webkit-details-marker{display:none}
+.mcux-allfeatures>summary::after{content:"⌄";margin-left:auto;font-size:22px;transition:transform .18s}
+.mcux-allfeatures[open]>summary::after{transform:rotate(180deg)}
+.mcux-module-directory{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px 18px;padding:8px 0 16px}
+.mcux-directory-group{border:1px solid #edf0ec;border-radius:13px;padding:11px 12px}
+.mcux-directory-group h3{margin:0 0 7px;color:#567163;text-transform:uppercase;font-size:11px;letter-spacing:.1em}
+.mcux-directory-group .mcux-dir-link{display:flex;width:100%;text-align:left;gap:7px;align-items:center;min-height:38px;border:0;background:transparent;color:#295945;padding:8px 4px;font-size:13px;text-decoration:none;border-radius:8px}
+.mcux-directory-group .mcux-dir-link:hover,.mcux-directory-group .mcux-dir-link:focus-visible{background:#edf6f0}
+.mcux-dirico{font-size:17px}
+.mcux-old-dashboard{display:none!important}
+.mcux-modal[hidden],.mcux-shade[hidden],.mcux-bottom[hidden]{display:none!important}
+.mcux-modal{position:fixed;inset:0;z-index:9995;display:flex;align-items:flex-start;justify-content:center;padding:clamp(12px,8vh,70px) 15px 20px;background:rgba(14,35,27,.68);backdrop-filter:blur(7px);animation:mcux-fade .16s ease}
+.mcux-dialog{width:min(610px,100%);max-height:82dvh;overflow:hidden;border-radius:20px;background:#fff;box-shadow:0 30px 85px #102e292e;display:flex;flex-direction:column;animation:mcux-pop .23s ease}
+.mcux-searchhead{padding:15px;display:flex;gap:9px;border-bottom:1px solid #e1eae5;align-items:center}
+.mcux-searchhead input{font-size:16px;border:1px solid #bdcfc4;border-radius:11px;padding:13px;width:100%;min-width:0;outline-color:#1f7456}
+.mcux-dismiss{padding:10px;border:0;border-radius:10px;background:#edf4ee;font-size:19px}
+.mcux-sresults{overflow-y:auto;overscroll-behavior:contain;padding:12px;flex:1}
+.mcux-result{display:flex;text-align:left;align-items:center;gap:12px;padding:14px;min-height:66px;border-radius:12px;border:0;background:white;width:100%;color:#1c3e30}
+.mcux-result:hover,.mcux-result:focus-visible{background:#eef6f0;outline-color:#bed8c8}
+.mcux-result .mcux-result-ico{font-size:24px;min-width:29px}
+.mcux-result strong{display:block;font-size:15px}
+.mcux-result small{display:block;font-size:12px;color:#718478;padding-top:3px}
+.mcux-empty{padding:18px;color:#66796e}
+.mcux-shade{position:fixed;inset:0;background:rgba(8,29,23,.53);z-index:1990}
+.mcux-bottom{display:none}
+.mcux-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+@keyframes mcux-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes mcux-fade{from{opacity:0}to{opacity:1}}
+@keyframes mcux-pop{from{opacity:0;transform:translateY(-9px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:950px){.mcux-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){
+ body.mcux-admin .layout{display:block}
+ body.mcux-admin .rail{position:fixed;left:0;top:0;bottom:0;height:100dvh;width:min(315px,86vw);min-width:0;transform:translateX(-105%);transition:transform .22s ease;z-index:2000;overflow-y:auto;padding:16px 13px 30px;box-shadow:12px 0 40px #0002}
+ body.mcux-admin.mcux-drawer-open .rail{transform:translateX(0)}
+ body.mcux-admin .navs{display:flex;flex-direction:column;overflow:visible;padding:10px 0;scrollbar-width:thin}
+ body.mcux-admin .navs .nav{white-space:normal;font-size:14px;min-height:47px}
+ body.mcux-admin .work{height:100dvh;min-height:0}
+ body.mcux-admin .top{position:relative;min-height:70px;padding:12px 13px;gap:8px}
+ body.mcux-admin #heading{font-size:15px;flex:1;line-height:1.3}
+ body.mcux-admin .topright{gap:6px;margin-left:0}
+ body.mcux-admin .person{display:none}
+ body.mcux-admin .minor{font-size:11px;padding:9px 8px;min-height:40px}
+ body.mcux-admin .mcux-menu-toggle{display:block;flex:0 0 auto}
+ body.mcux-admin .mcux-topsearch{font-size:0;gap:0;padding:11px 12px;min-height:43px;flex:0 0 auto}
+ body.mcux-admin .mcux-topsearch span{font-size:18px}
+ body.mcux-admin .mcux-toplogo{display:block;flex:0 0 auto}
+ body.mcux-admin .content{padding:13px 12px calc(96px + env(safe-area-inset-bottom,0px));min-height:0;overflow-y:auto}
+ body.mcux-admin .pane{max-width:none}
+ .mcux-bottom{position:fixed;bottom:0;left:0;right:0;z-index:1700;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px;padding:6px 9px calc(6px + env(safe-area-inset-bottom,0px));background:#fff;border-top:1px solid #e3eae5;box-shadow:0 -4px 20px #13372718}
+ .mcux-bottom button,.mcux-bottom a{display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center;text-decoration:none;color:#687c6e;background:transparent;border:0;border-radius:12px;padding:7px 2px;font-size:11px;font-weight:750;min-height:53px}
+ .mcux-bottom .mcux-bicon{font-size:23px;line-height:1.2}
+ .mcux-bottom .mcux-current{background:#edf6f0;color:#176149}
+ .mcux-home .mcux-hero{padding:20px 17px;border-radius:18px;margin-bottom:17px}
+ .mcux-home .mcux-hero h1{font-size:23px}
+ .mcux-home .mcux-hero p{font-size:13px}
+ .mcux-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .mcux-tile{min-height:134px;padding:14px 12px;border-radius:15px;gap:7px}
+ .mcux-tile strong{font-size:14px}
+ .mcux-tile small{font-size:11px}
+ .mcux-tile .mcux-tileico{width:42px;height:42px}
+ .mcux-module-directory{grid-template-columns:1fr}
+ .mcux-sectionhead h2{font-size:17px}
+ body.mcux-admin .stat{padding:14px}
+ body.mcux-admin .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ body.mcux-admin .frame{height:calc(100dvh - 175px);min-height:280px}
+ body.mcux-admin .card{padding:16px}
+ .mcux-modal{align-items:flex-start;padding:8vh 10px 12px}
+ .mcux-dialog{max-height:84dvh;border-radius:18px}
+}
+/* Remove legacy floating shortcut only for the redesigned admin shell; the real Hand Collections route remains in search, tiles and menu. */
+body.mcux-admin a[href="/app/hand-collections"][style*="position:fixed"]{display:none!important}
+@media(prefers-reduced-motion:reduce){.mcux-tile,.mcux-dialog,.mcux-modal{animation:none!important}.mcux-tile,body.mcux-admin .rail,.mcux-allfeatures>summary::after{transition:none!important}}
