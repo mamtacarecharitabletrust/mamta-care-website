@@ -37,7 +37,7 @@ test("indexed custody, transfer, audit and exact once-only constraints",()=>{
  assert.match(migration,/UNIQUE\(transfer_id,alert_type\)/);
  assert.match(migration,/mcst_lots_holder/);
  assert.match(migration,/mcst_transfer_admin/);
- assert.match(addon,/stage='reserved' AND lock_transfer=''/);
+ assert.match(addon,/stage='held' AND lock_transfer=''/);
  assert.match(addon,/stage='pending'/);
  assert.match(addon,/stage='approved'/);
  assert.match(addon,/WHERE id=\? AND stage='approved'/);
@@ -103,61 +103,61 @@ function setup(){
   sync:()=>get("mcstReconcileOld")({DB:db}),
  };
 }
-async function jsonResponse(response){return{status:response.status,...await response.json()}}
+async function jsonResponse(response){return{httpStatus:response.status,...await response.json()}}
 test("staff sends hair, admin approves, recipient confirms and zero balance follows",async()=>{
  const x=setup();
  const sent=await jsonResponse(await x.send({lot_ids:[lotId],to_kind:"staff",to_id:"b",dispatch_weight_grams:110}));
- assert.equal(sent.status,201);
+ assert.equal(sent.httpStatus,201);
  assert.equal(x.sql.prepare("SELECT stage FROM mcst_lots WHERE donor_id=?").get(lotId).stage,"reserved");
  assert.equal(x.sql.prepare("SELECT holder_id FROM mcst_lots WHERE donor_id=?").get(lotId).holder_id,"a");
  const duplicated=await jsonResponse(await x.send({lot_ids:[lotId],to_kind:"staff",to_id:"b"}));
- assert.equal(duplicated.status,409);
+ assert.equal(duplicated.httpStatus,409);
  const deniedAdmin=await jsonResponse(await x.decide({transfer_id:sent.transfer_id,action:"approve"},x.a));
- assert.equal(deniedAdmin.status,403);
+ assert.equal(deniedAdmin.httpStatus,403);
  const unauthorizedReceipt=await jsonResponse(await x.receive({transfer_id:sent.transfer_id,receipt_weight_grams:110},x.b));
- assert.equal(unauthorizedReceipt.status,409);
+ assert.equal(unauthorizedReceipt.httpStatus,409);
  const approved=await jsonResponse(await x.decide({transfer_id:sent.transfer_id,action:"approve"}));
- assert.equal(approved.status,200);
+ assert.equal(approved.httpStatus,200);
  assert.equal(x.sql.prepare("SELECT stage,holder_kind FROM mcst_lots WHERE donor_id=?").get(lotId).stage,"transit");
  const doubleApproval=await jsonResponse(await x.decide({transfer_id:sent.transfer_id,action:"approve"}));
- assert.equal(doubleApproval.status,409);
+ assert.equal(doubleApproval.httpStatus,409);
  const wrongReceiver=await jsonResponse(await x.receive({transfer_id:sent.transfer_id,receipt_weight_grams:110},x.a));
- assert.equal(wrongReceiver.status,403);
+ assert.equal(wrongReceiver.httpStatus,403);
  const receipt=await jsonResponse(await x.receive({transfer_id:sent.transfer_id,receipt_weight_grams:110},x.b));
- assert.equal(receipt.status,200);
- assert.equal(receipt.status!=='received_difference',true);
+ assert.equal(receipt.httpStatus,200);
+ assert.equal(receipt.status,"received");
  const row=x.sql.prepare("SELECT holder_kind,holder_id,stage,lock_transfer FROM mcst_lots WHERE donor_id=?").get(lotId);
- assert.deepEqual(row,{holder_kind:"staff",holder_id:"b",stage:"held",lock_transfer:""});
+ assert.deepEqual({...row},{holder_kind:"staff",holder_id:"b",stage:"held",lock_transfer:""});
  const repeated=await jsonResponse(await x.receive({transfer_id:sent.transfer_id,receipt_weight_grams:110},x.b));
- assert.equal(repeated.status,409);
+ assert.equal(repeated.httpStatus,409);
  const counts=x.sql.prepare("SELECT (SELECT COUNT(*) FROM mcst_events) AS events,(SELECT COUNT(*) FROM mcst_transfer_items) AS items,(SELECT COUNT(*) FROM mcst_tx_checks) AS guards").get();
  assert.equal(counts.events,3);assert.equal(counts.items,1);assert.equal(counts.guards,0);
 });
 test("wig maker needs measured receipt weight and flags actual weight differences",async()=>{
  const x=setup();
  const sent=await jsonResponse(await x.send({lot_ids:[lotId,secondLot],to_kind:"maker",to_id:"maker1",dispatch_weight_grams:250}));
- assert.equal(sent.status,201);
+ assert.equal(sent.httpStatus,201);
  assert.equal((await x.decide({transfer_id:sent.transfer_id,action:"approve"})).status,200);
  const empty=await jsonResponse(await x.receive({transfer_id:sent.transfer_id},x.maker));
- assert.equal(empty.status,400);
+ assert.equal(empty.httpStatus,400);
  const done=await jsonResponse(await x.receive({transfer_id:sent.transfer_id,receipt_weight_grams:230,note:"verified net weight"},x.maker));
- assert.equal(done.status,200);
+ assert.equal(done.httpStatus,200);
  assert.equal(done.weight_difference_grams,-20);
- assert.equal(done.status!=='received_difference',true);
+ assert.equal(done.status,"received_difference");
  assert.equal(x.sql.prepare("SELECT stage FROM mcst_transfers WHERE id=?").get(sent.transfer_id).stage,"received_difference");
  assert.equal(x.sql.prepare("SELECT COUNT(*) n FROM mcst_admin_alerts WHERE alert_type='received_difference'").get().n,1);
  assert.equal(x.sql.prepare("SELECT COUNT(*) n FROM mcst_lots WHERE holder_kind='maker' AND holder_id='maker1'").get().n,2);
  const visible=await jsonResponse(await x.overview(x.maker));
- assert.equal(visible.status,200);
+ assert.equal(visible.httpStatus,200);
  assert.ok(visible.lots.every(l=>l.donor_name===""&&l.registration_id===""));
 });
 test("atomic constraint prevents partial approval of mismatched packages",async()=>{
  const x=setup();
  const sent=await jsonResponse(await x.send({lot_ids:[lotId,secondLot],to_kind:"staff",to_id:"b"}));
- assert.equal(sent.status,201);
+ assert.equal(sent.httpStatus,201);
  x.sql.prepare("UPDATE mcst_lots SET lock_transfer='' WHERE donor_id=?").run(secondLot);
  const fail=await jsonResponse(await x.decide({transfer_id:sent.transfer_id,action:"approve"}));
- assert.equal(fail.status,409);
+ assert.equal(fail.httpStatus,409);
  assert.equal(x.sql.prepare("SELECT stage FROM mcst_transfers WHERE id=?").get(sent.transfer_id).stage,"pending");
  assert.equal(x.sql.prepare("SELECT stage FROM mcst_lots WHERE donor_id=?").get(lotId).stage,"reserved");
  assert.equal(x.sql.prepare("SELECT holder_kind FROM mcst_lots WHERE donor_id=?").get(lotId).holder_kind,"staff");
@@ -172,6 +172,6 @@ test("legacy hand collections import once, preserving old in-transit status",asy
  assert.equal(await x.sync(),0);
  const first=x.sql.prepare("SELECT holder_kind,holder_id,stage FROM mcst_lots WHERE donor_id=?").get(lotId);
  const second=x.sql.prepare("SELECT holder_kind,stage FROM mcst_lots WHERE donor_id=?").get(secondLot);
- assert.deepEqual(first,{holder_kind:"staff",holder_id:"a",stage:"held"});
- assert.deepEqual(second,{holder_kind:"transit",stage:"legacy_in_transit"});
+ assert.deepEqual({...first},{holder_kind:"staff",holder_id:"a",stage:"held"});
+ assert.deepEqual({...second},{holder_kind:"transit",stage:"legacy_in_transit"});
 });
