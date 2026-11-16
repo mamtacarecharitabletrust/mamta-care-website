@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#115944"><meta name="robots" content="noindex,nofollow">
+<title>Mamta Care • Hair Stock</title>
+<style nonce="MCCT_WIG_NONCE_PLACEHOLDER">
+:root{font:16px system-ui,-apple-system,Segoe UI,sans-serif;color:#1b3328;background:#f3f7f5}*{box-sizing:border-box}body{margin:0}header{background:#104f3e;color:#fff;padding:16px 4%;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}header b{font-size:21px}header a{color:#fff;text-decoration:none;border:1px solid #6b9c8c;border-radius:12px;padding:10px;font-size:14px}main{max-width:960px;margin:auto;padding:16px 12px 80px}.card{background:white;border:1px solid #dce7e1;border-radius:18px;padding:17px;margin:13px 0;box-shadow:0 2px 8px #1f543b09}.card h2,.card h3{margin:0 0 8px;font-size:20px}h1{font-size:24px;margin:10px 0 6px}p{line-height:1.5;margin:7px 0}small,.muted{color:#546b60;font-size:13px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(138px,1fr));gap:10px}.metric{background:#edf6f0;padding:16px;border-radius:15px;min-height:105px}.metric strong{display:block;font-size:29px;font-variant-numeric:tabular-nums}.metric small{display:block}.actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:14px 0}button,.button{font:700 16px system-ui;border:1px solid #d7e3dc;border-radius:14px;padding:14px 16px;background:#fff;color:#184a39;cursor:pointer;min-height:51px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px}button.primary,.button.primary{background:#126445;border-color:#126445;color:#fff}button.blue{background:#205fa5;color:#fff;border-color:#205fa5}button.secondary{background:#edf5f0}button.danger{color:#8d2f31;border-color:#e5bcc0}button:disabled{opacity:.5;cursor:wait}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #e6ad3d;outline-offset:2px}input,select,textarea{font:16px system-ui;border:1px solid #a4b8ad;border-radius:12px;padding:13px;width:100%;background:#fff;color:#1c3a2b;min-height:48px}textarea{min-height:88px}label{font-weight:700;display:block;margin:13px 0 5px}form .row{margin:10px 0}.lot{display:flex;gap:12px;align-items:flex-start;border-top:1px solid #e1eae5;padding:13px 0}.lot input[type=checkbox]{width:24px;min-height:24px;height:24px;accent-color:#146447;flex-shrink:0}.lot .content{flex:1;min-width:0}.lot b{display:block;overflow-wrap:anywhere}.pill{font-size:12px;font-weight:800;background:#e6f3ea;color:#175038;padding:6px 9px;border-radius:99px;display:inline-block}.warn{background:#fff4e2;color:#7b4d08}.dangerpill{background:#ffe9e8;color:#8c2f28}.banner{padding:13px;border-radius:12px;background:#f0f6ff;color:#214677;font-weight:650}.error{background:#fff0ed;color:#8a3323}.success{background:#e9f7ef;color:#17623d}.gone{display:none!important}.subhead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.hint{border-left:4px solid #c8a156;padding:9px 12px;background:#fffbf0;color:#654d25;border-radius:8px}.transfer{border:1px solid #dbe6df;border-radius:16px;margin:10px 0;padding:14px}.transfer h3{margin:4px 0;font-size:17px}.transfer .buttons{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}.transfer .buttons button{flex:1}.inline-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}.inline-actions button{flex:1}.person{padding:11px 0;border-top:1px solid #e5ebe8;display:flex;gap:8px;align-items:center;justify-content:space-between}.count{font-variant-numeric:tabular-nums;font-weight:800;font-size:18px}.status{font-size:13px;color:#546b60}.spacer{height:10px}#msg{position:sticky;top:0;z-index:5}#busy{text-align:center;margin:35px}footer{text-align:center;color:#567067;padding:18px;font-size:12px}@media(max-width:560px){header b{font-size:18px}button,.button{width:100%}.transfer .buttons{display:grid}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}main{padding:12px 10px 65px}.card{padding:15px}.lot input[type=checkbox]{width:27px;height:27px}}
+</style>
+</head>
+<body>
+<header><div><small style="color:#cce6d6">MAMTA CARE CHARITABLE TRUST</small><br><b>📦 Hair Stock</b></div><a href="__MCST_BACK__">← Donor Desk</a></header>
+<main><div id="msg" role="status" aria-live="polite"></div><div id="busy">Loading your stock securely…</div><div id="app"></div></main>
+<footer>Internal team inventory • Hair is never considered received until the receiver confirms.</footer>
+<script nonce="MCCT_WIG_NONCE_PLACEHOLDER">
+"use strict";
+const ROOT="__MCST_API__";
+const app=document.getElementById('app'),message=document.getElementById('msg'),busy=document.getElementById('busy');
+let model=null,tab='home',reveal='',first=true,previousPending=-1,updating=false;
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=x=>x?new Date(Number(x)*1000).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'}):'Not recorded';
+const num=x=>x==null?'Not weighed':Number(x).toLocaleString('en-IN')+' g';
+const status=x=>({held:'With person',reserved:'Awaiting approval',transit:'In transit',legacy_in_transit:'Sent via previous workflow',center:'At fabrication center',pending:'Needs admin approval',approved:'Waiting for receiver',received:'Received',received_difference:'Weight difference',rejected:'Returned'}[x]||x);
+const say=(text,type='banner')=>{message.className='banner '+(type==='error'?'error':type==='success'?'success':'');message.textContent=text;};
+async function request(action,method='GET',payload){
+ const options={method,credentials:'same-origin',cache:'no-store',headers:{"Accept":"application/json","X-Mamta-Desk":"1"}};
+ if(method==='POST'){options.headers['Content-Type']='application/json';options.body=JSON.stringify(payload||{});}
+ const result=await fetch(ROOT+'/'+action,options);
+ const d=await result.json().catch(()=>({}));
+ if(!result.ok||d.ok!==true)throw Error(d.error||'Request could not be completed');
+ return d;
+}
+async function load(silent=false){
+ if(updating)return;
+ updating=true;
+ try{
+  const d=await request('dashboard');
+  if(previousPending>=0&&d.person.admin&&d.metric.approval_needed>previousPending&&silent)say('🔔 New hair transfer waiting for administrator approval.');
+  previousPending=d.metric.approval_needed;
+  model=d;busy.classList.add('gone');render();
+  if(first)first=false;
+ }catch(e){busy.textContent='Hair Stock could not load. '+e.message;say('Please sign in again or try Refresh. No existing donor records were changed.','error')}
+ finally{updating=false}
+}
+function card(x){return '<div class="metric"><strong>'+esc(x[0])+'</strong><small>'+esc(x[1])+'</small></div>'}
+function nav(label,key,mark){return '<button type="button" class="'+(tab===key?'primary':'secondary')+'" data-nav="'+key+'">'+mark+' '+esc(label)+'</button>'}
+function listStatus(l){return '<span class="pill '+(l.stage==='reserved'?'warn':'')+'">'+esc(status(l.stage))+'</span>'}
+function peopleName(kind,id){return model.recipients.find(x=>x.kind===kind&&x.id===id)?.name||(kind==='center'?'Nashik Fabrication Center':'Authorized team member')}
+function summary(){
+ const m=model.metric,p=model.person;
+ let out='<h1>Welcome, '+esc(p.name)+'</h1><p class="muted">Simple hair stock updates. Your existing Donor Desk account is used automatically.</p>';
+ out+='<div class="grid">'+card([m.with_me,'Hair packages with me'])+card([m.incoming,'Coming to me']);
+ if(p.admin)out+=card([m.approval_needed,'Approvals waiting'])+card([m.on_team,'With team'])+card([m.in_transit,'In transit'])+card([m.wig_maker,'With wig makers']);
+ out+='</div>';
+ out+='<div class="actions">'+nav('My hair','home','📦')+nav('Give hair','send','↗')+nav('Coming to me','incoming','✓')+nav('History','history','☷');
+ if(p.admin)out+=nav('Approve transfers ('+m.approval_needed+')','admin','🔔')+nav('All stock','all','☷');
+ out+='</div>';
+ return out;
+}
+function lotsView(list,withMeasure=false){
+ if(!list.length)return '<div class="card"><h2>No hair packages here</h2><p class="muted">Collected hair will appear here after the existing donor collection is confirmed.</p></div>';
+ return '<div class="card">'+list.map(l=>{
+  const label=l.donor_name?esc(l.donor_name)+' · ':'Hair package · ';
+  return '<div class="lot"><div class="content"><b>'+label+esc(l.registration_id||String(l.donor_id).slice(0,8).toUpperCase())+'</b><p class="muted">'+esc(l.braids)+' braid(s)/ponytail(s) · '+num(l.weight_grams)+(l.length_cm?' · '+esc(l.length_cm)+' cm':'')+'</p>'+listStatus(l)+
+  (withMeasure&&l.stage==='held'?'<div class="inline-actions"><button type="button" data-measure="'+esc(l.donor_id)+'">✎ Add weight / length</button></div>':'')+
+  (reveal===l.donor_id?'<form data-measure-form="'+esc(l.donor_id)+'"><label>Number of braids or ponytails</label><input name="braids" inputmode="numeric" type="number" min="1" max="100" value="'+esc(l.braids)+'" required><label>Weight in grams (leave empty if no scale)</label><input type="number" inputmode="numeric" name="weight_grams" min="1" max="100000" value="'+esc(l.weight_grams??'')+'"><label>Hair length in cm (optional)</label><input type="number" inputmode="numeric" name="length_cm" min="1" max="200" value="'+esc(l.length_cm??'')+'"><button class="primary" type="submit">Save</button></form>':'')+'</div></div>';
+ }).join('')+'</div>';
+}
+function home(){
+ const p=model.person,list=model.lots.filter(l=>l.holder_kind===p.kind&&l.holder_id===p.id&&['held','reserved'].includes(l.stage));
+ let out='<section class="card"><h2>Hair with me</h2><p class="hint">Only record hair you physically have. Stock becomes zero after an approved transfer of all your packages.</p><p><a class="button primary" href="'+(p.kind==='volunteer'?'/volunteer/hand-collections':'/')+'">✂ I collected hair</a></p><p class="muted">Open the existing donor record and confirm <b>Hair collected by me</b>. It will appear here automatically.</p></section>';
+ out+=lotsView(list,true);
+ return out;
+}
+function send(){
+ const p=model.person;
+ const available=model.lots.filter(l=>l.stage==='held'&&l.holder_kind===p.kind&&l.holder_id===p.id);
+ if(!available.length)return '<div class="card"><h2>No available hair to give</h2><p>Only collected hair physically with you can be transferred. Packages already awaiting approval cannot be transferred twice.</p></div>';
+ const options=model.recipients.map(x=>'<option value="'+esc(x.kind+':'+x.id)+'">'+esc(x.name)+' ('+esc({staff:'Staff',volunteer:'Volunteer',maker:'Wig maker',center:'Center'}[x.kind])+')</option>').join('');
+ return '<form id="send-form" class="card"><h2>Who are you giving hair to?</h2><label for="recipient">Choose person or wig maker</label><select required id="recipient" name="recipient"><option value="">Select from authorized team</option>'+options+'</select><label>Select the hair packages</label>'+
+ available.map(l=>'<label class="lot"><input type="checkbox" name="lot" value="'+esc(l.donor_id)+'"><span class="content"><b>'+esc(l.donor_name||'Hair package')+'</b><span class="muted">'+esc(l.registration_id||l.donor_id.slice(0,8))+' · '+num(l.weight_grams)+'</span></span></label>').join('')+
+ '<button type="button" id="select-all">✓ Select all my packages</button><label>Measured total weight (grams) — optional</label><input name="dispatch_weight_grams" inputmode="numeric" type="number" min="1" max="10000000" placeholder="Leave empty if not weighed"><label>Note (optional)</label><textarea name="note" maxlength="240" placeholder="Example: sealed in one bag"></textarea><p class="hint">The administrator will receive a notification. Your packages cannot be sent twice. After approval, they will be marked In transit.</p><button type="submit" class="primary">↗ Send to administrator for approval</button></form>';
+}
+function transferRow(t,mode){
+ const receiving=model.person.kind===t.to_kind&&model.person.id===t.to_id||(model.person.admin&&t.to_kind==='center'&&t.to_id==='nashik');
+ const title=esc(t.sender)+' → '+esc(t.receiver);
+ let row='<div class="transfer"><h3>'+title+'</h3><p><b>'+esc(t.packages)+' hair package(s)</b> · <span class="pill '+(t.stage==='received_difference'?'dangerpill':t.stage==='pending'?'warn':'')+'">'+esc(status(t.stage))+'</span></p><p class="muted">Sent: '+fmt(t.created_at)+' · Weight at dispatch: '+num(t.dispatch_weight_grams)+'</p>';
+ if(t.receipt_weight_grams!=null)row+='<p class="muted">Receiver measured: '+num(t.receipt_weight_grams)+'</p>';
+ if(t.stage==='received_difference')row+='<p class="hint">Weight difference flagged for administrator. Dispatch and receipt values are both preserved.</p>';
+ if(mode==='admin'&&t.stage==='pending')row+='<div class="buttons"><button class="primary" data-approve="'+esc(t.id)+'">✓ Approve transfer</button><button class="danger" data-reject="'+esc(t.id)+'">Return to sender</button></div>';
+ if(mode==='incoming'&&receiving&&t.stage==='approved'){
+  row+='<form data-receive-form="'+esc(t.id)+'"><label>Weight of hair you received in grams'+(model.person.kind==='maker'?' (required)':' (optional)')+'</label><input name="receipt_weight_grams" type="number" inputmode="numeric" min="1" max="10000000" placeholder="Enter measured weight" '+(model.person.kind==='maker'?'required':'')+'><label>Note (optional)</label><textarea name="note" maxlength="240" placeholder="Condition of package or difference"></textarea><button type="submit" class="primary">✓ Yes, I received this hair</button></form>';
+ }
+ return row+'</div>';
+}
+function incoming(){
+ const a=model.person;
+ const list=model.transfers.filter(t=>t.stage==='approved'&&((t.to_kind===a.kind&&t.to_id===a.id)||(a.admin&&t.to_kind==='center'&&t.to_id==='nashik')));
+ return '<div class="card"><h2>Hair coming to me</h2><p class="muted">Open the package and check before confirming. Only hair you confirm becomes your stock.</p>'+(list.length?list.map(x=>transferRow(x,'incoming')).join(''):'<p class="hint">There are no approved transfers waiting for you.</p>')+'</div>';
+}
+function history(){
+ const items=model.transfers.filter(t=>t.stage!=='pending').slice(0,50);
+ return '<div class="card"><h2>Stock history</h2><p class="muted">Every transfer remains recorded, even if your current stock is zero.</p>'+(items.length?items.map(x=>transferRow(x,'history')).join(''):'<p>No previous transfers.</p>')+'</div>';
+}
+function admin(){
+ const a=model.transfers.filter(t=>t.stage==='pending');
+ const diff=model.transfers.filter(t=>t.stage==='received_difference');
+ return '<div class="card"><h2>🔔 Administrator approvals</h2><p>Every handover must be approved before the sender is released from responsibility.</p>'+(a.length?a.map(x=>transferRow(x,'admin')).join(''):'<p class="success banner">No transfers awaiting approval.</p>')+
+ (diff.length?'<h2>⚠ Weight differences</h2>'+diff.map(x=>transferRow(x,'history')).join(''):'')+
+ '<div class="inline-actions"><button data-sync="1" type="button">Include existing collected hair</button><button data-alerts-seen="1" type="button">Mark alerts reviewed</button></div></div>';
+}
+function allStock(){
+ const list=model.lots;
+ const custodians=new Map();
+ const people=model.recipients.concat([{kind:model.person.kind,id:model.person.id,name:model.person.name}]);
+ list.forEach(l=>{
+  let name=l.holder_kind==='transit'?'In transit':l.holder_kind==='center'?'Fabrication center':people.find(x=>x.kind===l.holder_kind&&x.id===l.holder_id)?.name||'Authorized team member';
+  const key=l.holder_kind+':'+l.holder_id;
+  const row=custodians.get(key)||{name,count:0,weight:0,unweighed:0};
+  row.count++;if(l.weight_grams==null)row.unweighed++;else row.weight+=Number(l.weight_grams);
+  custodians.set(key,row);
+ });
+ let result='<div class="card"><h2>All hair stock</h2><p class="muted">Includes hair held by staff, volunteers, wig makers, transit and the fabrication center. Historical transfers remain in the audit trail.</p>';
+ for(const row of custodians.values())result+='<div class="person"><div><b>'+esc(row.name)+'</b><div class="status">'+esc(row.unweighed)+' package(s) without weight</div></div><div><span class="count">'+esc(row.count)+'</span><div class="status">'+esc(row.weight)+' g recorded</div></div></div>';
+ return result+(list.length?'':'<p>No collected stock recorded yet.</p>')+'</div>'+lotsView(list,false);
+}
+function render(){
+ if(!model)return;
+ app.innerHTML=summary()+(tab==='home'?home():tab==='send'?send():tab==='incoming'?incoming():tab==='history'?history():tab==='admin'&&model.person.admin?admin():tab==='all'&&model.person.admin?allStock():home());
+}
+async function perform(action,body,success){
+ try{say('Saving securely…');await request(action,'POST',body);say(success||'Saved successfully.','success');reveal='';await load(true)}
+ catch(e){say(e.message,'error')}
+}
+app.addEventListener('click',async e=>{
+ const nav=e.target.closest('[data-nav]');if(nav){tab=nav.dataset.nav;reveal='';render();return}
+ const measure=e.target.closest('[data-measure]');if(measure){reveal=measure.dataset.measure;render();return}
+ if(e.target.closest('#select-all')){app.querySelectorAll('input[name=lot]').forEach(x=>x.checked=true);return}
+ const approve=e.target.closest('[data-approve]');if(approve&&confirm('Approve this hair transfer? Sender stock will move to In transit.')){await perform('decide',{transfer_id:approve.dataset.approve,action:'approve'},'Approved. The receiver will now confirm the hair.');return}
+ const reject=e.target.closest('[data-reject]');if(reject&&confirm('Return this request to the sender without moving the hair?')){await perform('decide',{transfer_id:reject.dataset.reject,action:'reject'},'Transfer returned to the sender.');return}
+ if(e.target.closest('[data-sync]')){await perform('sync-existing',{},'Existing collected stock included without duplicates.');return}
+ if(e.target.closest('[data-alerts-seen]')){await perform('alerts-seen',{},'Alerts marked as reviewed.');return}
+});
+app.addEventListener('submit',async e=>{
+ if(e.target.id==='send-form'){
+  e.preventDefault();const f=new FormData(e.target),ids=f.getAll('lot'),recipient=String(f.get('recipient')||''),sep=recipient.indexOf(':');
+  if(!ids.length||sep<0){say('Choose at least one package and a recipient.','error');return}
+  const name=model.recipients.find(x=>x.kind===recipient.slice(0,sep)&&x.id===recipient.slice(sep+1))?.name||'selected person';
+  if(!confirm('You are giving '+ids.length+' hair package(s) to '+name+'. Is this correct?'))return;
+  await perform('send',{lot_ids:ids,to_kind:recipient.slice(0,sep),to_id:recipient.slice(sep+1),dispatch_weight_grams:f.get('dispatch_weight_grams')||null,note:f.get('note')},'Transfer request sent. Administrator notified.');
+  return;
+ }
+ const form=e.target.closest('[data-measure-form]');
+ if(form){e.preventDefault();const f=new FormData(form);await perform('measure',{donor_id:form.dataset.measureForm,braids:Number(f.get('braids')),weight_grams:f.get('weight_grams')||null,length_cm:f.get('length_cm')||null},'Hair details saved.');return}
+ const receive=e.target.closest('[data-receive-form]');
+ if(receive){e.preventDefault();const f=new FormData(receive);
+  if(!confirm('Did you physically receive and check these hair packages?'))return;
+  await perform('receive',{transfer_id:receive.dataset.receiveForm,receipt_weight_grams:f.get('receipt_weight_grams')||null,note:f.get('note')},'Receipt recorded. Stock moved to you.');
+ }
+});
+setInterval(async()=>{if(model?.person?.admin&&document.visibilityState==='visible'){
+ try{const n=await request('alerts-count');if(n.pending>previousPending){say('🔔 A new hair stock transfer needs your approval.','banner');previousPending=n.pending;}else previousPending=n.pending;}catch(e){}
+}},120000);
+window.addEventListener('pageshow',e=>{if(e.persisted)location.reload()});
+load();
+</script></body></html>
