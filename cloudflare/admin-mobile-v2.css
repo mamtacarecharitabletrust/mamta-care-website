@@ -121,4 +121,6 @@ body.mcux-admin .railfoot{font-size:11px;line-height:1.5;padding:15px 10px}
  .mcux-modal{align-items:flex-start;padding:8vh 10px 12px}
  .mcux-dialog{max-height:84dvh;border-radius:18px}
 }
+/* Remove legacy floating shortcut only for the redesigned admin shell; the real Hand Collections route remains in search, tiles and menu. */
+body.mcux-admin a[href="/app/hand-collections"][style*="position:fixed"]{display:none!important}
 @media(prefers-reduced-motion:reduce){.mcux-tile,.mcux-dialog,.mcux-modal{animation:none!important}.mcux-tile,body.mcux-admin .rail,.mcux-allfeatures>summary::after{transition:none!important}}
