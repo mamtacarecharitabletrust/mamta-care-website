@@ -103,7 +103,7 @@ async function mcstSend(req,env,p){
  const available=await env.DB.prepare('SELECT donor_id FROM mcst_lots WHERE donor_id IN ('+values+") AND holder_kind=? AND holder_id=? AND stage='held' AND lock_transfer=''").bind(...ids,p.kind,p.id).all();
  if((available.results||[]).length!==ids.length)return mcstFail('Some packages are already transferred, or are not with you. Refresh your list.',409);
  const id=crypto.randomUUID(),ts=mcstTime();
- const lock=await env.DB.prepare('UPDATE mcst_lots SET stage=\\'reserved\\',lock_transfer=?,updated_at=?,version=version+1 WHERE donor_id IN ('+values+") AND holder_kind=? AND holder_id=? AND stage='held' AND lock_transfer=''").bind(id,ts,...ids,p.kind,p.id).run();
+ const lock=await env.DB.prepare("UPDATE mcst_lots SET stage='reserved',lock_transfer=?,updated_at=?,version=version+1 WHERE donor_id IN ("+values+") AND holder_kind=? AND holder_id=? AND stage='held' AND lock_transfer=''").bind(id,ts,...ids,p.kind,p.id).run();
  if(mcstResult(lock)!==ids.length){
   await env.DB.prepare("UPDATE mcst_lots SET stage='held',lock_transfer='',updated_at=?,version=version+1 WHERE lock_transfer=? AND stage='reserved'").bind(mcstTime(),id).run();
   return mcstFail('The stock changed while you were working. Please refresh.',409);
