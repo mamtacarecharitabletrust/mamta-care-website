@@ -278,7 +278,9 @@ launch_wig_maker_portal_worker_default.fetch=async function(req,env,ctx){
    if(html.includes('data-mcst-link'))return new Response(html,{status:previous.status,headers:previous.headers});
    const url=path==='/maker'?'/maker-api/hair-stock':'/hair-stock';
    const link='<a data-mcst-link="1" href="'+url+'" style="display:inline-block;margin:10px;padding:12px 16px;background:#12644d;color:#fff;border-radius:12px;font:700 15px system-ui;text-decoration:none">📦 Hair Stock</a>';
-   html=html.includes('</header>')?html.replace('</header>',link+'</header>'):html.replace('</body>',link+'</body>');
+   if((path==='/app'||path==='/')&&html.includes('</nav>'))html=html.replace('</nav>','<a class="nav" data-mcst-link="1" href="/hair-stock">📦 Hair Stock</a></nav>');
+   else if(html.includes('</header>'))html=html.replace('</header>',link+'</header>');
+   else html=html.replace('</body>',link+'</body>');
    const headers=new Headers(previous.headers);headers.delete('content-length');headers.delete('etag');headers.set('cache-control','private,no-store');
    return new Response(html,{status:previous.status,headers});
   }catch(e){console.error('MCST_NAV',String(e?.name||'Error'));return previous}
