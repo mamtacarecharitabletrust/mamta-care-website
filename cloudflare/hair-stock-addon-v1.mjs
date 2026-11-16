@@ -197,6 +197,14 @@ async function mcstMarkLegacy(env,kind,sourceId,action){
 async function mcstApi(req,env,person,endpoint){
  const method=req.method;
  if(method==='GET'&&endpoint==='dashboard')return mcstOverview(req,env,person);
+ if(method==='GET'&&endpoint==='alerts-count'){
+  if(!person.admin)return mcstFail('Administrator only.',403);
+  const [pending,unread]=await Promise.all([
+   env.DB.prepare("SELECT COUNT(*) AS n FROM mcst_transfers WHERE stage='pending'").first(),
+   env.DB.prepare("SELECT COUNT(*) AS n FROM mcst_admin_alerts WHERE read_at=0").first()
+  ]);
+  return mcstJson({ok:true,pending:Number(pending?.n||0),unread:Number(unread?.n||0)});
+ }
  if(method!=='POST')return mcstFail('Method not permitted.',405);
  if(!allowedWrite(req))return mcstFail('Request origin verification failed.',403);
  if(endpoint==='send')return mcstSend(req,env,person);
