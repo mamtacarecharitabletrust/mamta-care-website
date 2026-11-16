@@ -136,17 +136,18 @@ async function mcstDecide(req,env,p){
  const sql=approve?"UPDATE mcst_transfers SET stage='approved',approved_by=?,approved_at=?,updated_at=? WHERE id=? AND stage='pending'":"UPDATE mcst_transfers SET stage='rejected',approved_by=?,approved_at=?,updated_at=? WHERE id=? AND stage='pending'";
  const statements=[
   env.DB.prepare(sql).bind(p.id,ts,ts,id),
+  env.DB.prepare('INSERT INTO mcst_tx_checks(id,expected,actual) VALUES(?,?,changes())').bind(id+'-approve-state',1),
   approve?
    env.DB.prepare("UPDATE mcst_lots SET stage='transit',holder_kind='transit',holder_id=?,updated_at=?,version=version+1 WHERE lock_transfer=? AND stage='reserved' AND holder_kind=? AND holder_id=? AND EXISTS(SELECT 1 FROM mcst_transfers t WHERE t.id=? AND t.stage='approved')").bind(id,ts,id,current.from_kind,current.from_id,id):
    env.DB.prepare("UPDATE mcst_lots SET stage='held',lock_transfer='',updated_at=?,version=version+1 WHERE lock_transfer=? AND stage='reserved' AND holder_kind=? AND holder_id=? AND EXISTS(SELECT 1 FROM mcst_transfers t WHERE t.id=? AND t.stage='rejected')").bind(ts,id,current.from_kind,current.from_id,id),
-  env.DB.prepare("INSERT INTO mcst_events(id,transfer_id,actor_kind,actor_id,action,detail,created_at) VALUES(?,?,?,?,?,?,?)").bind(crypto.randomUUID(),id,'staff',p.id,d.action,mcstText(d.note,240),ts)
+  env.DB.prepare('INSERT INTO mcst_tx_checks(id,expected,actual) VALUES(?,?,changes())').bind(id+'-approve-items',Number(count.n)),
+  env.DB.prepare("INSERT INTO mcst_events(id,transfer_id,actor_kind,actor_id,action,detail,created_at) VALUES(?,?,?,?,?,?,?)").bind(crypto.randomUUID(),id,'staff',p.id,d.action,mcstText(d.note,240),ts),
+  env.DB.prepare("DELETE FROM mcst_tx_checks WHERE id IN (?,?)").bind(id+'-approve-state',id+'-approve-items')
  ];
- const out=await env.DB.batch(statements);
- if(mcstResult(out?.[0])!==1)return mcstFail('This request has already been handled.',409);
- if(mcstResult(out?.[1])!==Number(count.n)){
-  console.error('MCST_APPROVAL_STOCK_MISMATCH',{transfer:id,expected:count.n,changed:mcstResult(out?.[1])});
-  return mcstFail('Transfer requires review: stock count did not match. Contact an administrator.',503);
- }
+ let out;
+ try{out=await env.DB.batch(statements)}
+ catch(e){console.error('MCST_APPROVAL_ATOMIC',String(e?.name||'Error'));return mcstFail('Stock changed during approval. No partial transfer was allowed; please refresh.',409)}
+ if(mcstResult(out?.[0])!==1||mcstResult(out?.[2])!==Number(count.n))return mcstFail('Unexpected stock changes. Please refresh and review.',409);
  return mcstJson({ok:true,status:approve?'approved':'rejected',message:approve?'Approved. Hair is now in transit until the receiver confirms.':'Transfer rejected; stock is available again.'});
 }
 async function mcstReceive(req,env,p){
@@ -165,16 +166,17 @@ async function mcstReceive(req,env,p){
  if(!count?.n)return mcstFail('No packages attached to this transfer.',409);
  const statements=[
   env.DB.prepare("UPDATE mcst_transfers SET stage=?,receipt_weight_grams=?,receive_note=?,received_at=?,updated_at=? WHERE id=? AND stage='approved'").bind(stage,weight,mcstText(d.note,240),now,now,id),
+  env.DB.prepare('INSERT INTO mcst_tx_checks(id,expected,actual) VALUES(?,?,changes())').bind(id+'-receive-state',1),
   env.DB.prepare("UPDATE mcst_lots SET stage='held',holder_kind=?,holder_id=?,lock_transfer='',updated_at=?,version=version+1 WHERE lock_transfer=? AND stage='transit' AND holder_kind='transit' AND holder_id=? AND EXISTS(SELECT 1 FROM mcst_transfers t WHERE t.id=? AND t.stage IN ('received','received_difference'))").bind(t.to_kind,t.to_id,now,id,id,id),
+  env.DB.prepare('INSERT INTO mcst_tx_checks(id,expected,actual) VALUES(?,?,changes())').bind(id+'-receive-items',Number(count.n)),
   env.DB.prepare("INSERT INTO mcst_events(id,transfer_id,actor_kind,actor_id,action,detail,created_at) VALUES(?,?,?,?,?,?,?)").bind(crypto.randomUUID(),id,p.kind,p.id,stage,mcstText(d.note,240),now)
  ];
  if(diff)statements.push(env.DB.prepare("INSERT OR IGNORE INTO mcst_admin_alerts(id,transfer_id,alert_type,created_at) VALUES(?,?,'received_difference',?)").bind(crypto.randomUUID(),id,now));
- const results=await env.DB.batch(statements);
- if(mcstResult(results?.[0])!==1)return mcstFail('This receipt was already processed.',409);
- if(mcstResult(results?.[1])!==Number(count.n)){
-  console.error('MCST_RECEIPT_STOCK_MISMATCH',{transfer:id,expected:count.n,changed:mcstResult(results?.[1])});
-  return mcstFail('Stock mismatch requires administrator review.',503);
- }
+ statements.push(env.DB.prepare("DELETE FROM mcst_tx_checks WHERE id IN (?,?)").bind(id+'-receive-state',id+'-receive-items'));
+ let results;
+ try{results=await env.DB.batch(statements)}
+ catch(e){console.error('MCST_RECEIPT_ATOMIC',String(e?.name||'Error'));return mcstFail('Stock changed during receipt. No partial handover was allowed; please refresh.',409)}
+ if(mcstResult(results?.[0])!==1||mcstResult(results?.[2])!==Number(count.n))return mcstFail('Unexpected receipt stock changes. Please refresh.',409);
  return mcstJson({ok:true,status:stage,weight_difference_grams:diff?weight-t.dispatch_weight_grams:0,message:diff?'Received and administrator notified of the weight difference.':'Hair received. Stock is now with the recipient.'});
 }
 async function mcstMeasure(req,env,p){
