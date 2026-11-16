@@ -563,6 +563,14 @@ function Layout({ children }) {
 
             <br />
 
+            <a href="/privacy-policy.html">Privacy Policy</a>
+
+            <br />
+
+            <a href="/data-deletion.html">Data Deletion Requests</a>
+
+            <br />
+
             <Link to="/donate">
 
               Support Our Work
