@@ -52,7 +52,7 @@ input:focus,button:focus-visible,a:focus-visible{outline:3px solid #c99d54!impor
 @media(max-width:390px){.mcct-photo-grid{grid-template-columns:1fr}.mcct-process span{font-size:8px}}
 `;
 /* Existing classic Desk remains usable for staff and historical tools. */
-PAGE=PAGE.replace('</style>', MCCT_NOV18_CSS.replaceAll('.sidebar','.mcct-premium-sidebar') + `
+PAGE=PAGE.replace('</style>', `
 :root{background:#fbf7f1;color:#402534}body{background:#fbf7f1;color:#402534}
 header{background:linear-gradient(115deg,#5c213c,#813d59)!important}
 header .brand-mark{background:white}
