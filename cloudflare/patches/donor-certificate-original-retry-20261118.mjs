@@ -55,8 +55,8 @@ launch_wig_maker_portal_worker_default.fetch=async function(req,env,ctx){
     String(result.donor?.verification_status||'').trim().toUpperCase()!=='VERIFIED')
   return error('Google Apps Script registration/status mismatch; no local update made',409);
  const urlText=String(result.donor?.certificate_url||'').trim();
- if(result.certificate_processing!=='completed'||!urlText)
-  return error('Google Sheet is VERIFIED, but the original certificate generator reported needs_retry. Check Apps Script > Executions; no certificate was reported as sent.',409);
+ if(!urlText)
+  return error('Google Sheet is VERIFIED, but the original certificate generator reported needs_retry. Check Apps Script > Executions for the specific error; no certificate was reported as issued.',409);
  let certURL;
  try{
   certURL=new URL(urlText);
@@ -76,14 +76,16 @@ launch_wig_maker_portal_worker_default.fetch=async function(req,env,ctx){
  try{synced=await (await mcDeskImportVerification(env,request)).json()}catch(_){}
  if(synced?.ok!==true)
   return error('Google certificate was issued but Donor Desk synchronization requires review. Do not retry issuance; check Column O.',502);
- return json({ok:true,certificate_processing:'completed',
+ return json({ok:true,certificate_processing:result.certificate_processing||'unknown',
   certificate_email_status:sheetState||'NOT_RECORDED',
-  message:'Original Google Apps Script certificate workflow completed. Google Sheet and Donor Desk synchronized.'});
+  message:result.certificate_processing==='completed'
+    ? 'Original Google certificate was issued and the Donor Desk synchronized.'
+    : 'Official PDF link was recorded and synchronized, but email completion was not confirmed. Check Apps Script Executions; do not retry issuance blindly.'});
 };
 
 /* Original classic Donor Desk verification, augmented with the smallest
  * safe recovery affordance only after Google Sheet verification already succeeded. */
-const MCCT_CERT_RECOVERY_UI=String.raw\`
+const MCCT_CERT_RECOVERY_UI=String.raw`
 (function(){
  const oldOpen=openDonor;
  openDonor=async function(id){
@@ -124,7 +126,7 @@ const MCCT_CERT_RECOVERY_UI=String.raw\`
   };
  };
 })();
-\`;
+`;
 PAGE=PAGE.replace('</script>',MCCT_CERT_RECOVERY_UI+'</script>');
 const MCCT_PREV_RECOVERY_PREMIUM=mp3DonorDetails;
 mp3DonorDetails=async function(env,id){
