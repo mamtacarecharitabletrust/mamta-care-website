@@ -173,11 +173,37 @@ function mcWebsiteBridgePost_(p){
       row=mcWebsiteFindLedger_(ledger,id);
       if(row){
         const v=ledger.getRange(row,2,1,5).getValues()[0];
-        if(v[0]==="DONE")return reply({ok:true,existing:true,registration_id:String(v[3]||""),row:v[2]});
-        // An interrupted Form submission MUST NOT be automatically resubmitted.
-        return reply({ok:false,pending:true,error:"Submission is awaiting reconciliation; no second Form response was created"});
-      }
-      if(p.action==="website_status")return reply({ok:false,error:"Submission reference not found"});
+        const state=String(v[0]||""),existingId=String(v[3]||"").trim();
+        if(state==="DONE"&&existingId)
+          return reply({ok:true,existing:true,registration_id:existingId,row:v[2]});
+        // Recover only a response that was already saved and uniquely tagged
+        // WEBSITE:<submission_uuid>. Never submit the Form a second time.
+        const linkedRow=Number(v[2]);
+        if((state==="ROW_MATCHED"||state==="ID_GENERATING")&&
+           Number.isSafeInteger(linkedRow)&&linkedRow>=2&&linkedRow<=sheet.getLastRow()&&
+           String(sheet.getRange(linkedRow,19).getDisplayValue()||"").trim()==="WEBSITE:"+id){
+          const savedId=String(sheet.getRange(linkedRow,13).getDisplayValue()||"").trim();
+          if(/^[0-9]{4}-[0-9]{6}\/M\/2022$/.test(savedId)){
+            // The original ID/email automation finished before ledger finalization.
+            // Link that ID without invoking onFormSubmit or sending another email.
+            mcWebsiteUpdateLedger_(ledger,row,"DONE",String(v[1]||""),linkedRow,savedId,
+              "Recovered existing official ID without another email");
+            return reply({ok:true,existing:true,registration_id:savedId,row:linkedRow});
+          }
+          if(state==="ROW_MATCHED"&&typeof onFormSubmit==="function"){
+            // One-time claim under the existing ScriptLock. A crash leaves
+            // ID_GENERATING, preventing an unsafe second email/ID attempt.
+            mcWebsiteUpdateLedger_(ledger,row,"ID_GENERATING",String(v[1]||""),linkedRow,"",
+              "Resuming original ID generator once; no new Form response");
+            responseRow=linkedRow;
+            formResponseId=String(v[1]||"");
+            mustGenerate=true;
+          }
+        }
+        if(!mustGenerate)
+          return reply({ok:false,pending:true,error:"Your application is saved; official registration reconciliation is pending. Please do not register twice."});
+      } else {
+        if(p.action==="website_status")return reply({ok:false,error:"Submission reference not found"});
       values=mcWebsiteValues_(p.values);
       const formUrl=ss.getFormUrl();
       if(!formUrl)throw Error("Original Google Form is not linked");
@@ -203,6 +229,7 @@ function mcWebsiteBridgePost_(p){
       sheet.getRange(responseRow,19).setValue("WEBSITE:"+id);
       mcWebsiteUpdateLedger_(ledger,row,"ROW_MATCHED",formResponseId,responseRow,"","Ready for original ID generator");
       mustGenerate=true;
+      } // New submission. Existing ledger submissions resume above.
     } finally {lock.releaseLock();}
     if(mustGenerate){
       // onFormSubmit uses its own ScriptLock; never call while ours is held.
@@ -219,6 +246,6 @@ function mcWebsiteBridgePost_(p){
     return reply({ok:false,pending:true,error:"Not finalized"});
   } catch(ex) {
     console.error("Website registration bridge: "+String(ex?.message||ex).slice(0,180));
-    return reply({ok:false,pending:true,error:"Registration needs Administrator reconciliation; please do not resubmit"});
+    return reply({ok:false,pending:true,error:"Your application reference was saved, but official registration confirmation is still pending. Do not create a second application."});
   }
 }
