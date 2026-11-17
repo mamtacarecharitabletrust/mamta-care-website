@@ -24,7 +24,7 @@ test("custom website registration remains the user-facing form, never Google For
 });
 test("donor never sees administrator photo approval on pending registration",()=>{
  assert.doesNotMatch(ui,/Your registration needs Administrator review/);
- assert.match(ui,/Finalizing your registration/);
+ assert.match(ui,/Your application is saved/);
  assert.match(ui,/No administrator photo approval is required/);
  assert.match(ui,/checkRegistrationStatus/);
  assert.match(ui,/retryOriginalSubmission/);

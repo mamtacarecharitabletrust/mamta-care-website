@@ -12,6 +12,41 @@ const PHOTO_GUIDES = { haircut: "/registration-guides/haircut-approved.webp", he
 const LENGTHS = ["14-16INCHES", "18-20INCHES", "21-26INCHES"];
 const FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
+const MAX_SOURCE_PHOTO_BYTES = 20 * 1024 * 1024;
+/* Resize large phone photos locally before upload. No external photo services. */
+async function optimizeHairPhoto(file){
+  if(file.size<=650*1024)return file;
+  let image=null,objectURL="";
+  try{
+    if("createImageBitmap" in window)image=await createImageBitmap(file);
+    else {
+      objectURL=URL.createObjectURL(file);
+      image=await new Promise((resolve,reject)=>{const el=new Image();el.onload=()=>resolve(el);el.onerror=reject;el.src=objectURL;});
+    }
+    const scale=Math.min(1,1600/Math.max(image.width,image.height));
+    const canvas=document.createElement("canvas");
+    canvas.width=Math.max(1,Math.round(image.width*scale));
+    canvas.height=Math.max(1,Math.round(image.height*scale));
+    const ctx=canvas.getContext("2d");
+    if(!ctx)throw Error("Cannot prepare the photo on this device");
+    ctx.fillStyle="#ffffff";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(image,0,0,canvas.width,canvas.height);
+    let compressed=null;
+    for(const quality of [0.82,0.72,0.62]){
+      const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",quality));
+      if(!blob)break;
+      compressed=blob;
+      if(blob.size<=900*1024)break;
+    }
+    if(!compressed||compressed.size>=file.size)return file;
+    return new File([compressed],file.name.replace(/\.[^.]+$/,"")+".jpg",{type:"image/jpeg",lastModified:file.lastModified});
+  }finally{
+    if(objectURL)URL.revokeObjectURL(objectURL);
+    if(image&&typeof image.close==="function")image.close();
+  }
+}
+
 
 function GuidePhoto({ src, alt }) { const [missing, setMissing] = React.useState(false); return missing ? <div className="mchr-photo-unavailable">Corrected photograph will appear after image upload</div> : <img src={src} alt={alt} onError={() => setMissing(true)} />; }
 
@@ -67,6 +102,8 @@ export default function HairDonationRegistration() {
     voluntary: false, private_photos: false, terms_accepted: false, awareness: false,
   });
   const [files, setFiles] = useState({ front: null, back: null });
+  const [photoBusy, setPhotoBusy] = useState({front:false,back:false});
+  const photoSequence = useRef({front:0,back:0});
   const frontPreview = useMemo(() => files.front ? URL.createObjectURL(files.front) : null, [files.front]);
   const backPreview = useMemo(() => files.back ? URL.createObjectURL(files.back) : null, [files.back]);
   useEffect(() => () => { if (frontPreview) URL.revokeObjectURL(frontPreview); }, [frontPreview]);
@@ -78,18 +115,36 @@ export default function HairDonationRegistration() {
   const attempted = useRef(false);
   const [uploadState, setUploadState] = useState("idle");
   const [syncPending, setSyncPending] = useState(false);
+  const [pendingSeconds, setPendingSeconds] = useState(0);
+  const statusInFlight = useRef(false);
   const [canRetry, setCanRetry] = useState(false);
   const [statusChecking, setStatusChecking] = useState(false);
   const frontGallery = useRef(null), frontCamera = useRef(null);
   const backGallery = useRef(null), backCamera = useRef(null);
   const refs = useMemo(() => ({ front: { gallery: frontGallery, camera: frontCamera }, back: { gallery: backGallery, camera: backCamera } }), []);
   const set = (key, value) => { setValues(old => ({ ...old, [key]: value })); setError(""); };
-  const handleFile = (which, file) => {
-    if (!file) return;
-    if (!FILE_TYPES.includes(file.type) || !file.size || file.size > MAX_PHOTO_BYTES) {
-      setError("Choose a JPG, PNG or WebP image smaller than 4 MB."); return;
+  const handleFile = async (which, file) => {
+    if(!file)return;
+    if(!FILE_TYPES.includes(file.type)||!file.size||file.size>MAX_SOURCE_PHOTO_BYTES){
+      setError("Choose a JPG, PNG or WebP photo smaller than 20 MB."); return;
     }
-    setFiles(old => ({ ...old, [which]: file })); setError("");
+    const seq=++photoSequence.current[which];
+    setPhotoBusy(old=>({...old,[which]:true}));
+    setError("");
+    try{
+      const ready=await optimizeHairPhoto(file);
+      if(seq!==photoSequence.current[which])return;
+      if(!ready.size||ready.size>MAX_PHOTO_BYTES){
+        setError("This photo is still too large. Choose a smaller image (under 4 MB)."); return;
+      }
+      setFiles(old=>({...old,[which]:ready}));
+    }catch{
+      if(seq!==photoSequence.current[which])return;
+      if(file.size<=MAX_PHOTO_BYTES)setFiles(old=>({...old,[which]:file}));
+      else setError("Unable to prepare this large photo on your device. Please choose a smaller image.");
+    }finally{
+      if(seq===photoSequence.current[which])setPhotoBusy(old=>({...old,[which]:false}));
+    }
   };
   const validate = (current) => {
     if (current === 2) {
@@ -100,6 +155,7 @@ export default function HairDonationRegistration() {
         return "Complete every required donor information field before continuing.";
       }
     }
+    if (current === 3 && (photoBusy.front || photoBusy.back)) return "Your photographs are being prepared securely. Please try again.";
     if (current === 3 && (!files.front || !files.back)) return "Select one front photograph and one back photograph.";
     if (current === 4 && (!values.voluntary || !values.private_photos || !values.terms_accepted)) return "Please accept the voluntary donation, privacy, and registration terms.";
     return "";
@@ -115,7 +171,8 @@ export default function HairDonationRegistration() {
   // Server-side Cloudflare feature/security gates remain authoritative.
   const requestId = useRef(null);
   const checkRegistrationStatus = async () => {
-    if (!requestId.current) return false;
+    if (!requestId.current || statusInFlight.current) return false;
+    statusInFlight.current=true;
     setStatusChecking(true);
     try {
       const response = await fetch("/api/hair-registration-status?submission_uuid=" + encodeURIComponent(requestId.current), {cache:"no-store"});
@@ -132,6 +189,7 @@ export default function HairDonationRegistration() {
     } catch {
       setUploadState("Registration status is temporarily unavailable; automatic checking will continue.");
     } finally {
+      statusInFlight.current=false;
       setStatusChecking(false);
     }
     return false;
@@ -141,15 +199,21 @@ export default function HairDonationRegistration() {
     let active = true;
     let count = 0;
     const poll = async () => {
-      if (!active || count >= 35) return;
+      if (!active || count >= 48) return;
       count++;
       await checkRegistrationStatus();
     };
     poll();
-    const interval = window.setInterval(poll, 12000);
+    const interval = window.setInterval(poll, 5000);
     const retry = window.setTimeout(() => { if (active) setCanRetry(true); }, 47000);
     return () => { active = false; window.clearInterval(interval); window.clearTimeout(retry); };
   }, [syncPending, finished]);
+  useEffect(() => {
+    if (!syncPending) return;
+    setPendingSeconds(0);
+    const ticker=window.setInterval(()=>setPendingSeconds(v=>v+1),1000);
+    return ()=>window.clearInterval(ticker);
+  },[syncPending]);
   const retryOriginalSubmission = () => {
     // The same submission UUID is reused: no second Google Form registration.
     attempted.current = false;
@@ -228,15 +292,16 @@ export default function HairDonationRegistration() {
           <a href="tel:+918500012190">Call Mamta Care: 8500012190</a>
         </div>
         <button type="button" className="mchr-secondary" onClick={() => window.location.reload()}>Return to website</button>
-      </section> : syncPending ? <section className="mchr-panel mchr-pending" role="status" aria-live="polite" aria-busy="true">
-        <span className="mchr-loading-ring" aria-hidden="true" />
-        <h2>Finalizing your registration…</h2>
-        <p>Your details and two private photos have been received. We’re checking the existing registration system for your <strong>official registration number</strong>. No administrator photo approval is required.</p>
-        <p className="mchr-note">Submission reference (not your registration number): <strong>{requestId.current}</strong>. Please keep this page open and avoid creating another registration.</p>
+      </section> : syncPending ? <section className="mchr-panel mchr-pending" role="status" aria-live="polite" aria-busy={pendingSeconds<15}>
+        <span className="mchr-success-icon" aria-hidden="true">✓</span>
+        <h2>{pendingSeconds<15?"Your photos are received securely":"Your application is saved"}</h2>
+        <p>Your details and two private hair photographs have been received. Mamta Care is retrieving your <strong>official registration number from the original Google Form</strong>. No administrator photo approval is required.</p>
+        {pendingSeconds<15 ? <p>Checking your official registration number automatically…</p> : <p>Google registration is taking longer than usual. You do not need to fill in the form again.</p>}
+        <p className="mchr-note">Your saved submission reference (not the registration ID): <strong>{requestId.current}</strong>. Keep this reference in case you need support.</p>
         <p>{uploadState}</p>
         <div className="mchr-footer-actions">
-          <button type="button" className="mchr-secondary" disabled={statusChecking} onClick={checkRegistrationStatus}>{statusChecking ? "Checking…" : "Check registration status"}</button>
-          {canRetry && <button type="button" className="mchr-primary" onClick={retryOriginalSubmission}>Retry this same submission securely</button>}
+          <button type="button" className="mchr-secondary" disabled={statusChecking} onClick={checkRegistrationStatus}>{statusChecking ? "Checking…" : "Check my registration ID"}</button>
+          {canRetry && <button type="button" className="mchr-primary" onClick={retryOriginalSubmission}>Retry this same submission safely</button>}
         </div>
       </section> : <>
         <nav aria-label="Hair donation registration steps" className="mchr-steps">
@@ -288,15 +353,15 @@ export default function HairDonationRegistration() {
                   <strong>{photoNames[which]}</strong>
                   <p>{which === "front" ? "Face and front hair clearly visible." : "Show the complete length of your hair from behind."}</p>
                   <div className="mchr-upload-actions">
-                    <button type="button" onClick={() => refs[which].camera.current?.click()}>Take photo</button>
-                    <button type="button" onClick={() => refs[which].gallery.current?.click()}>Choose file</button>
+                    <button type="button" disabled={photoBusy[which]} onClick={() => refs[which].camera.current?.click()}>Take photo</button>
+                    <button type="button" disabled={photoBusy[which]} onClick={() => refs[which].gallery.current?.click()}>Choose file</button>
                   </div>
                   <input aria-label={"Camera " + photoNames[which]} className="mchr-hidden-file" ref={refs[which].camera} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={e => handleFile(which, e.target.files?.[0])}/>
                   <input aria-label={"Gallery " + photoNames[which]} className="mchr-hidden-file" ref={refs[which].gallery} type="file" accept="image/jpeg,image/png,image/webp" onChange={e => handleFile(which, e.target.files?.[0])}/>
-                  <small>{files[which] ? "✓ Photo selected on this device (not sent yet)" : "No photo selected yet"}</small>
+                  <small>{photoBusy[which] ? "Preparing photo for faster secure upload…" : files[which] ? "✓ Photo ready for secure upload" : "No photo selected yet"}</small>
                 </div>)}
               </div>
-              <div className="mchr-note">Exactly two clear pictures. Maximum 4 MB each. When registration is enabled, they will be stored privately for your assigned Mamta Care team — never posted publicly.</div>
+              <div className="mchr-note">Exactly two clear pictures. Large phone photos are resized privately on your device to upload faster.  When registration is enabled, they will be stored privately for your assigned Mamta Care team — never posted publicly.</div>
             </>}
             {step === 4 && <>
               <StepTitle number="04" title="Review and consent" help="Please read each declaration before submitting your registration." />
