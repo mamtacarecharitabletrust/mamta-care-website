@@ -32,13 +32,13 @@ test("donors see a circular loading animation during the original submission",()
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 });
 
-test("pending official registration continues showing a progress circle, not a false completed number",()=>{
+test("pending official registration shows saved-photo receipt, not a false completed number",()=>{
  assert.match(ui,/syncPending \? <section className="mchr-panel mchr-pending"/);
- assert.match(ui,/Finalizing your registration/);
- assert.match(ui,/className="mchr-loading-ring" aria-hidden="true"/);
- assert.match(ui,/Submission reference \(not your registration number\)/);
+ assert.match(ui,/Your application is saved/);
+ assert.match(ui,/className="mchr-success-icon" aria-hidden="true"/);
+ assert.match(ui,/Your saved submission reference/);
  assert.match(ui,/checkRegistrationStatus/);
- assert.match(ui,/window\.setInterval\(poll, 12000\)/);
+ assert.match(ui,/window\.setInterval\(poll, 5000\)/);
  assert.match(ui,/No administrator photo approval is required/);
  assert.doesNotMatch(ui,/Your registration needs Administrator review|under administrator scrutiny/i);
 });
