@@ -144,6 +144,21 @@ const WIG_FORM_ENABLED=false; // Keep off until the full backend, Sheet and emai
 const WIG_API='https://mamta-donor-desk-launch-new.bharathairseva-in.workers.dev/api/public/wig-v8';
 const WIG_SITE_KEY='0x4AAAAAAFU1GOT32HyjtR0p';
 const WIG_SUBMISSION_ID=crypto.randomUUID();
+
+function reflectLiveWigCopy(){
+ if(!WIG_FORM_ENABLED)return; // Preview remains unchanged until explicitly activated.
+ const intro=document.getElementById('mainDesc');if(intro)intro.textContent='A confidential, step-by-step application for wig assistance.';
+ const introStatus=document.getElementById('stepCounter');if(introStatus)introStatus.textContent='Application introduction';
+ const notice=[...document.querySelectorAll('.step[data-step="5"] .notice')].find(el=>el.textContent.includes('Preview only.'));
+ if(notice)notice.textContent='Once you submit, your application and four photographs will be securely recorded for verification. Submission does not guarantee approval.';
+ const hero=document.querySelector('.step[data-step="6"] .success-hero');
+ if(hero){const title=hero.querySelector('h3'),paragraph=hero.querySelector('p');if(title)title.textContent='Your wig assistance application was received';if(paragraph)paragraph.textContent='Your registration number has been issued. Please keep it for verification and further communication.';}
+ const status=document.querySelector('.step[data-step="6"] .refbox span');if(status)status.textContent='Registration Number';
+ const consentError=document.getElementById('consentError');if(consentError)consentError.textContent='Please acknowledge the required terms and privacy conditions to continue.';
+ const uploader=document.getElementById('medical-status');if(uploader)uploader.textContent='No PDF selected · optional';
+ for(const side of ['front','back','left','right']){const status=document.getElementById('photo-'+side+'-status');if(status)status.textContent='No image selected · required for secure submission';}
+}
+
 let wigWidgetId=null,wigSubmitting=false;
 function wigChip(name){return document.querySelector('[data-choice="'+name+'"] .chip.selected')?.textContent.trim()||''}
 function wigMountSecurity(){
@@ -181,7 +196,8 @@ async function submitWigApplication(){
 let step=0;const steps=[...document.querySelectorAll('.step')],bars=[...document.querySelectorAll('#progress button')];
 const labels=['Introduction','Patient details','Medical needs','Wig & hair source','Four guided photos','Review & consent','WhatsApp verification'];
 const headings=['Request Free Wig Assistance','Patient Registration','Patient Support Details','Wig & Hair Preferences','Patient Photographs','Application Review','Selfie Video Verification'];
-const descs=['A warm, private process. This is a design preview only.','Step 1 · Patient and family contact details, including email.','Step 2 · Health-support information and medical document.','Step 3 · Wig preferences, hair source and delivery.','Step 4 · Four guided photo examples and local file previews.','Step 5 · Clear terms and optional media permissions.','Step 6 · Sample registration ID and WhatsApp video script.'];
+const descs=[WIG_FORM_ENABLED?'A warm, private and secure application for wig assistance.':'A warm, private process. This is a design preview only.','Step 1 · Patient and family contact details, including email.','Step 2 · Health-support information and medical document.','Step 3 · Wig preferences, hair source and delivery.','Step 4 · Four guided photo examples and local file previews.','Step 5 · Clear terms and optional media permissions.',WIG_FORM_ENABLED?'Step 6 · Your issued registration ID and WhatsApp video verification.':'Step 6 · Sample registration ID and WhatsApp video script.'];
+reflectLiveWigCopy();
 const photos={front:null,back:null,left:null,right:null};
 const guideAssets={bald:{front:'https://images.pexels.com/photos/6984587/pexels-photo-6984587.jpeg?auto=compress&cs=tinysrgb&w=800',back:'https://images.pexels.com/photos/3851330/pexels-photo-3851330.jpeg?auto=compress&cs=tinysrgb&w=800',left:'https://images.pexels.com/photos/6984582/pexels-photo-6984582.jpeg?auto=compress&cs=tinysrgb&w=800',right:'https://images.pexels.com/photos/6984582/pexels-photo-6984582.jpeg?auto=compress&cs=tinysrgb&w=800'},long:{front:'https://images.pexels.com/photos/22042361/pexels-photo-22042361.jpeg?auto=compress&cs=tinysrgb&w=800',back:'https://images.pexels.com/photos/16157613/pexels-photo-16157613.jpeg?auto=compress&cs=tinysrgb&w=800',left:'https://images.pexels.com/photos/11635189/pexels-photo-11635189.jpeg?auto=compress&cs=tinysrgb&w=800',right:'https://images.pexels.com/photos/11635189/pexels-photo-11635189.jpeg?auto=compress&cs=tinysrgb&w=800'}};
 let guideMode='bald';
@@ -216,7 +232,7 @@ kn:n=>`ನಮಸ್ಕಾರ, ನನ್ನ ಹೆಸರು ${n}. ನನ್ನ �
 ta:n=>`வணக்கம், என் பெயர் ${n}. எனது மம்தா கேர் விக் விண்ணப்ப பதிவு எண் ${demoRef}. எனது தனிப்பட்ட பயன்பாட்டிற்கு விக் உதவி தேவைப்படுகிறது. நான் நேரடியாகவோ அல்லது எனது அனுமதியுடன் பராமரிப்பாளர் உதவியுடனோ விண்ணப்பித்துள்ளேன். நன்றி, மம்தா கேர்.`,
 ml:n=>`നമസ്കാരം, എന്റെ പേര് ${n}. എന്റെ മംത കെയർ വിഗ് അപേക്ഷ രജിസ്ട്രേഷൻ നമ്പർ ${demoRef} ആണ്. എന്റെ വ്യക്തിഗത ഉപയോഗത്തിനായി എനിക്ക് വിഗ് സഹായം ആവശ്യമാണ്. ഞാൻ നേരിട്ടോ എന്റെ അനുമതിയോടെ പരിചാരകന്റെ സഹായത്തോടെയോ അപേക്ഷ നൽകിയിട്ടുണ്ട്. നന്ദി, മംത കെയർ.`,
 mr:n=>`नमस्कार, माझे नाव ${n} आहे. माझा ममता केअर विग अर्ज नोंदणी क्रमांक ${demoRef} आहे. मला वैयक्तिक वापरासाठी विग सहाय्य हवे आहे. मी स्वतः किंवा माझ्या परवानगीने काळजीवाहूच्या मदतीने अर्ज केला आहे. धन्यवाद, ममता केअर.`};
-function updateScript(){const l=val('videoLang');$('demoReference').textContent=demoRef+(realRegistrationId?'':'  ·  DEMO');$('videoScript').textContent=(translations[l]||translations.en)(getName());if($('whatsappBox').classList.contains('show'))showWhatsApp(true);}
+function updateScript(){const l=val('videoLang');$('demoReference').textContent=demoRef+(realRegistrationId?'':'  ·  DEMO');if(realRegistrationId){const label=document.querySelector('.step[data-step="6"] .refbox span');if(label)label.textContent='Your Registration Number · APPLICATION RECEIVED';}$('videoScript').textContent=(translations[l]||translations.en)(getName());if($('whatsappBox').classList.contains('show'))showWhatsApp(true);}
 $('prefLang').addEventListener('change',()=>{$('videoLang').value=val('prefLang');updateScript();});$('videoLang').addEventListener('change',updateScript);$('fullName').addEventListener('input',()=>{if(step===6)updateScript();});
 function whatsappText(){return 'Mamta Care — Free Wig Verification\nPatient: '+getName()+'\nRegistration number: '+demoRef+'\nI am sharing my selfie video for verification. I will attach the recorded video manually.\n\n[Please attach the recorded video manually before sending]';}
 function showWhatsApp(openOnly=false){$('waMessage').textContent=whatsappText();$('whatsappBox').classList.add('show');if(!openOnly)$('whatsappBox').scrollIntoView({behavior:'smooth',block:'nearest'});}
