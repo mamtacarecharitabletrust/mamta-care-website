@@ -1,7 +1,8 @@
 /**
  * SANDBOX ONLY: Isolated copy of WigDatabaseBridge.gs.
- * Locked to the TEST ONLY spreadsheet, the fictional patient 'SYSTEM TEST ONLY',
- * registration ID 2099/010199 and fake email test@example.invalid.
+ * Locked to the TEST ONLY spreadsheet, two fictional patients:
+ * 'SYSTEM TEST ONLY' (2099/010199) and 'SYSTEM TEST INTAKE' (2026/231101),
+ * with dummy email test@example.invalid and synthetic contact data.
  * Email delivery is SIMULATED and NO EMAILS ARE SENT from this script.
  * DO NOT USE FOR PRODUCTION / REPLACE THE LIVE SCRIPT.
  * Create a NEW standalone Google Apps Script project, set WIG_SHEET_BRIDGE_SECRET
@@ -116,7 +117,7 @@ function doPost(e){
  var action=wigSafe_(input.action,40),c=input.record||{};
  var reg=wigSafe_(c.registration_id,45);
  if(!/^\d{4}\/\d{4}\d{2,}$/.test(reg))return wigJson_({ok:false,error:'Invalid registration ID'});
- if(reg!=='2099/010199'||c.patient_name!=='SYSTEM TEST ONLY'||c.email!=='test@example.invalid')return wigJson_({ok:false,error:'SANDBOX SAFETY: Only synthetic test case allowed'});
+ if(!((reg==='2099/010199'&&c.patient_name==='SYSTEM TEST ONLY')||(reg==='2026/231101'&&c.patient_name==='SYSTEM TEST INTAKE'))||c.email!=='test@example.invalid'||(c.phone&&c.phone!=='0000000000'))return wigJson_({ok:false,error:'SANDBOX SAFETY: Only approved fictional cases allowed'});
  if(!['GOOGLE_SHEET_CREATE','GOOGLE_SHEET_APPROVE','REGISTRATION_EMAIL','APPROVAL_EMAIL'].includes(action)&&!/^MAKER_STATUS_V[1-9][0-9]{0,5}$/.test(action))return wigJson_({ok:false,error:'Unknown action'});
  var lock=LockService.getScriptLock();
  try{lock.waitLock(25000)}catch{return wigJson_({ok:false,error:'Busy; retry later'})}
