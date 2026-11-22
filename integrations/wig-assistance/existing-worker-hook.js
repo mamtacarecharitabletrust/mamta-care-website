@@ -42,11 +42,6 @@ launch_wig_maker_portal_worker_default.scheduled=function mcwigV8Scheduled(event
  }
  return result;
 };
-const mcwigPriorPage=mcctPage;
-mcctPage=function mcwigV8Page(user){
- const html=mcwigPriorPage(user);
- if(user?.role==="admin"&&typeof html==="string"){
-  return html.replace("</nav>",'<a class="nav" href="/admin-wig-v8" title="Cancer Patient Applications">🎗 Cancer Patients</a></nav>');
- }
- return html;
-};
+// The Cancer Patient navigation tab is deliberately not shown until the
+// production feature gate, Google Sheet bridge, and email tests are green.
+// The admin route is available only after MC_WIG_ENABLED is true.
