@@ -7,6 +7,7 @@ import {handleMamtaWigV8, wigProductionGuard, syncMamtaMakerJobUpdate, drainMamt
 import {testWigBridgeFromStaging} from "./diagnostic.js";
 import {testStagingIntake} from "./synthetic-intake.js";
 import {verifyProductionWigBridgeNoWrite} from "./production-probe.js";
+import {verifyNewSyntheticAdminFlow} from "./new-admin-flow.js";
 const TEST_CASE="8bd2e2b6-7a2c-4f70-bbf9-705a40c566b3";
 const TEST_MAKER="d702c1d8-63b0-4b3a-a593-984ae2336b13";
 function equal(a,b){
@@ -120,6 +121,7 @@ export default {
   const diagnostic=await testWigBridgeFromStaging(req,env);if(diagnostic)return diagnostic;
   const synthetic=await testStagingIntake(req,env);if(synthetic)return synthetic;
   const productionProbe=await verifyProductionWigBridgeNoWrite(req,env);if(productionProbe)return productionProbe;
+  const adminFlow=await verifyNewSyntheticAdminFlow(req,env);if(adminFlow)return adminFlow;
   const approval=await wigApprovalTest(req,env);if(approval)return approval;
   const release=await wigReleaseAndMakerProgressTest(req,env);if(release)return release;
   const outbox=await wigOutboxTest(req,env);if(outbox)return outbox;
