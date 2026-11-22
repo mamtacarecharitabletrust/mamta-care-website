@@ -4235,93 +4235,18 @@ function HairDonation() {
 ========================================================= */
 
 function WigRequest() {
-
+  React.useEffect(() => {
+    window.location.replace("/wig-assistance-preview-v7.html");
+  }, []);
   return (
-
-    <Page
-
-      title="Request a Free Wig"
-
-      intro="Our free wig initiative supports people experiencing hair loss during cancer treatment."
-
-    >
-
-      <AnimatedHighlight>
-
-        <div>
-
-          <p className="eyebrow">
-
-            FREE WIG SUPPORT
-
-          </p>
-
-          <h2>
-
-            Confidence Matters.
-
-          </h2>
-
-          <p>
-
-            Submit the official wig
-
-            request form and connect
-
-            with Mamta Care Charitable
-
-            Trust for support.
-
-          </p>
-
-          <div className="wig-request-actions">
-
-            <a
-
-              className="btn primary"
-
-              href={
-
-                info.wigRequestForm
-
-              }
-
-              target="_blank"
-
-              rel="noreferrer"
-
-            >
-
-              Open Wig Request Form
-
-            </a>
-
-            <Link
-
-              className="btn wig-process-button"
-
-              to="/wig-making-process"
-
-            >
-
-              Wig Making Process
-
-              <span>
-                →
-              </span>
-
-            </Link>
-
-          </div>
-
-        </div>
-
-      </AnimatedHighlight>
-
-    </Page>
-
+    <main style={{minHeight:"65vh",display:"grid",placeItems:"center",padding:"32px"}}>
+      <div>
+        <h1>Free Wig Assistance</h1>
+        <p>Opening the Mamta Care registration experience…</p>
+        <a href="/wig-assistance-preview-v7.html">Continue to the registration preview</a>
+      </div>
+    </main>
   );
-
 }
 
 /* =========================================================
