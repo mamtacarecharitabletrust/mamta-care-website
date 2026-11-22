@@ -124,7 +124,7 @@ export async function handleMamtaWigV8(req,env,currentUser){
  const p=new URL(req.url).pathname,method=req.method;
  if(p==="/api/public/wig-v8"&&method==="OPTIONS"){const o=sameOrigin(req,env);return o?new Response(null,{status:204,headers:cors(o)}):err("Origin not allowed",403);}
  if(p==="/api/public/wig-v8"&&method==="POST")return apply(req,env);
- if(p==="/admin-wig-v8"){if(!adminCheck(req,currentUser))return err("Administrator session required",401);return mcwigAdminPage();}
+ if(p==="/admin-wig-v8"){if(env.MC_WIG_ENABLED!=="true")return err("Cancer Patient integration is not activated",503);if(!adminCheck(req,currentUser))return err("Administrator session required",401);return mcwigAdminPage();}
  if(!p.startsWith("/api/admin/wig-v8"))return null;
  if(env.MC_WIG_ENABLED!=="true")return err("Cancer Patient integration is not activated",503);
  if(!adminCheck(req,currentUser))return err("Administrator session required",401);
@@ -182,7 +182,7 @@ export async function drainMamtaWigOutbox(env,limit=8){
   const ts=Math.floor(Date.now()/1000),locked=await env.DB.prepare("UPDATE mcwig_outbox_v1 SET state='PROCESSING',attempts=attempts+1,updated_at=? WHERE id=? AND state IN ('PENDING','FAILED')").bind(ts,task.id).run();
   if((locked.meta?.changes||0)!==1)continue;
   const record={registration_id:task.registration_id,applied_day_ist:task.applied_day_ist,patient_name:task.patient_name,email:task.email,phone:task.phone,city:task.city,maker_job_id:task.maker_job_id,payload:JSON.parse(task.payload_json)};
-  if(task.kind.startsWith("MAKER_STATUS_V")){const job=await env.DB.prepare("SELECT status,version FROM maker_jobs WHERE id=?").bind(task.maker_job_id).first();if(!job)throw Error("Manufacturing order no longer exists");record.maker_status=job.status;record.maker_version=job.version;}
+  if(task.kind.startsWith("MAKER_STATUS_V")){const job=await env.DB.prepare("SELECT status,version FROM maker_jobs WHERE id=?").bind(task.maker_job_id).first();if(!job){await env.DB.prepare("UPDATE mcwig_outbox_v1 SET state='HOLD',last_error='Manufacturing order not found',updated_at=? WHERE id=?").bind(ts,task.id).run();stats.waiting++;continue;}record.maker_status=job.status;record.maker_version=job.version;}
   try{
    const response=await fetch(url.toString(),{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({secret,action:task.kind,record}),redirect:"follow",signal:AbortSignal.timeout(16000)});
    const body=await response.text();if(!response.ok||body.length>8000)throw Error("Bridge failed");
