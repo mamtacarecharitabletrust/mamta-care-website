@@ -131,3 +131,43 @@ export async function wigProductionGuard(db,jobId){
  const row=await db.prepare("SELECT 1 AS hold FROM mcwig_cases_v1 WHERE maker_job_id=? AND production_released_at IS NULL AND status='APPROVED' LIMIT 1").bind(jobId).first();
  return !row;
 }
+
+/**
+ * Reliable outbox delivery: scheduled job or administrator-triggered.
+ * Requires configured WIG_SHEET_BRIDGE_URL and WIG_SHEET_BRIDGE_SECRET.
+ * The standalone Apps Script bridge MUST be deployed and authenticated first.
+ */
+export async function drainMamtaWigOutbox(env,limit=8){
+ const secret=String(env.WIG_SHEET_BRIDGE_SECRET||""),endpoint=String(env.WIG_SHEET_BRIDGE_URL||"");
+ if(secret.length<48||!endpoint)return {ok:false,configured:false,reason:"Wig Google Sheet bridge not configured"};
+ let url;try{url=new URL(endpoint)}catch{return {ok:false,configured:false,reason:"Invalid Wig bridge URL"}}
+ if(url.protocol!=="https:"||url.hostname!=="script.google.com"||!/^\/macros\/s\/[^/]+\/exec$/.test(url.pathname))return {ok:false,configured:false,reason:"Unapproved Wig bridge hostname"};
+ const results=await env.DB.prepare("SELECT o.id,o.case_id,o.kind,o.attempts,c.registration_id,c.applied_day_ist,c.patient_name,c.email,c.phone,c.city,c.payload_json,c.maker_job_id FROM mcwig_outbox_v1 o JOIN mcwig_cases_v1 c ON c.id=o.case_id WHERE o.state IN ('PENDING','FAILED') AND o.attempts<5 ORDER BY CASE o.kind WHEN 'GOOGLE_SHEET_CREATE' THEN 0 WHEN 'REGISTRATION_EMAIL' THEN 1 WHEN 'GOOGLE_SHEET_APPROVE' THEN 2 WHEN 'APPROVAL_EMAIL' THEN 3 ELSE 4 END,o.created_at LIMIT ?").bind(Math.max(1,Math.min(20,Number(limit)||8))).all();
+ const stats={ok:true,configured:true,done:0,failed:0,waiting:0};
+ for(const task of results.results||[]){
+  const prior=task.kind==="REGISTRATION_EMAIL"?"GOOGLE_SHEET_CREATE":task.kind==="GOOGLE_SHEET_APPROVE"?"GOOGLE_SHEET_CREATE":task.kind==="APPROVAL_EMAIL"?"GOOGLE_SHEET_APPROVE":null;
+  if(prior){
+   const predecessor=await env.DB.prepare("SELECT state FROM mcwig_outbox_v1 WHERE case_id=? AND kind=?").bind(task.case_id,prior).first();
+   if(predecessor?.state!=="DONE"){stats.waiting++;continue}
+  }
+  const ts=Math.floor(Date.now()/1000),locked=await env.DB.prepare("UPDATE mcwig_outbox_v1 SET state='PROCESSING',attempts=attempts+1,updated_at=? WHERE id=? AND state IN ('PENDING','FAILED')").bind(ts,task.id).run();
+  if((locked.meta?.changes||0)!==1)continue;
+  const record={registration_id:task.registration_id,applied_day_ist:task.applied_day_ist,patient_name:task.patient_name,email:task.email,phone:task.phone,city:task.city,maker_job_id:task.maker_job_id,payload:JSON.parse(task.payload_json)};
+  try{
+   const response=await fetch(url.toString(),{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({secret,action:task.kind,record}),redirect:"follow",signal:AbortSignal.timeout(16000)});
+   const body=await response.text();if(!response.ok||body.length>8000)throw Error("Bridge failed");
+   const reply=JSON.parse(body);
+   if(reply.ok!==true){
+    if(reply.needs_manual_review)await env.DB.prepare("UPDATE mcwig_outbox_v1 SET state='HOLD',last_error=?,updated_at=? WHERE id=?").bind("Email attempt uncertain; manual verification required",ts,task.id).run();
+    else throw Error(String(reply.error||"Wig bridge rejected request").slice(0,200));
+    stats.waiting++;continue;
+   }
+   await env.DB.prepare("UPDATE mcwig_outbox_v1 SET state='DONE',last_error=NULL,updated_at=? WHERE id=?").bind(ts,task.id).run();
+   stats.done++;
+  }catch(e){
+   await env.DB.prepare("UPDATE mcwig_outbox_v1 SET state='FAILED',last_error=?,updated_at=? WHERE id=?").bind(String(e?.message||"Bridge temporarily unavailable").slice(0,230),ts,task.id).run();
+   stats.failed++;
+  }
+ }
+ return stats;
+}
