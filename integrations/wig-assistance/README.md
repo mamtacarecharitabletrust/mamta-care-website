@@ -5,7 +5,7 @@ STATUS: STAGING ONLY. Existing public wig form, donor intake and production pati
 Built: V7 patient UI, four guided photo uploads, backend API with Cloudflare Turnstile and collision-free daily registration IDs, private R2 photo storage, D1 cancer-case tables, admin review/approval/production release controls, active CINE WIGS job assignment, an email and Google Sheet synchronization outbox, and an Apps Script bridge.
 
 Required to activate:
-1. Deploy integrations/wig-assistance/WigDatabaseBridge.gs from the original Wig Donation Database Google Sheet's Apps Script editor. Authorize Google Sheets and MailApp. Set a unique 48+ character WIG_SHEET_BRIDGE_SECRET in Script Properties.
+1. Create a NEW standalone Apps Script project at https://script.google.com/home/projects/create and paste WigDatabaseBridge.gs. Do not paste this into an existing Sheet-bound project; that could interfere with its existing doPost handler. Authorize Google Sheets and MailApp from the Trust account. Set a unique 48+ character WIG_SHEET_BRIDGE_SECRET in the standalone project's Script Properties. Deploy as a Web App executing as the Trust account with access for Anyone, protected by the secret.
 2. Bind the same secret encrypted in Cloudflare, set WIG_SHEET_BRIDGE_URL to the Apps Script HTTPS web app URL, and allow only real production website origins via MC_WIG_ALLOWED_ORIGINS.
 3. Import integrations/wig-assistance/worker-module.js and existing-worker-hook.js into the original Donor Desk Worker build WITHOUT removing old bindings, secrets, routes or schedules.
 4. Apply additive schema.sql to production D1 after staging tests. Keep donor photo bucket private and all medical/photo endpoints admin-only.
