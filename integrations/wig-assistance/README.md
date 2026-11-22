@@ -52,3 +52,12 @@ Successful staging tests do not authorize publication of public patient intake.
 - Live Cloudflare cron remains */2 * * * *.
 - Live production WIG_SHEET_BRIDGE_URL and WIG_SHEET_BRIDGE_SECRET remain deliberately UNSET. Staging-only Google bridge and test credentials were not copied into production. Public preview WIG_FORM_ENABLED remains false and website PR unmerged.
 - Read-only and anonymous-route smoke tests passed; authenticated donor workflows, full production registration, Google Sheet email deliveries, maker status and cron execution are NOT yet end-to-end certified.
+
+
+## Production bridge configuration — 2026-11-23 IST
+
+- Added genuine production Apps Script Web App URL as encrypted-configuration companion WIG_SHEET_BRIDGE_URL for Worker mamta-donor-desk-launch-new. This URL is NOT the TEST ONLY sandbox bridge.
+- Added a fresh production-specific WIG_SHEET_BRIDGE_SECRET encrypted secret (value intentionally absent from repository). A private handoff file was created for the NGO administrator to paste this value into original Apps Script's Script Properties. DO NOT commit, print or copy the secret into any repository, test logs or staff chat.
+- After settings/secret update, Cloudflare automatically created live version 12c58850-0870-453f-9b3c-9ed8069617f5 (100%). Verified same Worker script ETag, same fetch/scheduled handlers, same compatibility date and all original bindings as previously deployed Wig module version 963c8791-aaaf-4a97-8ca3-749c2689aeb8.
+- MC_WIG_ENABLED remains false; 2-minute cron preserved; D1 donor and maker record counts unchanged. Live original Apps Script secret property has NOT yet been changed by the administrator, therefore production bridge authentication is NOT yet verified.
+- Production deployment rollback source is the earlier V193 version 543b20a2-be5a-49fe-9aa7-1681ad4cb7ad. After script property rotation, perform a no-write secure round-trip check before considering public activation.
