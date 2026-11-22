@@ -143,7 +143,7 @@ const $=id=>document.getElementById(id), val=id=>($(id)?.value||'').trim();
 const WIG_FORM_ENABLED=false; // Keep off until the full backend, Sheet and email tests pass.
 const WIG_API='https://mamta-donor-desk-launch-new.bharathairseva-in.workers.dev/api/public/wig-v8';
 const WIG_SITE_KEY='0x4AAAAAAFg4La53uj9Wuu94';
-const WIG_SUBMISSION_ID=typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(16).slice(2);
+const WIG_SUBMISSION_ID=crypto.randomUUID();
 let wigWidgetId=null,wigSubmitting=false;
 function wigChip(name){return document.querySelector('[data-choice="'+name+'"] .chip.selected')?.textContent.trim()||''}
 function wigMountSecurity(){
@@ -159,7 +159,7 @@ function wigMountSecurity(){
 async function submitWigApplication(){
  if(wigSubmitting)return;
  if(!WIG_FORM_ENABLED){showError('Registration is not enabled in this staging preview.');return;}
- if(!val('fullName')||!val('city')||!/^\d{10}$/.test(val('phone'))){showError('Please enter patient name, city and a 10-digit phone number.');return;}
+ if(!val('fullName')||!val('city')||!/^\d{10}$/.test(val('phone'))||!/^\S+@\S+\.\S+$/.test(val('email'))){showError('Please enter patient name, city, a valid 10-digit phone number and email address.');return;}
  if(photoCount()!==4){showError('Please upload all four patient photographs before submitting.');navigate(4);return;}
  const token=window.turnstile?.getResponse(wigWidgetId);if(!token){showError('Complete the security verification to continue.');return;}
  const source=selectedHairSource(),hairSource=source==='Mamta Care donated hair'?'donated':source.toLowerCase().includes('own')?'own':'family';
@@ -194,11 +194,12 @@ function currentReference(){const dt=new Intl.DateTimeFormat('en-GB',{timeZone:'
 let demoRef=currentReference();let realRegistrationId='';
 function getName(){return val('fullName')||'Sample Patient';}
 function selectedHairSource(){return document.querySelector('input[name="hairSource"]:checked')?.value||'Mamta Care donated hair';}
-function navigate(n){step=Math.max(0,Math.min(6,n));steps.forEach((el,i)=>el.classList.toggle('active',i===step));bars.forEach((el,i)=>{el.classList.toggle('current',i===step);el.classList.toggle('complete',i<step)});$('phaseName').textContent=step===6?'FINAL VERIFICATION':'A GUIDED APPLICATION';$('mainTitle').textContent=headings[step];$('mainDesc').textContent=descs[step];$('stepCounter').textContent=labels[step];$('stepTag').textContent=String(step+1).padStart(2,'0')+' / 07';$('bottomButtons').style.display=step===0||step===6?'none':'flex';$('nextBtn').textContent=step===5?'Preview registration & WhatsApp →':'Continue →';if(step===5){updateSummary();if(WIG_FORM_ENABLED)wigMountSecurity();}if(step===6) updateScript();window.scrollTo({top:0,behavior:'smooth'});}
+function navigate(n){step=Math.max(0,Math.min(6,n));steps.forEach((el,i)=>el.classList.toggle('active',i===step));bars.forEach((el,i)=>{el.classList.toggle('current',i===step);el.classList.toggle('complete',i<step)});$('phaseName').textContent=step===6?'FINAL VERIFICATION':'A GUIDED APPLICATION';$('mainTitle').textContent=headings[step];$('mainDesc').textContent=descs[step];$('stepCounter').textContent=labels[step];$('stepTag').textContent=String(step+1).padStart(2,'0')+' / 07';$('bottomButtons').style.display=step===0||step===6?'none':'flex';$('nextBtn').textContent=step===5?(WIG_FORM_ENABLED?'Submit secure application →':'Preview registration & WhatsApp →'):'Continue →';if(step===5){updateSummary();if(WIG_FORM_ENABLED)wigMountSecurity();}if(step===6) updateScript();window.scrollTo({top:0,behavior:'smooth'});}
 function showError(message){alert(message);}
 function nextStep(){if(step===1){const email=val('email');if(!email||!/^\S+@\S+\.\S+$/.test(email)){showError('Please enter a valid email address to continue the preview.');$('email').focus();return;}}
 if(step===3 && selectedHairSource()!=='Mamta Care donated hair' && !$('hairDonationPermission').checked){showError('Please confirm that the hair contributor has agreed to contribute the hair.');return;}
-if(step===5){let ok=['consent1','consent2','consent3'].every(id=>$(id).checked);$('consentError').classList.toggle('show',!ok);if(!ok){$('consentError').scrollIntoView({behavior:'smooth',block:'nearest'});return;}}navigate(step+1);}
+if(step===4&&WIG_FORM_ENABLED&&photoCount()!==4){showError('Please select the front, back, left and right patient photographs.');return;}
+if(step===5){let ok=['consent1','consent2','consent3'].every(id=>$(id).checked);$('consentError').classList.toggle('show',!ok);if(!ok){$('consentError').scrollIntoView({behavior:'smooth',block:'nearest'});return;}if(WIG_FORM_ENABLED){submitWigApplication();return;}}navigate(step+1);}
 function prevStep(){navigate(step-1);}
 bars.forEach((el,i)=>el.addEventListener('click',()=>navigate(i)));
 document.querySelectorAll('[data-choice]').forEach(group=>group.querySelectorAll('.chip').forEach(chip=>chip.addEventListener('click',()=>{group.querySelectorAll('.chip').forEach(el=>el.classList.remove('selected'));chip.classList.add('selected')})));
