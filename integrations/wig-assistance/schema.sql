@@ -1,0 +1,8 @@
+-- Additive-only Mamta Care cancer-patient workflow schema; test in a copy of D1 before production.
+CREATE TABLE IF NOT EXISTS mcwig_cases_v1 (id TEXT PRIMARY KEY, registration_id TEXT NOT NULL UNIQUE, applied_day_ist TEXT NOT NULL, daily_sequence INTEGER NOT NULL, patient_name TEXT NOT NULL, email TEXT NOT NULL, phone TEXT NOT NULL, city TEXT NOT NULL, payload_json TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'PENDING_REVIEW', maker_id TEXT, maker_job_id TEXT UNIQUE, approved_by TEXT, approved_at INTEGER, production_released_at INTEGER, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_mcwig_cases_daily_id ON mcwig_cases_v1 (applied_day_ist,daily_sequence);
+CREATE TABLE IF NOT EXISTS mcwig_day_sequence_v1 (day_ist TEXT PRIMARY KEY, last_sequence INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS mcwig_photos_v1 (case_id TEXT NOT NULL, view TEXT NOT NULL, object_key TEXT NOT NULL UNIQUE, content_type TEXT NOT NULL, byte_size INTEGER NOT NULL, uploaded_at INTEGER NOT NULL, PRIMARY KEY(case_id,view));
+CREATE TABLE IF NOT EXISTS mcwig_event_v1 (id TEXT PRIMARY KEY,case_id TEXT NOT NULL, event_type TEXT NOT NULL,actor TEXT NOT NULL, event_json TEXT NOT NULL DEFAULT '{}',created_at INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS mcwig_outbox_v1 (id TEXT PRIMARY KEY,case_id TEXT NOT NULL,kind TEXT NOT NULL,state TEXT NOT NULL DEFAULT 'PENDING',attempts INTEGER NOT NULL DEFAULT 0,last_error TEXT,created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL, UNIQUE(case_id,kind));
+-- Never overwrite the existing Google Sheet, maker tables or donation tables. See migration note.
