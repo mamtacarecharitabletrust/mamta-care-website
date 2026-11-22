@@ -19,6 +19,36 @@ function wigLedgerRow_(sh,key){var last=sh.getLastRow();if(last<2)return 0;var v
 function wigLog_(sh,key,reg,action,state,detail,attempt){var row=wigLedgerRow_(sh,key);var vals=[[key,reg,action,state,wigDate_(),wigSafe_(detail,700),attempt||0]];if(row)sh.getRange(row,1,1,7).setValues(vals);else sh.getRange(sh.getLastRow()+1,1,1,7).setValues(vals)}
 function wigMail_(email,subject,html){if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw Error('Invalid patient email');MailApp.sendEmail({to:email,subject:subject,htmlBody:html,name:'Mamta Care Charitable Trust'})}
 function wigEsc_(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+
+function wigSummary_(ss,c,status){
+ var sh=ss.getSheetByName('Sheet1');
+ if(!sh)throw Error('Original Sheet1 summary missing');
+ var last=sh.getLastRow(),row=0;
+ if(last>1){var list=sh.getRange(2,1,last-1,1).getDisplayValues();for(var i=0;i<list.length;i++)if(String(list[i][0]).trim()===c.registration_id){row=i+2;break}}
+ if(!row)row=Math.max(2,last+1);
+ sh.getRange(row,1,1,6).setValues([[c.registration_id,c.patient_name,c.city,c.applied_day_ist,status,wigDate_()]]);
+ return row;
+}
+function wigMakerSync_(book,ledger,c){
+ var version=Number(c.maker_version);
+ if(!Number.isInteger(version)||version<1||version>100000)return {ok:false,error:'Invalid maker status version'};
+ var allowed=['assigned','in_progress','ready','received','cancelled'];
+ var state=wigSafe_(c.maker_status,30).toLowerCase();
+ if(allowed.indexOf(state)===-1)return {ok:false,error:'Unknown manufacturing status'};
+ var record=wigFind_(book.sh,c.registration_id);
+ if(!record)throw Error('Patient case is missing from the original Wig Donation Database');
+ var key='MAKER_LATEST:'+c.registration_id,last=wigLedgerRow_(ledger,key);
+ var lastVersion=last?Number(ledger.getRange(last,7).getValue()):0;
+ if(lastVersion>=version)return {ok:true,already_synced:true,version:lastVersion};
+ var names={assigned:'Assigned to CINE WIGS',in_progress:'Wig fabrication in progress',ready:'Wig ready at CINE WIGS',received:'Wig received by Mamta Care',cancelled:'Manufacturing order cancelled'};
+ var status=names[state];
+ book.sh.getRange(record,39).setValue(status);
+ book.sh.getRange(record,40).setValue(wigDate_());
+ wigSummary_(book.ss,c,status);
+ wigLog_(ledger,key,c.registration_id,'MAKER_LATEST','DONE',status,version);
+ return {ok:true,updated:true,status:status,version:version};
+}
+
 function wigCreate_(sh,c,p){
  var existing=wigFind_(sh,c.registration_id);if(existing)return {ok:true,row:existing,already_exists:true};
  var vals=Array(46).fill('');
@@ -40,6 +70,7 @@ function wigCreate_(sh,c,p){
  put(46,'Website Wig Portal | '+(p.hairSource||'donated')+' hair | ID: '+c.registration_id);
  var row=Math.max(2,sh.getLastRow()+1);
  sh.getRange(row,1,1,46).setValues([vals]);
+ wigSummary_(SpreadsheetApp.openById(MC_WIG_SHEET_ID),c,'APPLICATION RECEIVED');
  return {ok:true,row:row,created:true}
 }
 function wigApprove_(sh,c){
@@ -47,6 +78,7 @@ function wigApprove_(sh,c){
  sh.getRange(row,38).setValue('APPROVED');sh.getRange(row,39).setValue('APPROVED - MAKER ASSIGNED');sh.getRange(row,40).setValue(wigDate_());
  var note=wigSafe_(sh.getRange(row,46).getDisplayValue(),700);
  sh.getRange(row,46).setValue(note+' | Maker: CINE WIGS | Order ref: '+wigSafe_(c.maker_job_id,45));
+ wigSummary_(SpreadsheetApp.openById(MC_WIG_SHEET_ID),c,'APPROVED - MAKER ASSIGNED');
  return {ok:true,row:row,updated:true};
 }
 function wigSendMail_(ledger,action,c){
@@ -74,7 +106,7 @@ function doPost(e){
  var action=wigSafe_(input.action,40),c=input.record||{};
  var reg=wigSafe_(c.registration_id,45);
  if(!/^\d{4}\/\d{4}\d{2,}$/.test(reg))return wigJson_({ok:false,error:'Invalid registration ID'});
- if(!['GOOGLE_SHEET_CREATE','GOOGLE_SHEET_APPROVE','REGISTRATION_EMAIL','APPROVAL_EMAIL'].includes(action))return wigJson_({ok:false,error:'Unknown action'});
+ if(!['GOOGLE_SHEET_CREATE','GOOGLE_SHEET_APPROVE','REGISTRATION_EMAIL','APPROVAL_EMAIL'].includes(action)&&!/^MAKER_STATUS_V[1-9][0-9]{0,5}$/.test(action))return wigJson_({ok:false,error:'Unknown action'});
  var lock=LockService.getScriptLock();
  try{lock.waitLock(25000)}catch{return wigJson_({ok:false,error:'Busy; retry later'})}
  try{
@@ -84,6 +116,7 @@ function doPost(e){
   var result;
   if(action==='GOOGLE_SHEET_CREATE')result=wigCreate_(book.sh,c,c.payload||{});
   else if(action==='GOOGLE_SHEET_APPROVE')result=wigApprove_(book.sh,c);
+  else if(action.indexOf('MAKER_STATUS_V')===0)result=wigMakerSync_(book,ledger,c);
   else result=wigSendMail_(ledger,action,c);
   if(result.ok){wigLog_(ledger,key,reg,action,'DONE',JSON.stringify(result),1);}
   return wigJson_(result);
