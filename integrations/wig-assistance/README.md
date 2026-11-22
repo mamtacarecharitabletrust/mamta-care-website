@@ -38,3 +38,17 @@ IMPORTANT: the feature is currently disabled. Successful code upload/build does 
 6. Only after tests, deliberately activate MC_WIG_ENABLED, WIG_FORM_ENABLED, admin navigation and publish production branch after approval.
 
 Successful staging tests do not authorize publication of public patient intake.
+
+
+## Controlled production backend deployment — 2026-11-23 IST
+
+- Explicit user approval: production Donor Desk Worker code deployment permitted only with public Free Wig registration disabled; do not enable until separate approval.
+- Cloudflare live script: mamta-donor-desk-launch-new; additive module version 963c8791-aaaf-4a97-8ca3-749c2689aeb8 at 100% as deployment af50724d-67a1-495b-9cf3-7dabc28fc65e.
+- Canary validation: 5% new code / 95% original passed configuration and read-only D1 checks; promoted to 100%.
+- Original rollback: V193 Worker version 543b20a2-be5a-49fe-9aa7-1681ad4cb7ad. Restore this as 100% via Cloudflare Worker Deployments if necessary.
+- Verified prepared version preserves all 21 original binding names and values plus two plain-text bindings MC_WIG_ALLOWED_ORIGINS and MC_WIG_ENABLED=false; same live D1, same private R2, same runtime date, same fetch/scheduled handlers.
+- Post-deployment D1 read-only counts unchanged: donors 178; donor_events 756; maker_jobs 6; wig_requests 2; mcwig_cases_v1 0; mcwig_outbox_v1 0 (observed immediately after deployment, may grow normally).
+- Live browser smoke tests: donor sign-in page loads (Sign In | Mamta Care Donor Desk); Wig Maker route loads (Mamta Care · Wig Maker); /admin-wig-v8 returns 'Cancer Patient integration is not activated' (expected while OFF).
+- Live Cloudflare cron remains */2 * * * *.
+- Live production WIG_SHEET_BRIDGE_URL and WIG_SHEET_BRIDGE_SECRET remain deliberately UNSET. Staging-only Google bridge and test credentials were not copied into production. Public preview WIG_FORM_ENABLED remains false and website PR unmerged.
+- Read-only and anonymous-route smoke tests passed; authenticated donor workflows, full production registration, Google Sheet email deliveries, maker status and cron execution are NOT yet end-to-end certified.
