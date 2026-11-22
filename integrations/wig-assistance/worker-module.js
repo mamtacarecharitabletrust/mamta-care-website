@@ -61,7 +61,7 @@ async function apply(req,env){
 function adminCheck(req,user){return !!user&&user.role==="admin"&&["GET","POST"].includes(req.method)}
 function adminWrite(req){return req.headers.get("Origin")===new URL(req.url).origin&&req.headers.get("X-Mamta-Desk")==="1"&&/^application\/json(?:;|$)/i.test(req.headers.get("Content-Type")||"");}
 async function listCases(env){const results=await env.DB.prepare("SELECT id,registration_id,patient_name,email,phone,city,status,maker_id,maker_job_id,approved_by,approved_at,production_released_at,created_at FROM mcwig_cases_v1 ORDER BY created_at DESC LIMIT 150").all();return json({ok:true,cases:results.results||[]});}
-async function showCase(env,id){const c=await env.DB.prepare("SELECT * FROM mcwig_cases_v1 WHERE id=?").bind(id).first();if(!c)return err("Application not found",404);const a=await env.DB.prepare("SELECT view FROM mcwig_photos_v1 WHERE case_id=?").bind(id).all();return json({ok:true,case:{...c,payload:JSON.parse(c.payload_json),payload_json:undefined},available_photos:(a.results||[]).map(x=>x.view)});}
+async function showCase(env,id){const c=await env.DB.prepare("SELECT c.*,j.status AS maker_status,j.version AS maker_job_version FROM mcwig_cases_v1 c LEFT JOIN maker_jobs j ON j.id=c.maker_job_id WHERE c.id=?").bind(id).first();if(!c)return err("Application not found",404);const a=await env.DB.prepare("SELECT view FROM mcwig_photos_v1 WHERE case_id=?").bind(id).all();const queued=await env.DB.prepare("SELECT kind,state,last_error FROM mcwig_outbox_v1 WHERE case_id=? ORDER BY created_at").bind(id).all();return json({ok:true,case:{...c,payload:JSON.parse(c.payload_json),payload_json:undefined},available_photos:(a.results||[]).map(x=>x.view),sync_status:queued.results||[]});}
 async function showPhoto(env,id,view){
  if(!["front","back","left","right","medical"].includes(view))return err("Invalid photograph",400);
  const p=await env.DB.prepare("SELECT object_key,content_type FROM mcwig_photos_v1 WHERE case_id=? AND view=?").bind(id,view).first();
@@ -126,6 +126,7 @@ export async function handleMamtaWigV8(req,env,currentUser){
  if(p==="/api/public/wig-v8"&&method==="POST")return apply(req,env);
  if(p==="/admin-wig-v8"){if(!adminCheck(req,currentUser))return err("Administrator session required",401);return mcwigAdminPage();}
  if(!p.startsWith("/api/admin/wig-v8"))return null;
+ if(env.MC_WIG_ENABLED!=="true")return err("Cancer Patient integration is not activated",503);
  if(!adminCheck(req,currentUser))return err("Administrator session required",401);
  if(method==="GET"&&p==="/api/admin/wig-v8")return listCases(env);
  if(method==="GET"&&p==="/api/admin/wig-v8/outbox"){const rows=await env.DB.prepare("SELECT state,kind,COUNT(*) n FROM mcwig_outbox_v1 GROUP BY state,kind").all();return json({ok:true,counts:rows.results||[]});}
@@ -138,6 +139,19 @@ export async function handleMamtaWigV8(req,env,currentUser){
  if(method==="POST"&&act)return act[2]==="approve"?approve(req,env,currentUser,act[1]):release(req,env,currentUser,act[1]);
  return err("Not found",404);
 }
+
+export async function syncMamtaMakerJobUpdate(env,jobId){
+ if(String(env.MC_WIG_ENABLED)!=="true")return {linked:false,reason:"Feature disabled"};
+ const row=await env.DB.prepare("SELECT c.id AS case_id,c.registration_id,j.status AS maker_status,j.version FROM mcwig_cases_v1 c JOIN maker_jobs j ON j.id=c.maker_job_id WHERE j.id=?").bind(jobId).first();
+ if(!row)return {linked:false};
+ const ts=Math.floor(Date.now()/1000),kind="MAKER_STATUS_V"+String(row.version);
+ await env.DB.batch([
+  env.DB.prepare("INSERT OR IGNORE INTO mcwig_outbox_v1(id,case_id,kind,created_at,updated_at) VALUES(?,?,?,?,?)").bind(crypto.randomUUID(),row.case_id,kind,ts,ts),
+  env.DB.prepare("INSERT INTO mcwig_event_v1(id,case_id,event_type,actor,event_json,created_at) SELECT ?,?,?,?, ?,? WHERE NOT EXISTS (SELECT 1 FROM mcwig_event_v1 WHERE case_id=? AND event_type=? AND event_json=?)").bind(crypto.randomUUID(),row.case_id,"MAKER_PROGRESS","CINE_WIGS",JSON.stringify({status:row.maker_status,version:row.version}),ts,row.case_id,"MAKER_PROGRESS",JSON.stringify({status:row.maker_status,version:row.version}))
+ ]);
+ return {linked:true,maker_status:row.maker_status,version:row.version};
+}
+
 export async function wigProductionGuard(db,jobId){
  const row=await db.prepare("SELECT 1 AS hold FROM mcwig_cases_v1 WHERE maker_job_id=? AND production_released_at IS NULL AND status='APPROVED' LIMIT 1").bind(jobId).first();
  return !row;
@@ -153,10 +167,14 @@ export async function drainMamtaWigOutbox(env,limit=8){
  if(secret.length<48||!endpoint)return {ok:false,configured:false,reason:"Wig Google Sheet bridge not configured"};
  let url;try{url=new URL(endpoint)}catch{return {ok:false,configured:false,reason:"Invalid Wig bridge URL"}}
  if(url.protocol!=="https:"||url.hostname!=="script.google.com"||!/^\/macros\/s\/[^/]+\/exec$/.test(url.pathname))return {ok:false,configured:false,reason:"Unapproved Wig bridge hostname"};
+
+ const stale=Math.floor(Date.now()/1000)-600;
+ await env.DB.prepare("UPDATE mcwig_outbox_v1 SET state='HOLD',last_error='Email delivery uncertain after interruption; manual verification required' WHERE state='PROCESSING' AND kind LIKE '%EMAIL' AND updated_at<?").bind(stale).run();
+ await env.DB.prepare("UPDATE mcwig_outbox_v1 SET state='FAILED',last_error='Retry interrupted sheet sync' WHERE state='PROCESSING' AND kind NOT LIKE '%EMAIL' AND updated_at<?").bind(stale).run();
  const results=await env.DB.prepare("SELECT o.id,o.case_id,o.kind,o.attempts,c.registration_id,c.applied_day_ist,c.patient_name,c.email,c.phone,c.city,c.payload_json,c.maker_job_id FROM mcwig_outbox_v1 o JOIN mcwig_cases_v1 c ON c.id=o.case_id WHERE o.state IN ('PENDING','FAILED') AND o.attempts<5 ORDER BY CASE o.kind WHEN 'GOOGLE_SHEET_CREATE' THEN 0 WHEN 'REGISTRATION_EMAIL' THEN 1 WHEN 'GOOGLE_SHEET_APPROVE' THEN 2 WHEN 'APPROVAL_EMAIL' THEN 3 ELSE 4 END,o.created_at LIMIT ?").bind(Math.max(1,Math.min(20,Number(limit)||8))).all();
  const stats={ok:true,configured:true,done:0,failed:0,waiting:0};
  for(const task of results.results||[]){
-  const prior=task.kind==="REGISTRATION_EMAIL"?"GOOGLE_SHEET_CREATE":task.kind==="GOOGLE_SHEET_APPROVE"?"GOOGLE_SHEET_CREATE":task.kind==="APPROVAL_EMAIL"?"GOOGLE_SHEET_APPROVE":null;
+  const prior=task.kind==="REGISTRATION_EMAIL"?"GOOGLE_SHEET_CREATE":task.kind==="GOOGLE_SHEET_APPROVE"?"GOOGLE_SHEET_CREATE":task.kind==="APPROVAL_EMAIL"?"GOOGLE_SHEET_APPROVE":task.kind.startsWith("MAKER_STATUS_V")?"GOOGLE_SHEET_APPROVE":null;
   if(prior){
    const predecessor=await env.DB.prepare("SELECT state FROM mcwig_outbox_v1 WHERE case_id=? AND kind=?").bind(task.case_id,prior).first();
    if(predecessor?.state!=="DONE"){stats.waiting++;continue}
@@ -164,6 +182,7 @@ export async function drainMamtaWigOutbox(env,limit=8){
   const ts=Math.floor(Date.now()/1000),locked=await env.DB.prepare("UPDATE mcwig_outbox_v1 SET state='PROCESSING',attempts=attempts+1,updated_at=? WHERE id=? AND state IN ('PENDING','FAILED')").bind(ts,task.id).run();
   if((locked.meta?.changes||0)!==1)continue;
   const record={registration_id:task.registration_id,applied_day_ist:task.applied_day_ist,patient_name:task.patient_name,email:task.email,phone:task.phone,city:task.city,maker_job_id:task.maker_job_id,payload:JSON.parse(task.payload_json)};
+  if(task.kind.startsWith("MAKER_STATUS_V")){const job=await env.DB.prepare("SELECT status,version FROM maker_jobs WHERE id=?").bind(task.maker_job_id).first();if(!job)throw Error("Manufacturing order no longer exists");record.maker_status=job.status;record.maker_version=job.version;}
   try{
    const response=await fetch(url.toString(),{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({secret,action:task.kind,record}),redirect:"follow",signal:AbortSignal.timeout(16000)});
    const body=await response.text();if(!response.ok||body.length>8000)throw Error("Bridge failed");
