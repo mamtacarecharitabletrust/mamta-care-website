@@ -2,7 +2,7 @@
  * STAGING ONLY: end-to-end admin test of a synthetic four-photo intake.
  * NEVER attach to the live worker or use with the original production D1.
  */
-import {handleMamtaWigV8,wigProductionGuard} from "./mcwig-v8.js";
+import {handleMamtaWigV8,wigProductionGuard,drainMamtaWigOutbox} from "./mcwig-v8.js";
 const TEST_CASE="fa370aff-4fd8-438c-99b5-ceaca497036c";
 const TEST_MAKER="d702c1d8-63b0-4b3a-a593-984ae2336b13";
 const TEST_REG="2026/231101";
@@ -48,5 +48,14 @@ export async function verifyNewSyntheticAdminFlow(req,env){
  const outbox=(await env.DB.prepare("SELECT kind,state FROM mcwig_outbox_v1 WHERE case_id=? ORDER BY kind").bind(TEST_CASE).all()).results||[];
  const event=(await env.DB.prepare("SELECT COUNT(*) AS n FROM mcwig_event_v1 WHERE case_id=? AND event_type='APPROVED'").bind(TEST_CASE).first());
  const ok=c?.status==="APPROVED"&&c.maker_id===TEST_MAKER&&job?.maker_id===TEST_MAKER&&job.status==="assigned"&&job.reference==="MC-WIG-2026-231101"&&jobs.n===1&&duplicate.already_approved===true&&guard===false&&guardAfter===false&&rejection.status===400&&c.production_released_at===null&&event.n===1&&outbox.some(x=>x.kind==="GOOGLE_SHEET_APPROVE"&&["PENDING","DONE"].includes(x.state))&&outbox.some(x=>x.kind==="APPROVAL_EMAIL"&&["PENDING","DONE"].includes(x.state))&&outbox.some(x=>x.kind==="GOOGLE_SHEET_CREATE"&&x.state==="DONE");
- return json({ok,stagingOnly:true,registrationId:TEST_REG,patientPhotoAccess:{unauthenticatedBlocked:guest.status===401,staffBlocked:staff.status===401,administratorPhotoVerified:photoOk,photos:photoCount},administratorApproval:c?.status==="APPROVED",CINEWIGSStagingAssignment:job?.maker_id===TEST_MAKER,manufacturingOrderCount:jobs.n,duplicateApprovalPrevented:duplicate.already_approved===true,productionReleaseStillBlocked:guard===false&&guardAfter===false&&rejection.status===400,approvalEventExactlyOnce:event.n===1,queuedActions:outbox,realManufacturerUntouched:true,patientEmailsSent:0,productionDBModified:false},ok?200:502);
+ if(!ok)return json({ok:false,error:"Stage admin security or assignment validation failed",stagingOnly:true,queuedActions:outbox,productionDBModified:false},502);
+ const pinned="https://script.google.com/macros/s/AKfycbw-V3178QDvReoWn6RQgfH02-7T8qRjwk_om5qTAVLLkV1lkwGCMvHQAXOxoBiDRCQeVg/exec";
+ if(String(env.WIG_SHEET_BRIDGE_URL)!==pinned)return json({ok:false,error:"Test Google Apps Script URL not pinned to isolated sandbox",productionDBModified:false},409);
+ let sandboxVerified=false;
+ try{const v=await fetch(pinned,{method:"GET",redirect:"follow",signal:AbortSignal.timeout(12000)});const result=v.ok?await v.json():null;sandboxVerified=result?.service==="Mamta Care Wig Database Bridge — SANDBOX ONLY"}catch{}
+ if(!sandboxVerified)return json({ok:false,error:"Sandbox bridge identity verification failed; no queue delivery attempted"},409);
+ const delivery=await drainMamtaWigOutbox(env,8);
+ const completed=(await env.DB.prepare("SELECT kind,state,attempts FROM mcwig_outbox_v1 WHERE case_id=? ORDER BY kind").bind(TEST_CASE).all()).results||[];
+ const allDone=["GOOGLE_SHEET_CREATE","REGISTRATION_EMAIL","GOOGLE_SHEET_APPROVE","APPROVAL_EMAIL"].every(kind=>completed.some(x=>x.kind===kind&&x.state==="DONE"));
+ return json({ok:allDone&&delivery.failed===0,stagingOnly:true,registrationId:TEST_REG,patientPhotoAccess:{unauthenticatedBlocked:true,staffBlocked:true,administratorPhotoVerified:photoOk,photos:photoCount},administratorApproval:true,CINEWIGSStagingAssignment:true,manufacturingOrderCount:jobs.n,duplicateApprovalPrevented:true,productionReleaseStillBlocked:true,approvalEventExactlyOnce:true,googleSandboxBridgeVerified:true,approvalSyncDelivered:completed.some(x=>x.kind==="GOOGLE_SHEET_APPROVE"&&x.state==="DONE"),approvalEmailSimulated:completed.some(x=>x.kind==="APPROVAL_EMAIL"&&x.state==="DONE"),automaticQueueFunction:delivery,queuedActions:completed,realManufacturerUntouched:true,patientEmailsSent:0,productionDBModified:false},allDone&&delivery.failed===0?200:502);
 }
