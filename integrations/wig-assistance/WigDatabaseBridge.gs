@@ -1,6 +1,6 @@
 /**
  * Mamta Care Wig Donation Database bridge (deployment required).
- * Bound to the existing Wig Donation Database; preserve Form Responses 1 A:AT.
+ * Create as a NEW standalone Apps Script project. It opens the existing Wig Donation Database by ID; preserve Form Responses 1 A:AT.
  * NEVER make an Apps Script web-app deployment public without the 48+ character
  * WIG_SHEET_BRIDGE_SECRET Script Property; use a dedicated signed HTTPS request.
  * Required property: WIG_SHEET_BRIDGE_SECRET.
@@ -123,3 +123,4 @@ function doPost(e){
  }catch(err){return wigJson_({ok:false,error:wigSafe_(String(err),280)})}
  finally{lock.releaseLock()}
 }
+function doGet(e){return wigJson_({ok:true,service:'Mamta Care Wig Database Bridge',version:'v1',patient_data_exposed:false})}
