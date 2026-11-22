@@ -3,7 +3,7 @@
  * Authenticates a private test key then runs real wig module admin approval
  * with a synthetic staging case and staging-only inactive credential maker.
  */
-import {handleMamtaWigV8, wigProductionGuard, syncMamtaMakerJobUpdate} from "./mcwig-v8.js";
+import {handleMamtaWigV8, wigProductionGuard, syncMamtaMakerJobUpdate, drainMamtaWigOutbox} from "./mcwig-v8.js";
 import {testWigBridgeFromStaging} from "./diagnostic.js";
 const TEST_CASE="8bd2e2b6-7a2c-4f70-bbf9-705a40c566b3";
 const TEST_MAKER="d702c1d8-63b0-4b3a-a593-984ae2336b13";
@@ -80,16 +80,57 @@ async function wigReleaseAndMakerProgressTest(req,env){
  return json({ok,stagingOnly:true,preReleaseChecksEnforced:rejectionPass,administratorProductionRelease:releasePass&&updated.production_released_at!==null,manufacturingUnblockedAfterApproval:guardAfter===true,manufacturingStatus:job.status,manufacturingStatusVersion:job.version,donorDeskStatusEventLogged:(progressEvent?.count||0)>0,googleSheetStatusUpdateQueued:s?.state==="PENDING",queuedActions:(queued.results||[]).map(x=>({kind:x.kind,state:x.state})),emailsSent:0,realManufacturerOrdersCreated:0,productionDatabaseModified:false},ok?200:502);
 }
 
+
+const LIVE_APPS_SCRIPT_ID="AKfycbxwFsJBYmHYBuMdDIOgMZ7oriDQXeD2-PeNlm9vKjUNjc61bhh6qOsbLdT17mVLDCgaaA";
+function sandboxBridgeConfig(env){
+ if(env.MC_WIG_ENABLED!=="false"||env.MC_WIG_STAGING_BRIDGE_READY!=="true")return null;
+ const expected=String(env.MC_WIG_STAGING_SCRIPT_ID||"");
+ if(expected.length<35||expected===LIVE_APPS_SCRIPT_ID||!/^[-_A-Za-z0-9]+$/.test(expected))return null;
+ let u;try{u=new URL(String(env.WIG_SHEET_BRIDGE_URL||""))}catch{return null}
+ if(u.hostname!=="script.google.com"||u.protocol!=="https:"||u.pathname!=="/macros/s/"+expected+"/exec")return null;
+ return u;
+}
+async function verifySandboxBridge(env){
+ const url=sandboxBridgeConfig(env);if(!url)return false;
+ try{
+  const response=await fetch(url.toString(),{method:"GET",redirect:"follow",signal:AbortSignal.timeout(10000)});
+  if(!response.ok)return false;
+  const result=await response.json();
+  return result?.service==="Mamta Care Wig Database Bridge — SANDBOX ONLY";
+ }catch{return false}
+}
+async function wigOutboxTest(req,env){
+ const pathname=new URL(req.url).pathname;
+ if(pathname!=="/internal/wig-outbox-test")return null;
+ if(req.method!=="POST")return json({ok:false,error:"Method not supported"},405);
+ if(!equal(req.headers.get("X-Mamta-Wig-Bridge-Test"),env.WIG_SHEET_BRIDGE_SECRET))return json({ok:false,error:"Unauthorized"},403);
+ const verified=await verifySandboxBridge(env);
+ if(!verified)return json({ok:false,error:"Test-only Google Apps Script deployment was not verified; no queue delivery attempted"},409);
+ const caseRow=await env.DB.prepare("SELECT id,registration_id,patient_name,email FROM mcwig_cases_v1 WHERE id=?").bind(TEST_CASE).first();
+ if(caseRow?.registration_id!=="2099/010199"||caseRow.patient_name!=="SYSTEM TEST ONLY"||caseRow.email!=="test@example.invalid")return json({ok:false,error:"Synthetic staging case has changed"},409);
+ const result=await drainMamtaWigOutbox(env,8);
+ const statuses=await env.DB.prepare("SELECT kind,state,attempts FROM mcwig_outbox_v1 WHERE case_id=? ORDER BY kind").bind(TEST_CASE).all();
+ return json({ok:result.ok!==false&&result.failed===0,bridgeVerifiedAsSandbox:true,automaticOutboxFunctionInvoked:true,delivery:result,queuedStatuses:statuses.results||[],productionDatabaseTouched:false,patientEmailsActuallySent:0},result.failed?502:200);
+}
+
 export default {
  async fetch(req,env){
   const diagnostic=await testWigBridgeFromStaging(req,env);if(diagnostic)return diagnostic;
   const approval=await wigApprovalTest(req,env);if(approval)return approval;
   const release=await wigReleaseAndMakerProgressTest(req,env);if(release)return release;
+  const outbox=await wigOutboxTest(req,env);if(outbox)return outbox;
   const path=new URL(req.url).pathname;
   if(req.method==="GET"&&path==="/health"){
    const count=await env.DB.prepare("SELECT COUNT(*) AS cases FROM mcwig_cases_v1").first();
    return json({ok:true,staging:true,case_count:count?.cases||0,publicIntakeEnabled:env.MC_WIG_ENABLED==="true"});
   }
   return (await handleMamtaWigV8(req,env,null))||new Response("Not found",{status:404});
+ },
+ async scheduled(event,env,ctx){
+  if(!sandboxBridgeConfig(env))return;
+  ctx.waitUntil((async()=>{
+   if(!await verifySandboxBridge(env))return;
+   await drainMamtaWigOutbox(env,8);
+  })().catch(e=>console.error('WIG_SANDBOX_SCHEDULED_TEST',e?.name||'Error')));
  }
 }
