@@ -136,3 +136,24 @@ function doPost(e){
  finally{lock.releaseLock()}
 }
 function doGet(e){return wigJson_({ok:true,service:'Mamta Care Wig Database Bridge — SANDBOX ONLY',version:'v1',patient_data_exposed:false})}
+
+
+/**
+ * Staging diagnostic: trigger the actual Cloudflare queue for synthetic patients.
+ * It reads the secure Script Property; never log or share the secret.
+ * Do not add this function to the production (non-sandbox) Apps Script.
+ */
+function testMamtaAutomaticQueue() {
+  var secret=PropertiesService.getScriptProperties().getProperty('WIG_SHEET_BRIDGE_SECRET');
+  if(!secret||secret.length<48)throw Error('Sandbox bridge secret missing');
+  var endpoint='https://mamta-wig-v8-staging.bharathairseva-in.workers.dev/internal/wig-outbox-test';
+  var response=UrlFetchApp.fetch(endpoint,{
+    method:'post',contentType:'application/json',
+    headers:{'X-Mamta-Wig-Bridge-Test':secret},
+    payload:'{}',muteHttpExceptions:true
+  });
+  var body=response.getContentText();
+  Logger.log('HTTP status: '+response.getResponseCode());
+  Logger.log(body);
+  if(response.getResponseCode()!==200)throw Error('Sandbox delivery test failed; inspect HTTP status and JSON log');
+}
