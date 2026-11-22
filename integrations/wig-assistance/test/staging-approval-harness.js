@@ -3,7 +3,7 @@
  * Authenticates a private test key then runs real wig module admin approval
  * with a synthetic staging case and staging-only inactive credential maker.
  */
-import {handleMamtaWigV8, wigProductionGuard} from "./mcwig-v8.js";
+import {handleMamtaWigV8, wigProductionGuard, syncMamtaMakerJobUpdate} from "./mcwig-v8.js";
 import {testWigBridgeFromStaging} from "./diagnostic.js";
 const TEST_CASE="8bd2e2b6-7a2c-4f70-bbf9-705a40c566b3";
 const TEST_MAKER="d702c1d8-63b0-4b3a-a593-984ae2336b13";
@@ -37,10 +37,54 @@ async function wigApprovalTest(req,env){
  const ok=approvalResponse.ok&&approval.ok===true&&approved?.status==="APPROVED"&&approved?.maker_id===TEST_MAKER&&job?.maker_id===TEST_MAKER&&job?.status==="assigned"&&guardAllowed===false&&approved?.production_released_at===null&&(events?.results||[]).some(x=>x.action==="maker_job_assigned")&&(outbox.results||[]).some(x=>x.kind==="GOOGLE_SHEET_APPROVE")&&(outbox.results||[]).some(x=>x.kind==="APPROVAL_EMAIL");
  return json({ok,stagingOnly:true,registration_id:"2099/010199",approvalAction:approval.ok===true?"PASS":"FAIL",manufacturerAssignment:job?.maker_id===TEST_MAKER?"CINE WIGS staging fixture assigned":"FAIL",orderStatus:job?.status||null,manufacturingBlockedUntilAdminRelease:guardAllowed===false,approvalSheetSyncQueued:(outbox.results||[]).some(x=>x.kind==="GOOGLE_SHEET_APPROVE"),approvalEmailQueued:(outbox.results||[]).some(x=>x.kind==="APPROVAL_EMAIL"),realEmailsSent:false,productionDBTouched:false,warning:ok?undefined:(approval.error||"Review staging results")},ok?200:502);
 }
+
+async function wigReleaseAndMakerProgressTest(req,env){
+ if(req.method!=="POST"||new URL(req.url).pathname!=="/internal/wig-release-test")return null;
+ if(!equal(req.headers.get("X-Mamta-Wig-Bridge-Test"),env.WIG_SHEET_BRIDGE_SECRET))
+  return json({ok:false,error:"Unauthorized"},403);
+ if(env.MC_WIG_ENABLED!=="false")return json({ok:false,error:"Staging public intake must remain disabled"},503);
+ const c=await env.DB.prepare("SELECT id,registration_id,patient_name,status,maker_id,maker_job_id,production_released_at FROM mcwig_cases_v1 WHERE id=?").bind(TEST_CASE).first();
+ const maker=await env.DB.prepare("SELECT id,login_name,created_by FROM maker_accounts WHERE id=?").bind(TEST_MAKER).first();
+ if(!c||c.patient_name!=="SYSTEM TEST ONLY"||c.registration_id!=="2099/010199"||c.status!=="APPROVED"||c.maker_id!==TEST_MAKER||!c.maker_job_id||!maker||maker.login_name!=="staging_cine_wigs_unusable"||maker.created_by!=="SYSTEM_STAGING_TEST")
+  return json({ok:false,error:"Approved synthetic staging fixtures missing or changed"},409);
+ const origin=new URL(req.url).origin;
+ const requestFor=(body)=>new Request(new URL("/api/admin/wig-v8/"+TEST_CASE+"/release",origin),{
+  method:"POST",headers:{"origin":origin,"X-Mamta-Desk":"1","content-type":"application/json"},
+  body:JSON.stringify(body)
+ });
+ let rejectionPass=true,releasePass=true,alreadyReleased=c.production_released_at!==null;
+ if(!alreadyReleased){
+  const refused=await handleMamtaWigV8(requestFor({hair_ready:false,fitting_confirmed:true,conditions_confirmed:true}),{...env,MC_WIG_ENABLED:"true"},{role:"admin",username:"STAGING_TEST_ADMIN"});
+  rejectionPass=refused.status===400;
+  const guardBefore=await wigProductionGuard(env.DB,c.maker_job_id);
+  if(guardBefore!==false)return json({ok:false,error:"Manufacturing was not blocked before release"},502);
+  const approved=await handleMamtaWigV8(requestFor({hair_ready:true,fitting_confirmed:true,conditions_confirmed:true}),{...env,MC_WIG_ENABLED:"true"},{role:"admin",username:"STAGING_TEST_ADMIN"});
+  const body=await approved.json();
+  releasePass=approved.ok&&body.released===true;
+ }
+ const updated=await env.DB.prepare("SELECT id,production_released_at FROM mcwig_cases_v1 WHERE id=?").bind(TEST_CASE).first();
+ const guardAfter=await wigProductionGuard(env.DB,c.maker_job_id);
+ let job=await env.DB.prepare("SELECT id,maker_id,status,version FROM maker_jobs WHERE id=?").bind(c.maker_job_id).first();
+ if(!job||job.maker_id!==TEST_MAKER)return json({ok:false,error:"Staging manufacturer order not found"},502);
+ if(job.status==="assigned"){
+  await env.DB.prepare("UPDATE maker_jobs SET status='in_progress',version=version+1,updated_at=? WHERE id=? AND maker_id=? AND status='assigned'").bind(Math.floor(Date.now()/1000),job.id,TEST_MAKER).run();
+ }
+ job=await env.DB.prepare("SELECT id,maker_id,status,version FROM maker_jobs WHERE id=?").bind(c.maker_job_id).first();
+ const sync=await syncMamtaMakerJobUpdate({...env,MC_WIG_ENABLED:"true"},job.id);
+ const statusKind="MAKER_STATUS_V"+String(job.version);
+ const queued=await env.DB.prepare("SELECT kind,state FROM mcwig_outbox_v1 WHERE case_id=? ORDER BY kind").bind(TEST_CASE).all();
+ const progressEvent=await env.DB.prepare("SELECT COUNT(*) AS count FROM mcwig_event_v1 WHERE case_id=? AND event_type='MAKER_PROGRESS'").bind(TEST_CASE).first();
+ const releasedEvent=await env.DB.prepare("SELECT COUNT(*) AS count FROM mcwig_event_v1 WHERE case_id=? AND event_type='PRODUCTION_RELEASED'").bind(TEST_CASE).first();
+ const s=(queued.results||[]).find(x=>x.kind===statusKind);
+ const ok=rejectionPass&&releasePass&&updated?.production_released_at!==null&&guardAfter===true&&job.status==="in_progress"&&job.version>=2&&sync.linked===true&&s?.state==="PENDING"&&(releasedEvent?.count||0)>0&&(progressEvent?.count||0)>0;
+ return json({ok,stagingOnly:true,preReleaseChecksEnforced:rejectionPass,administratorProductionRelease:releasePass&&updated.production_released_at!==null,manufacturingUnblockedAfterApproval:guardAfter===true,manufacturingStatus:job.status,manufacturingStatusVersion:job.version,donorDeskStatusEventLogged:(progressEvent?.count||0)>0,googleSheetStatusUpdateQueued:s?.state==="PENDING",queuedActions:(queued.results||[]).map(x=>({kind:x.kind,state:x.state})),emailsSent:0,realManufacturerOrdersCreated:0,productionDatabaseModified:false},ok?200:502);
+}
+
 export default {
  async fetch(req,env){
   const diagnostic=await testWigBridgeFromStaging(req,env);if(diagnostic)return diagnostic;
   const approval=await wigApprovalTest(req,env);if(approval)return approval;
+  const release=await wigReleaseAndMakerProgressTest(req,env);if(release)return release;
   const path=new URL(req.url).pathname;
   if(req.method==="GET"&&path==="/health"){
    const count=await env.DB.prepare("SELECT COUNT(*) AS cases FROM mcwig_cases_v1").first();
