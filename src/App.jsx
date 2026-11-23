@@ -4219,28 +4219,10 @@ function HairDonation() {
 ========================================================= */
 
 function WigRequest() {
-  return (
-    <Page
-      title="Wig Assistance Portal"
-      intro="Mamta Care Charitable Trust supports people experiencing hair loss during cancer treatment. Patients and family members can request help here."
-    >
-      <AnimatedHighlight>
-        <div>
-          <h2>Request wig support</h2>
-          <p>Applying is free. Our team reviews each request and contacts you about availability, fitting and the next steps.</p>
-          <div className="wig-request-actions">
-            <a className="btn primary" href={info.wigRequestForm}>Open request form</a>
-          </div>
-          <h3>What to prepare</h3>
-          <p>Have the patient’s contact details, city and wig preferences ready. If a family member is helping, agree on the best number and language for follow-up.</p>
-          <h3>Photo and fitting guidance</h3>
-          <p>If our team requests fitting photos, take four clear views in even light: front, back, left and right. Keep the camera at head height. Send photos and treatment documents only through the private channel provided for your application.</p>
-          <h3>After you apply</h3>
-          <p>Our team may contact you to clarify treatment-related needs, discuss fit and arrange collection or delivery after approval.</p>
-        </div>
-      </AnimatedHighlight>
-    </Page>
-  );
+  React.useEffect(() => {
+    window.location.replace("/wig-assistance-preview-v7.html");
+  }, []);
+  return <a href="/wig-assistance-preview-v7.html">Open the Wig Assistance Portal</a>;
 }
 
 /* =========================================================
