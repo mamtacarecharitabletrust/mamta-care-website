@@ -4239,6 +4239,9 @@ function WigRequest() {
             >
               Open the request form
             </a>
+            <a className="btn wig-process-button" href="/wig-assistance-preview-v7.html">
+              Preview the new Wig Assistance portal
+            </a>
             <Link className="btn wig-process-button" to="/wig-making-process">
               How we make wigs
             </Link>
