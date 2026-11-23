@@ -413,7 +413,6 @@ function Layout({ children }) {
 
               href={info.hairDonationForm}
 
-              target="_blank"
 
               rel="noreferrer"
 
@@ -435,7 +434,6 @@ function Layout({ children }) {
 
               href={info.trackingApp}
 
-              target="_blank"
 
               rel="noreferrer"
 
@@ -449,7 +447,6 @@ function Layout({ children }) {
 
               href={info.volunteerForm}
 
-              target="_blank"
 
               rel="noreferrer"
 
@@ -583,7 +580,6 @@ function Layout({ children }) {
 
               href={info.instagram}
 
-              target="_blank"
 
               rel="noreferrer"
 
@@ -925,7 +921,6 @@ function Home() {
               <motion.a
                 className="btn hero-primary"
                 href={info.hairDonationForm}
-                target="_blank"
                 rel="noreferrer"
                 whileHover={{ y: -5, scale: 1.025 }}
                 whileTap={{ scale: 0.98 }}
@@ -944,7 +939,6 @@ function Home() {
               <motion.a
                 className="btn hero-track-btn"
                 href={info.trackingApp}
-                target="_blank"
                 rel="noreferrer"
                 whileHover={{ y: -5, scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -1403,7 +1397,6 @@ function Home() {
 
               }
 
-              target="_blank"
 
               rel="noreferrer"
 
@@ -1953,7 +1946,6 @@ function Home() {
 
               }
 
-              target="_blank"
 
               rel="noreferrer"
 
@@ -2155,7 +2147,6 @@ function Home() {
 
               }
 
-              target="_blank"
 
               rel="noreferrer"
 
@@ -2313,7 +2304,6 @@ function ImpactCard({
 
         href={link}
 
-        target="_blank"
 
         rel="noreferrer"
 
@@ -3265,7 +3255,6 @@ function Work() {
 
             }
 
-            target="_blank"
 
             rel="noreferrer"
 
@@ -3657,7 +3646,6 @@ function Volunteer() {
 
             }
 
-            target="_blank"
 
             rel="noreferrer"
 
@@ -3835,7 +3823,6 @@ function Donate() {
 
             }
 
-            target="_blank"
 
             rel="noreferrer"
 
@@ -3983,7 +3970,6 @@ function ServiceCoverageMap() {
                 key={location.name}
                 className="service-hotspot"
                 href={location.mapsUrl}
-                target="_blank"
                 rel="noreferrer"
                 aria-label={`Open ${location.name} in Google Maps`}
                 title={`Open ${location.name} in Google Maps`}
@@ -4121,7 +4107,6 @@ function Contact() {
 
               href={info.instagram}
 
-              target="_blank"
 
               rel="noreferrer"
 
@@ -4208,7 +4193,6 @@ function HairDonation() {
 
             }
 
-            target="_blank"
 
             rel="noreferrer"
 
@@ -4251,10 +4235,9 @@ function WigRequest() {
             <a
               className="btn primary"
               href={info.wigRequestForm}
-              target="_blank"
               rel="noreferrer"
             >
-              Open the request form (opens in a new tab)
+              Open the request form
             </a>
             <Link className="btn wig-process-button" to="/wig-making-process">
               How we make wigs
