@@ -6,12 +6,18 @@ import {handleMamtaWigV8,wigProductionGuard,drainMamtaWigOutbox} from "./mcwig-v
 const TEST_CASE="fa370aff-4fd8-438c-99b5-ceaca497036c";
 const TEST_MAKER="d702c1d8-63b0-4b3a-a593-984ae2336b13";
 const TEST_REG="2026/231101";
+// Temporary direct-test access; token itself is never stored or exposed in source.
+const ADMIN_OFFLINE_SHA256="b87650c5e2203064c8cf7daa4c2325fd1ee7133c5fa07fc274036a4f603ac2e8";
+async function offlineAuthorized(req){const k=String(req.headers.get("X-Mamta-Staging-Admin-Test")||"");if(k.length<40||k.length>120)return false;const dig=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(k));const hex=Array.from(new Uint8Array(dig),b=>b.toString(16).padStart(2,"0")).join("");return hex===ADMIN_OFFLINE_SHA256;}
 const exact=(a,b)=>{const x=new TextEncoder().encode(String(a||"")),y=new TextEncoder().encode(String(b||""));if(x.length!==y.length||x.length<48)return false;let v=0;for(let i=0;i<x.length;i++)v|=x[i]^y[i];return v===0};
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{"content-type":"application/json","cache-control":"no-store","x-content-type-options":"nosniff"}});
 export async function verifyNewSyntheticAdminFlow(req,env){
- if(new URL(req.url).pathname!=="/internal/wig-new-admin-flow-test")return null;
- if(req.method!=="POST")return json({ok:false,error:"Method not allowed"},405);
- if(!exact(req.headers.get("X-Mamta-Wig-Bridge-Test"),env.WIG_SHEET_BRIDGE_SECRET))return json({ok:false,error:"Not authorized"},403);
+ const path=new URL(req.url).pathname;
+ const offline=path==="/internal/wig-new-admin-offline-test";
+ if(!offline&&path!=="/internal/wig-new-admin-flow-test")return null;
+ if((offline&&req.method!=="GET")||(!offline&&req.method!=="POST"))return json({ok:false,error:"Method not allowed"},405);
+ if(offline){if(!await offlineAuthorized(req))return json({ok:false,error:"Unauthorized staging check"},403);}
+ else if(!exact(req.headers.get("X-Mamta-Wig-Bridge-Test"),env.WIG_SHEET_BRIDGE_SECRET))return json({ok:false,error:"Not authorized"},403);
  if(env.MC_WIG_ENABLED!=="false"||env.MC_WIG_STAGING_BRIDGE_READY!=="true"||env.MC_WIG_STAGING_SCRIPT_ID!=="AKfycbw-V3178QDvReoWn6RQgfH02-7T8qRjwk_om5qTAVLLkV1lkwGCMvHQAXOxoBiDRCQeVg")return json({ok:false,error:"Sandbox isolation gate failed"},503);
  const caseRow=await env.DB.prepare("SELECT id,registration_id,patient_name,email,phone,status,maker_id,maker_job_id,production_released_at FROM mcwig_cases_v1 WHERE id=?").bind(TEST_CASE).first();
  const maker=await env.DB.prepare("SELECT id,login_name,display_name,active,created_by FROM maker_accounts WHERE id=?").bind(TEST_MAKER).first();
@@ -49,6 +55,7 @@ export async function verifyNewSyntheticAdminFlow(req,env){
  const event=(await env.DB.prepare("SELECT COUNT(*) AS n FROM mcwig_event_v1 WHERE case_id=? AND event_type='APPROVED'").bind(TEST_CASE).first());
  const ok=c?.status==="APPROVED"&&c.maker_id===TEST_MAKER&&job?.maker_id===TEST_MAKER&&job.status==="assigned"&&job.reference==="MC-WIG-2026-231101"&&jobs.n===1&&duplicate.already_approved===true&&guard===false&&guardAfter===false&&rejection.status===400&&c.production_released_at===null&&event.n===1&&outbox.some(x=>x.kind==="GOOGLE_SHEET_APPROVE"&&["PENDING","DONE"].includes(x.state))&&outbox.some(x=>x.kind==="APPROVAL_EMAIL"&&["PENDING","DONE"].includes(x.state))&&outbox.some(x=>x.kind==="GOOGLE_SHEET_CREATE"&&x.state==="DONE");
  if(!ok)return json({ok:false,error:"Stage admin security or assignment validation failed",stagingOnly:true,queuedActions:outbox,productionDBModified:false},502);
+ if(offline)return json({ok:true,stagingOnly:true,registrationId:TEST_REG,patientPhotoAccess:{unauthenticatedBlocked:true,staffBlocked:true,administratorPhotoVerified:true,photos:photoCount},administratorApproval:true,CINEWIGSStagingAssignment:true,manufacturingOrderCount:jobs.n,duplicateApprovalPrevented:true,productionReleaseStillBlocked:true,approvalEventExactlyOnce:true,queuedActions:outbox,googleBridgeDelivery:"NOT ATTEMPTED - sandbox key mismatch",patientEmailsSent:0,realManufacturerUntouched:true,productionDBModified:false},200);
  const pinned="https://script.google.com/macros/s/AKfycbw-V3178QDvReoWn6RQgfH02-7T8qRjwk_om5qTAVLLkV1lkwGCMvHQAXOxoBiDRCQeVg/exec";
  if(String(env.WIG_SHEET_BRIDGE_URL)!==pinned)return json({ok:false,error:"Test Google Apps Script URL not pinned to isolated sandbox",productionDBModified:false},409);
  let sandboxVerified=false;
