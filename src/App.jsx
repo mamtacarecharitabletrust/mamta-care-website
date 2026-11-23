@@ -413,7 +413,6 @@ function Layout({ children }) {
 
               href={info.hairDonationForm}
 
-              target="_blank"
 
               rel="noreferrer"
 
@@ -435,7 +434,6 @@ function Layout({ children }) {
 
               href={info.trackingApp}
 
-              target="_blank"
 
               rel="noreferrer"
 
@@ -449,7 +447,6 @@ function Layout({ children }) {
 
               href={info.volunteerForm}
 
-              target="_blank"
 
               rel="noreferrer"
 
@@ -583,7 +580,6 @@ function Layout({ children }) {
 
               href={info.instagram}
 
-              target="_blank"
 
               rel="noreferrer"
 
@@ -925,7 +921,6 @@ function Home() {
               <motion.a
                 className="btn hero-primary"
                 href={info.hairDonationForm}
-                target="_blank"
                 rel="noreferrer"
                 whileHover={{ y: -5, scale: 1.025 }}
                 whileTap={{ scale: 0.98 }}
@@ -944,7 +939,6 @@ function Home() {
               <motion.a
                 className="btn hero-track-btn"
                 href={info.trackingApp}
-                target="_blank"
                 rel="noreferrer"
                 whileHover={{ y: -5, scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -1403,7 +1397,6 @@ function Home() {
 
               }
 
-              target="_blank"
 
               rel="noreferrer"
 
@@ -1953,7 +1946,6 @@ function Home() {
 
               }
 
-              target="_blank"
 
               rel="noreferrer"
 
@@ -2155,7 +2147,6 @@ function Home() {
 
               }
 
-              target="_blank"
 
               rel="noreferrer"
 
@@ -2313,7 +2304,6 @@ function ImpactCard({
 
         href={link}
 
-        target="_blank"
 
         rel="noreferrer"
 
@@ -3265,7 +3255,6 @@ function Work() {
 
             }
 
-            target="_blank"
 
             rel="noreferrer"
 
@@ -3657,7 +3646,6 @@ function Volunteer() {
 
             }
 
-            target="_blank"
 
             rel="noreferrer"
 
@@ -3835,7 +3823,6 @@ function Donate() {
 
             }
 
-            target="_blank"
 
             rel="noreferrer"
 
@@ -3983,7 +3970,6 @@ function ServiceCoverageMap() {
                 key={location.name}
                 className="service-hotspot"
                 href={location.mapsUrl}
-                target="_blank"
                 rel="noreferrer"
                 aria-label={`Open ${location.name} in Google Maps`}
                 title={`Open ${location.name} in Google Maps`}
@@ -4121,7 +4107,6 @@ function Contact() {
 
               href={info.instagram}
 
-              target="_blank"
 
               rel="noreferrer"
 
@@ -4208,7 +4193,6 @@ function HairDonation() {
 
             }
 
-            target="_blank"
 
             rel="noreferrer"
 
@@ -4235,93 +4219,34 @@ function HairDonation() {
 ========================================================= */
 
 function WigRequest() {
-
   return (
-
     <Page
-
       title="Request a Free Wig"
-
-      intro="Our free wig initiative supports people experiencing hair loss during cancer treatment."
-
+      intro="Mamta Care Charitable Trust provides free wig support to people experiencing hair loss during cancer treatment."
     >
-
       <AnimatedHighlight>
-
         <div>
-
-          <p className="eyebrow">
-
-            FREE WIG SUPPORT
-
-          </p>
-
-          <h2>
-
-            Confidence Matters.
-
-          </h2>
-
+          <h2>Apply for wig support</h2>
           <p>
-
-            Submit the official wig
-
-            request form and connect
-
-            with Mamta Care Charitable
-
-            Trust for support.
-
+            Use the official request form to apply. Our team reviews applications
+            individually and will contact you about the next steps.
           </p>
-
           <div className="wig-request-actions">
-
             <a
-
               className="btn primary"
-
-              href={
-
-                info.wigRequestForm
-
-              }
-
-              target="_blank"
-
+              href={info.wigRequestForm}
               rel="noreferrer"
-
             >
-
-              Open Wig Request Form
-
+              Open the request form
             </a>
-
-            <Link
-
-              className="btn wig-process-button"
-
-              to="/wig-making-process"
-
-            >
-
-              Wig Making Process
-
-              <span>
-                →
-              </span>
-
+            <Link className="btn wig-process-button" to="/wig-making-process">
+              How we make wigs
             </Link>
-
           </div>
-
         </div>
-
       </AnimatedHighlight>
-
     </Page>
-
   );
-
 }
 
 /* =========================================================
