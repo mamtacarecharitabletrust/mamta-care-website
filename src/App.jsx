@@ -935,7 +935,6 @@ function Home() {
               >
                 Request a Free Wig
               </a>
-              <Link className="btn hero-secondary" to="/wig-making-process">Wig Making Process</Link>
 
               <motion.a
                 className="btn hero-track-btn"
