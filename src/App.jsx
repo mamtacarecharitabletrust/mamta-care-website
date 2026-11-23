@@ -89,7 +89,7 @@ const info = {
 
   wigRequestForm:
 
-    "https://mamta-donor-desk-launch-new.bharathairseva-in.workers.dev/request-free-wig",
+    "/wig-assistance-preview-v7.html",
 
   volunteerForm:
 
@@ -929,12 +929,12 @@ function Home() {
                 <span>↗</span>
               </motion.a>
 
-              <Link
+              <a
                 className="btn hero-secondary"
-                to="/wig-request"
+                href={info.wigRequestForm}
               >
                 Request a Free Wig
-              </Link>
+              </a>
 
               <motion.a
                 className="btn hero-track-btn"
@@ -1656,11 +1656,11 @@ function Home() {
 
           </p>
 
-          <Link
+          <a
 
             className="btn hero-primary"
 
-            to="/wig-request"
+            href={info.wigRequestForm}
 
           >
 
@@ -1672,7 +1672,7 @@ function Home() {
 
             </span>
 
-          </Link>
+          </a>
 
         </motion.div>
 
