@@ -34,7 +34,12 @@ test("donors see a circular loading animation during the original submission",()
 
 test("pending official registration shows saved-photo receipt, not a false completed number",()=>{
  assert.match(ui,/syncPending \? <section className="mchr-panel mchr-pending"/);
- assert.match(ui,/Your application is saved/);
+ assert.match(ui,/receiptConfirmed \? <>/);
+ assert.match(ui,/setReceiptConfirmed\(result\?\.photos_received === true\)/);
+ assert.match(ui,/response\.ok && result\?\.ok === true && result\?\.photos_received === true/);
+ assert.match(ui,/Confirming your application receipt/);
+ assert.match(ui,/if \(receiptConfirmed\) return/);
+ assert.match(ui,/You do not need to register again or keep this page open/);
  assert.match(ui,/className="mchr-success-icon" aria-hidden="true"/);
  assert.match(ui,/Your saved submission reference/);
  assert.match(ui,/checkRegistrationStatus/);
@@ -48,7 +53,7 @@ test("only official success response shows the official registration number and 
  assert.match(ui,/if \(!res\.ok \|\| result\?\.ok !== true \|\| !result\?\.registration_id\)/);
  assert.match(ui,/setTestResult\(\{registration_id:result\.registration_id\}\)/);
  assert.match(ui,/finished \? <section className="mchr-panel mchr-success"/);
- assert.match(ui,/Registration successful/);
+ assert.match(ui,/Registration Successful!/);
  assert.match(ui,/Your official hair donation registration number/);
  assert.match(ui,/className="mchr-registration-number"/);
  assert.match(ui,/testResult\?\.registration_id/);

@@ -115,7 +115,7 @@ export default function HairDonationRegistration() {
   const attempted = useRef(false);
   const [uploadState, setUploadState] = useState("idle");
   const [syncPending, setSyncPending] = useState(false);
-  const [pendingSeconds, setPendingSeconds] = useState(0);
+  const [receiptConfirmed, setReceiptConfirmed] = useState(false);
   const statusInFlight = useRef(false);
   const [canRetry, setCanRetry] = useState(false);
   const [statusChecking, setStatusChecking] = useState(false);
@@ -183,6 +183,7 @@ export default function HairDonationRegistration() {
         setUploadState("Official registration confirmed");
         return true;
       }
+      if (response.ok && result?.ok === true && result?.photos_received === true) setReceiptConfirmed(true);
       if (response.status === 404) {
         setUploadState("Checking the original registration reference. Please do not create a second application.");
       }
@@ -208,14 +209,10 @@ export default function HairDonationRegistration() {
     const retry = window.setTimeout(() => { if (active) setCanRetry(true); }, 47000);
     return () => { active = false; window.clearInterval(interval); window.clearTimeout(retry); };
   }, [syncPending, finished]);
-  useEffect(() => {
-    if (!syncPending) return;
-    setPendingSeconds(0);
-    const ticker=window.setInterval(()=>setPendingSeconds(v=>v+1),1000);
-    return ()=>window.clearInterval(ticker);
-  },[syncPending]);
+
   const retryOriginalSubmission = () => {
     // The same submission UUID is reused: no second Google Form registration.
+    if (receiptConfirmed) return;
     attempted.current = false;
     setSyncPending(false); setCanRetry(false); setError("");
     setUploadState("Retrying the original registration reference securely");
@@ -249,8 +246,9 @@ export default function HairDonationRegistration() {
         {method:"POST",body}
       );
       const result = await res.json().catch(() => null);
-      if (res.status === 202 || result?.pending === true) {
-        setUploadState("Your application is received. The official registration number is being synchronized automatically.");
+      if (res.ok && result?.ok === true && (res.status === 202 || result?.pending === true) && !result?.registration_id) {
+        setReceiptConfirmed(result?.photos_received === true);
+        setUploadState("We are confirming your original submission. Please do not register again.");
         setSyncPending(true); setCanRetry(false); setError("");
         try { window.turnstile?.reset?.(widgetId.current); } catch {}
         return;
@@ -283,7 +281,9 @@ export default function HairDonationRegistration() {
       </div>}
       {finished ? <section className="mchr-panel mchr-success" aria-live="polite">
         <span className="mchr-success-icon" aria-hidden="true">✓</span>
-        <h2>Registration successful</h2>
+        <h2>Registration Successful!</h2>
+        <p><strong>Thank you for choosing Mamta Care Charitable Trust.</strong></p>
+        <p>You are not just donating hair — you are gifting confidence, dignity and hope to someone undergoing cancer treatment.</p>
         <p className="mchr-registration-label">Your official hair donation registration number</p>
         <div className="mchr-registration-number"><strong>{testResult?.registration_id}</strong></div>
         <p>Your two photographs were received privately, without administrator photo approval. Your confirmation email follows Mamta Care’s existing email process, and your record will synchronize with Donor Desk.</p>
@@ -291,18 +291,34 @@ export default function HairDonationRegistration() {
           <strong>Kindly contact Mamta Care Charitable Trust with your registration number</strong> if you need assistance or want to arrange the next steps of your hair donation.
           <a href="tel:+918500012190">Call Mamta Care: 8500012190</a>
         </div>
-        <button type="button" className="mchr-secondary" onClick={() => window.location.reload()}>Return to website</button>
-      </section> : syncPending ? <section className="mchr-panel mchr-pending" role="status" aria-live="polite" aria-busy={pendingSeconds<15}>
-        <span className="mchr-success-icon" aria-hidden="true">✓</span>
-        <h2>{pendingSeconds<15?"Your photos are received securely":"Your application is saved"}</h2>
-        <p>Your details and two private hair photographs have been received. Mamta Care is retrieving your <strong>official registration number from the original Google Form</strong>. No administrator photo approval is required.</p>
-        {pendingSeconds<15 ? <p>Checking your official registration number automatically…</p> : <p>Google registration is taking longer than usual. You do not need to fill in the form again.</p>}
-        <p className="mchr-note">Your saved submission reference (not the registration ID): <strong>{requestId.current}</strong>. Keep this reference in case you need support.</p>
-        <p>{uploadState}</p>
-        <div className="mchr-footer-actions">
-          <button type="button" className="mchr-secondary" disabled={statusChecking} onClick={checkRegistrationStatus}>{statusChecking ? "Checking…" : "Check my registration ID"}</button>
-          {canRetry && <button type="button" className="mchr-primary" onClick={retryOriginalSubmission}>Retry this same submission safely</button>}
-        </div>
+        <Link className="mchr-secondary" to="/">Return to website</Link>
+      </section> : syncPending ? <section className="mchr-panel mchr-pending" role="status" aria-live="polite">
+        {receiptConfirmed ? <>
+          <span className="mchr-success-icon" aria-hidden="true">✓</span>
+          <h2>Registration Successful!</h2>
+          <p><strong>Thank you for choosing Mamta Care Charitable Trust.</strong></p>
+          <p>Your hair donation application and both photographs have been securely received. No administrator photo approval is required.</p>
+          <p>You are not just donating hair — you are gifting confidence, dignity and hope to someone undergoing cancer treatment.</p>
+          <p>Your official registration number is being finalized. It will appear here when available, and your confirmation email follows our existing registration process. You do not need to register again or keep this page open.</p>
+          <div className="mchr-contact-instruction">
+            <strong>Need assistance? Reach out to us.</strong>
+            <a href="tel:+918500012190">Call Mamta Care: +91 85000 12190</a>
+          </div>
+          <p><strong>Women-led NGO · PAN India Hair Donation Initiative</strong></p>
+          <p>Together, we donate confidence.</p>
+          <details className="mchr-note"><summary>Support reference</summary><p>Your saved submission reference (not the registration ID): <strong>{requestId.current}</strong></p></details>
+          <Link className="mchr-secondary" to="/">Return to website</Link>
+        </> : <>
+          <h2>Confirming your application receipt</h2>
+          <p>We are checking whether your details and photographs were securely received. Please do not create a second application.</p>
+          <p className="mchr-note">Support reference (not the registration ID): <strong>{requestId.current}</strong></p>
+          <p>{uploadState}</p>
+          <div className="mchr-contact-instruction"><strong>Need assistance?</strong><a href="tel:+918500012190">Call Mamta Care: +91 85000 12190</a></div>
+          <div className="mchr-footer-actions">
+            <button type="button" className="mchr-secondary" disabled={statusChecking} onClick={checkRegistrationStatus}>{statusChecking ? "Confirming receipt…" : "Check my application"}</button>
+            {canRetry && <button type="button" className="mchr-primary" onClick={retryOriginalSubmission}>Retry this same submission safely</button>}
+          </div>
+        </>}
       </section> : <>
         <nav aria-label="Hair donation registration steps" className="mchr-steps">
           {["Donation type", "Your details", "Two photos", "Consent"].map((label, index) =>
