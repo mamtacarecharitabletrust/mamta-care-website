@@ -8,7 +8,7 @@ function loadTurnstile() {
   if (!scriptReady) scriptReady = new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-    script.onload = () => window.turnstile.ready(() => resolve(window.turnstile));
+    script.onload = () => window.turnstile ? resolve(window.turnstile) : reject(new Error('Verification could not start. Reload this page to retry.'));
     script.onerror = () => { scriptReady = null; script.remove(); reject(new Error('Verification could not load. Check your connection and refresh this page.')); };
     document.head.appendChild(script);
   });
@@ -38,7 +38,8 @@ export default function DonationTracker({initialId}) {
   },[]);
   async function lookup(event) {
     event.preventDefault();
-    if(busy || !token)return;
+    if(busy)return;
+    if(!token){setError('Complete the Cloudflare check below your mobile digits, then check your status again.');return;}
     setBusy(true);setError('');setResult(null);
     try {
       const res = await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','X-Mamta-Public':'1'},
@@ -55,8 +56,8 @@ export default function DonationTracker({initialId}) {
     <form onSubmit={lookup}>
       <label>Official registration ID<input required maxLength={75} value={id} disabled={busy} autoCapitalize="characters" spellCheck={false} onChange={e=>{setId(e.target.value);setResult(null);setError('');}} /></label>
       <label>Last four mobile digits<input required type="text" inputMode="numeric" pattern="[0-9]{4}" maxLength={4} value={digits} disabled={busy} onChange={e=>{setDigits(e.target.value.replace(/\D/g,''));setResult(null);setError('');}} /></label>
-      <div ref={box}></div>
-      <button disabled={busy||!token}>{busy?'Checking…':'Check donation status'}</button>
+      <div aria-label="Cloudflare verification" ref={box}></div>
+      <button disabled={busy}>{busy?'Checking…':'Check donation status'}</button>
     </form>
     {error && <p role="alert">{error}</p>}
     {result && <section aria-live="polite">
