@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './DonationTracker.css';
+import {TrustStory, DonationImpact} from './TrackingImpact';
 import DonationJourney from './DonationJourney';
 
 const endpoint = 'https://mamta-public-donation-tracking.bharathairseva-in.workers.dev/lookup';
@@ -51,7 +52,7 @@ export default function DonationTracker({initialId}) {
     } catch(e) {setError(e.name==='TypeError' || e.name==='TimeoutError' ? 'Unable to reach tracking. Please try again.' : e.message);}
     finally {setBusy(false);setToken('');if(widget.current!==null)window.turnstile?.reset(widget.current);}
   }
-  return <main className="mc-track">
+  return <main className="mc-track-layout"><div className="mc-track">
     <h1>Track your hair donation</h1>
     <p>Enter the registration ID from your confirmation or certificate and the last four digits of your registered mobile number.</p>
     <form onSubmit={lookup}>
@@ -62,5 +63,5 @@ export default function DonationTracker({initialId}) {
     </form>
     {error && <p role="alert">{error}</p>}
     {result && <DonationJourney key={result.registration_id} result={result} onSync={lookup} busy={busy} />}
-  </main>;
+  </div><TrustStory /><DonationImpact /></main>;
 }
