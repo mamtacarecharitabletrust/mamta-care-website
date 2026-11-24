@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import HairDonationRegistration from "./HairDonationRegistration";
+import DonationTracker from "./DonationTracker";
 import OfficialDocuments from "./OfficialDocuments";
 import OccasionWelcome from "./OccasionWelcome";
 
@@ -63,7 +64,7 @@ import wigProcessPhoto9 from "./assets/55.jpg.jpeg";
 
 ========================================================= */
 
-const PUBLIC_TRACKING_BASE = "https://mamta-donor-desk-launch-new.bharathairseva-in.workers.dev/track-hair-donation";
+const PUBLIC_TRACKING_BASE = "/track-your-hair-donation";
 function registrationQrSearch() {
   if (typeof window === "undefined") return "";
   const params = new URLSearchParams(window.location.search);
@@ -4414,18 +4415,9 @@ function WigMakingProcess() {
 
 ========================================================= */
 
-function TrackingRedirect() {
-  const url = PUBLIC_TRACKING_BASE + registrationQrSearch();
-  React.useEffect(() => {
-    window.location.replace(url);
-  }, [url]);
-  return (
-    <div style={{maxWidth: 720, margin: "80px auto", textAlign: "center", padding: 24}}>
-      <h1>Track Your Hair Donation</h1>
-      <p>Opening Mamta Care's secure donation tracking page.</p>
-      <a href={url}>Open secure tracking</a>
-    </div>
-  );
+function TrackingPage() {
+  const initialId = new URLSearchParams(registrationQrSearch()).get("registration_id") || "";
+  return <DonationTracker initialId={initialId} />;
 }
 
 function AppRoutes() {
@@ -4541,8 +4533,8 @@ function AppRoutes() {
           />
 
           <Route path="/official-documents" element={<OfficialDocuments />} />
-          <Route path="/track" element={<TrackingRedirect />} />
-          <Route path="/track-your-hair-donation" element={<TrackingRedirect />} />
+          <Route path="/track" element={<TrackingPage />} />
+          <Route path="/track-your-hair-donation" element={<TrackingPage />} />
           <Route path="/hair-registration" element={<HairDonationRegistration />} />
 
           <Route
