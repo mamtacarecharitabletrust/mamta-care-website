@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './DonationTracker.css';
+import DonationJourney from './DonationJourney';
 
 const endpoint = 'https://mamta-public-donation-tracking.bharathairseva-in.workers.dev/lookup';
 let scriptReady;
@@ -40,12 +41,12 @@ export default function DonationTracker({initialId}) {
     event.preventDefault();
     if(busy)return;
     if(!token){setError('Complete the Cloudflare check below your mobile digits, then check your status again.');return;}
-    setBusy(true);setError('');setResult(null);
+    setBusy(true);setError('');
     try {
       const res = await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','X-Mamta-Public':'1'},
         body:JSON.stringify({registration_id:id.trim(),phone_last4:digits,cf_turnstile_response:token}),signal:AbortSignal.timeout(25000)});
       const data = await res.json();
-      if(!res.ok || !data.ok) throw new Error(data.error || 'Tracking is temporarily unavailable.');
+      if(!res.ok || !data.ok){setResult(null);throw new Error(data.error || 'Tracking is temporarily unavailable.');}
       setResult(data);
     } catch(e) {setError(e.name==='TypeError' || e.name==='TimeoutError' ? 'Unable to reach tracking. Please try again.' : e.message);}
     finally {setBusy(false);setToken('');if(widget.current!==null)window.turnstile?.reset(widget.current);}
@@ -60,10 +61,6 @@ export default function DonationTracker({initialId}) {
       <button disabled={busy}>{busy?'Checking…':'Check donation status'}</button>
     </form>
     {error && <p role="alert">{error}</p>}
-    {result && <section aria-live="polite">
-      <h2>Latest recorded update</h2><strong>{result.latest}</strong><p>Registration ID · {result.registration_id}</p>
-      {result.history.length>0 && <><h3>Hair donation history</h3><ol>{result.history.map(label=><li key={label}>{label}</li>)}</ol></>}
-      {result.current && <p>Donor Desk application status · {result.current.status}</p>}
-    </section>}
+    {result && <DonationJourney key={result.registration_id} result={result} onSync={lookup} busy={busy} />}
   </main>;
 }

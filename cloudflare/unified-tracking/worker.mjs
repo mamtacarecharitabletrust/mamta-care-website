@@ -37,12 +37,12 @@ export default {
         if(collision)return missing();
       }
       const closed=!noMatch && current.phase==='closed';
-      const archived=closed?null:await env.DB.prepare('SELECT timeline FROM mc_public_historical_tracking WHERE registration_id=? AND phone_last4=?').bind(id,last4).first();
+      const archived=closed?null:await env.DB.prepare('SELECT h.timeline,c.details FROM mc_public_historical_tracking h LEFT JOIN mc_tracking_certificate_view c ON c.registration_id=h.registration_id WHERE h.registration_id=? AND h.phone_last4=?').bind(id,last4).first();
       if(noMatch && !archived)return missing();
       const history=archived?JSON.parse(archived.timeline):[];
       let latest = history.at(-1) || (!noMatch ? current.phase_label : 'Registration recorded. Awaiting a hair movement update.');
       if (!noMatch && (closed || (['received','fabrication'].includes(current.phase) && history.every(label=>/^(Hair received by Mamta Care|Hair in transit)$/.test(label))))) latest=current.phase_label;
-      return response({ok:true,registration_id:id,history,current:noMatch?null:{status:current.application_status,phase:current.phase,label:current.phase_label},latest});
+      return response({ok:true,registration_id:id,certificate:archived?.details?JSON.parse(archived.details):null,history,current:noMatch?null:{status:current.application_status,phase:current.phase,label:current.phase_label},latest});
     } catch {return response({error:'Tracking is temporarily unavailable. Please try again.'},503);}
   }
 };
