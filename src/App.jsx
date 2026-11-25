@@ -4286,6 +4286,8 @@ function WigMakingProcess() {
 
     >
 
+      <TrustNotice />
+
       <motion.div
 
         className="wig-process-gallery"
