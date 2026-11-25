@@ -158,7 +158,11 @@ const WIG_SITE_KEY='0x4AAAAAAFU1GOT32HyjtR0p';
 const WIG_SUBMISSION_ID=crypto.randomUUID();
 
 function reflectLiveWigCopy(){
- if(!WIG_FORM_ENABLED)return; // Preview remains unchanged until explicitly activated.
+ if(!WIG_FORM_ENABLED)return;
+ document.querySelector('.app').setAttribute('aria-label','Patient wig assistance registration');
+ document.querySelector('.app-bottom span:last-child').textContent='Patient registration';
+ document.querySelector('.footer').textContent='Mamta Care reviews each application before deciding eligibility for free wig assistance.';
+ document.querySelector('.side-foot').lastChild.textContent='Supporting people who need a wig during treatment. You can register here for individual review.';
  const intro=document.getElementById('mainDesc');if(intro)intro.textContent='A confidential, step-by-step application for wig assistance.';
  const introStatus=document.getElementById('stepCounter');if(introStatus)introStatus.textContent='Application introduction';
  const notice=[...document.querySelectorAll('.step[data-step="5"] .notice')].find(el=>el.textContent.includes('Preview only.'));
