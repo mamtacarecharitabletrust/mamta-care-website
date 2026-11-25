@@ -3630,7 +3630,7 @@ function Volunteer() {
 
           <p>
 
-            Choose your volunteer role and upload address proof and government ID. The form shows the ₹999 joining fee and payment QR only for roles that require payment.
+            Choose your volunteer role and upload address proof and government ID. After you choose a role, the form shows any applicable application scrutiny fee. Payment does not confer volunteer status.
 
           </p>
 

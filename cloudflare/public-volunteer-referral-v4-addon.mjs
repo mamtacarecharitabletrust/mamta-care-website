@@ -3,12 +3,13 @@
  * agreements and scheduled imports remain unchanged.
  * Requires previous V3 Turnstile/HMAC helpers from deployed Worker.
  */
+import { volunteerLocations } from './volunteer-locations.mjs';
 const MCCT_VOL_V4_PREV_FETCH=launch_wig_maker_portal_worker_default.fetch;
 function mcctVolV4Fail(msg,status=400){return mcctWigV3Json({ok:false,error:msg},status)}
 function mcctVolV4Page(env){
  const key=mcctWigV3Str(env.TURNSTILE_SITE_KEY,100);
  if(!/^0x[A-Za-z0-9_-]{12,90}$/.test(key))return mcctVolV4Fail("Security verification unavailable",503);
- return mcctWigV3SecureHTML(MCCT_VOL_PUBLIC_HTML,true,key);
+ return mcctWigV3SecureHTML(MCCT_VOL_PUBLIC_HTML.replace("MC_VOLUNTEER_LOCATIONS_JSON",()=>JSON.stringify(volunteerLocations).replaceAll("<","\\u003c")),true,key);
 }
 const volunteerRoleFees=new Map(Object.entries({"Hair collection & courier":999,"Professional hairstylist / barber":999,"Campus & donation drive":999,"Donor support":999,"Awareness & outreach":0,"Hospital & patient support":0,"Creative & translation":0,"Wig-making & workshop":0,"Help wherever needed":0}));
 async function volunteerProof(file){
@@ -30,14 +31,18 @@ async function mcctVolV4Submit(req,env){
   d=Object.fromEntries(await new Response(new Blob(chunks),{headers:{'Content-Type':req.headers.get('content-type')}}).formData());
  }catch{return mcctVolV4Fail('Invalid application upload')}
  const name=mcctWigV3Str(d.full_name,110),rawPhone=mcctWigV3Str(d.phone,30),
-       city=mcctWigV3Str(d.city,100),profession=mcctWigV3Str(d.profession,80),
+       city=mcctWigV3Str(d.city==="__other"?d.city_other:d.city,100),profession=mcctWigV3Str(d.profession,80),
        interest=mcctWigV3Str(d.interest,70),notes=mcctWigV3Str(d.note,100),
        email=mcctWigV3Str(d.email,180),token=String(d["cf-turnstile-response"]||"");
  const digits=rawPhone.replace(/[^0-9]/g,"");
  const phone=digits.length===10?"+91"+digits:"+"+digits;
  const fee=volunteerRoleFees.get(interest);
+ const state=String(d.state||''),district=String(d.district||'');
+ const towns=Object.hasOwn(volunteerLocations,state)&&Object.hasOwn(volunteerLocations[state],district)?volunteerLocations[state][district]:null;
+ if(!towns||(d.city!=='__other'&&!towns.includes(city))||(d.city==='__other'&&(typeof d.city_other!=='string'||d.city_other.trim().length>100)))return mcctVolV4Fail('Select your state, district and city.');
+ if(fee&&d.fee_ack!=='on')return mcctVolV4Fail('Please acknowledge the scrutiny fee before submitting.');
  if(name.length<3||city.length<2||profession.length<2||digits.length<10||digits.length>15||fee===undefined||
-    (email.length>0&&!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email))||d.consent_confirmed!=="on"||d.privacy_accepted!=="on")return mcctVolV4Fail("Complete required details and consent");
+    (!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email))||d.consent_confirmed!=="on"||d.privacy_accepted!=="on")return mcctVolV4Fail("Complete required details and consent");
  const proofs=await Promise.all([volunteerProof(d.address_proof),volunteerProof(d.id_proof)]);
  if(proofs.some(p=>!p))return mcctVolV4Fail('Attach both your address proof and government ID as JPEG, PNG or PDF files of up to 5 MB each.');
  if(!(await mcctWigV3Verify(req,env,token)))return mcctVolV4Fail("Security challenge failed. Please try again.",403);
@@ -69,6 +74,7 @@ async function mcctVolV4Submit(req,env){
     env.DB.prepare("INSERT INTO mcct_public_volunteer_intakes(referral_id,contact_hash,day_ist,created_at) SELECT ?,?,?,? WHERE changes()=1")
      .bind(id,contactKey,today,ts),
     env.DB.prepare("INSERT INTO mc_volunteer_proofs(referral_id,role,fee,address_mime,id_mime) VALUES(?,?,?,?,?)").bind(id,interest,fee,proofs[0].mime,proofs[1].mime),
+    env.DB.prepare("INSERT INTO mc_volunteer_locations(referral_id,state,district,city,fee_ack_version) VALUES(?,?,?,?,?)").bind(id,state,district,city,fee?'scrutiny-v1':null),
     ...(fee?[env.DB.prepare("INSERT INTO mc_volunteer_payments(referral_id,utr,amount) VALUES(?,?,?)").bind(id,receipt,fee)]:[])
   ]);
   if((inserted[0]?.meta?.changes||0)!==1||(inserted[1]?.meta?.changes||0)!==1)return mcctVolV4Fail("Application not confirmed; please contact Mamta Care",503);

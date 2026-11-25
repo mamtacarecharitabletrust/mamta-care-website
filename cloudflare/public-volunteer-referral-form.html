@@ -58,22 +58,25 @@ footer{text-align:center;border-top:1px solid #e5e0d5;color:#6d8475;padding:20px
 <label><span>Full name <b class="req">*</b></span><input name="full_name" autocomplete="name" minlength="3" maxlength="110" required placeholder="Your full name"></label>
 <div class="fields">
 <label><span>Phone number <b class="req">*</b></span><input name="phone" autocomplete="tel" inputmode="tel" maxlength="30" required placeholder="+91 9876543210"></label>
-<label><span>Email (optional)</span><input name="email" type="email" autocomplete="email" maxlength="180" placeholder="you@example.com"></label>
-<label><span>City / district <b class="req">*</b></span><input name="city" autocomplete="address-level2" minlength="2" maxlength="100" required placeholder="City and state"></label>
-<label><span>Profession / role <b class="req">*</b></span><input name="profession" minlength="2" maxlength="80" required placeholder="Hairstylist, student, teacher…"></label>
+<label><span>Email address <b class="req">*</b></span><input name="email" required type="email" autocomplete="email" maxlength="180" placeholder="you@example.com"></label>
+<label>State / union territory<select name="state" required></select></label>
+<label>District<select name="district" required disabled></select></label>
+<label>City / town<select name="city" required disabled></select></label>
+<label hidden id="other-place">Enter your city, town or village<input name="city_other" disabled minlength="2" maxlength="100" autocomplete="address-level2"></label>
+<label><span>Current occupation <b class="req">*</b></span><input name="profession" minlength="2" maxlength="80" required placeholder="Hairstylist, student, teacher…"></label>
 </div>
-<label><span>How would you like to help? <b class="req">*</b></span>
+<label><span>Which volunteer role are you applying for? <b class="req">*</b></span>
 <select name="interest" required>
 <option value="">Select your volunteer role</option>
-<option value="Hair collection &amp; courier" data-fee="999">Hair collection &amp; courier · ₹999</option>
-<option value="Professional hairstylist / barber" data-fee="999">Professional hairstylist / barber · ₹999</option>
-<option value="Campus &amp; donation drive" data-fee="999">Campus &amp; donation drive · ₹999</option>
-<option value="Donor support" data-fee="999">Donor support · ₹999</option>
-<option value="Awareness &amp; outreach" data-fee="0">Awareness &amp; outreach · Free</option>
-<option value="Hospital &amp; patient support" data-fee="0">Hospital &amp; patient support · Free</option>
-<option value="Creative &amp; translation" data-fee="0">Creative &amp; translation · Free</option>
-<option value="Wig-making &amp; workshop" data-fee="0">Wig-making &amp; workshop · Free</option>
-<option value="Help wherever needed" data-fee="0">Help wherever needed · Free</option>
+<option value="Hair collection &amp; courier" data-fee="999">Hair collection &amp; courier</option>
+<option value="Professional hairstylist / barber" data-fee="999">Professional hairstylist / barber</option>
+<option value="Campus &amp; donation drive" data-fee="999">Campus &amp; donation drive</option>
+<option value="Donor support" data-fee="999">Donor support</option>
+<option value="Awareness &amp; outreach" data-fee="0">Awareness &amp; outreach</option>
+<option value="Hospital &amp; patient support" data-fee="0">Hospital &amp; patient support</option>
+<option value="Creative &amp; translation" data-fee="0">Creative &amp; translation</option>
+<option value="Wig-making &amp; workshop" data-fee="0">Wig-making &amp; workshop</option>
+<option value="Help wherever needed" data-fee="0">Help wherever needed</option>
 </select>
 </label>
 <label><span>Other details (optional)</span><textarea name="note" maxlength="100" placeholder="A short note about your experience or availability"></textarea></label>
@@ -82,7 +85,7 @@ footer{text-align:center;border-top:1px solid #e5e0d5;color:#6d8475;padding:20px
 <label>Government ID proof<input type="file" required name="id_proof" accept="image/jpeg,image/png,application/pdf"></label>
 <label class="consent"><input type="checkbox" name="consent_confirmed" required><span>I consent to Mamta Care contacting me for volunteer screening, safety training, agreement and identity verification where applicable.</span></label>
 <label class="consent"><input type="checkbox" name="privacy_accepted" required><span>I understand the form is an expression of interest, not a guarantee of approval, employment, salary or an official volunteer ID card.</span></label>
-<section hidden id="fee-panel" class="info"><h3>Volunteer joining fee · ₹999</h3><p>Scan the Mamta Care QR in your UPI app and enter ₹999. On the same phone, save the QR and use your UPI app’s scan-from-gallery option. Check the recipient before paying.</p><img id="fee-qr" alt="Mamta Care payment QR" width="240"><p><a href="/volunteer-payment-qr.jpg" download="Mamta-Care-UPI.jpg">Save payment QR</a></p><label>UPI reference / UTR (12 digits)<input name="utr" disabled inputmode="numeric" minlength="12" maxlength="12" pattern="[0-9]{12}"></label><p>Find the reference in your successful payment receipt. If you retry this form, use the same reference and pay only once.</p></section><div class="turnstile"><div class="cf-turnstile" data-sitekey="MCCT_WIG_SITEKEY_PLACEHOLDER" data-theme="light" data-appearance="always"></div></div>
+<section hidden id="fee-panel" class="info"><h3>Application scrutiny fee · ₹999</h3><p>This fee covers only the review of your application and documents. Payment does not guarantee selection or enrol you as a volunteer of Mamta Care Charitable Trust.</p><label class="consent"><input type="checkbox" name="fee_ack" disabled><span>I understand that ₹999 is for application scrutiny only. Volunteer status requires separate approval.</span></label><p>Scan the Mamta Care QR in your UPI app and enter ₹999. On the same phone, save the QR and use your UPI app’s scan-from-gallery option. Check the recipient before paying.</p><img id="fee-qr" alt="Mamta Care payment QR" width="240"><p><a href="/volunteer-payment-qr.jpg" download="Mamta-Care-UPI.jpg">Save payment QR</a></p><label>UPI reference / UTR (12 digits)<input name="utr" disabled inputmode="numeric" minlength="12" maxlength="12" pattern="[0-9]{12}"></label><p>Find the reference in your successful payment receipt. If you retry this form, use the same reference and pay only once.</p></section><div class="turnstile"><div class="cf-turnstile" data-sitekey="MCCT_WIG_SITEKEY_PLACEHOLDER" data-theme="light" data-appearance="always"></div></div>
 <button type="submit" id="submit">Submit volunteer application</button>
 <div id="response" role="status" aria-live="polite"></div>
 </form>
@@ -92,9 +95,18 @@ footer{text-align:center;border-top:1px solid #e5e0d5;color:#6d8475;padding:20px
 <script nonce="MCCT_WIG_NONCE_PLACEHOLDER">
 (function(){"use strict";
 const form=document.getElementById("volunteer"),btn=document.getElementById("submit"),box=document.getElementById("response");
+const places=MC_VOLUNTEER_LOCATIONS_JSON;
+const fields=form.elements;
+function options(select,prompt,values){select.replaceChildren(new Option(prompt,''),...values.map(value=>new Option(value,value)))}
+function toggleOther(){const show=fields.city.value==='__other';document.getElementById('other-place').hidden=!show;fields.city_other.disabled=!show;fields.city_other.required=show;if(!show)fields.city_other.value=''}
+function updateCities(){const towns=places[fields.state.value]?.[fields.district.value];options(fields.city,'Select city / town',towns||[]);if(towns)fields.city.add(new Option('Other city, town or village','__other'));fields.city.disabled=!towns;toggleOther()}
+function updateDistricts(){const districts=places[fields.state.value];options(fields.district,'Select district',Object.keys(districts||{}));fields.district.disabled=!districts;updateCities()}
+options(fields.state,'Select state / union territory',Object.keys(places));updateDistricts();
+fields.state.addEventListener('change',updateDistricts);fields.district.addEventListener('change',updateCities);fields.city.addEventListener('change',toggleOther);
 function displayFee(){
  const paid=form.elements.interest.selectedOptions[0]?.dataset.fee==='999';
  document.getElementById('fee-panel').hidden=!paid;
+ const ack=fields.fee_ack;ack.disabled=!paid;ack.required=paid;if(!paid)ack.checked=false;
  const utr=form.elements.utr;utr.disabled=!paid;utr.required=paid;
  if(paid)document.getElementById('fee-qr').src='/volunteer-payment-qr.jpg';else{utr.value='';document.getElementById('fee-qr').removeAttribute('src')}
 }
@@ -111,7 +123,7 @@ form.addEventListener("submit",async e=>{
   const d=await r.json().catch(()=>({ok:false,error:"Unexpected response"}));
   if(!r.ok||!d.ok)throw Error(d.error||"Unable to submit interest");
   info("Your volunteer application has been received."+(d.reference?" Reference: "+d.reference+".":"")+" Your application is awaiting review.");
-  form.reset();displayFee();
+  form.reset();updateDistricts();displayFee();
  }catch(err){info(err.message||"Unable to submit. Please call Mamta Care for assistance.",true);}
  finally{btn.disabled=false;try{window.turnstile?.reset()}catch{}}
 });

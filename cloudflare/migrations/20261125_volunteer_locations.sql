@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS mc_volunteer_locations(referral_id TEXT PRIMARY KEY REFERENCES mca_referrals(id),state TEXT NOT NULL,district TEXT NOT NULL,city TEXT NOT NULL,fee_ack_version TEXT);
