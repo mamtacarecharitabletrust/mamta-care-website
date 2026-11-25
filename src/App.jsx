@@ -819,7 +819,6 @@ function Home() {
           PREMIUM 3D HERO
       ====================================================== */}
 
-      <TrustNotice />
       <section
         ref={heroRef}
         className="cinematic-hero"
@@ -953,6 +952,7 @@ function Home() {
               <a className="btn hero-secondary" href="/courier-my-hair">Courier my hair</a>
             </motion.div>
 
+            <TrustNotice />
             <motion.div
               className="hero-proof"
               variants={fadeUp}
