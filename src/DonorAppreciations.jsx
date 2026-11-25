@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import donorWithCertificate from './assets/IMG-20260404-WA0005.jpg.jpeg';
 import './styles/donor-appreciations.css';
 
 const feed = 'https://mamta-website-content-control.bharathairseva-in.workers.dev/api/appreciations';
@@ -29,6 +30,13 @@ export default function DonorAppreciations() {
     <header><div><h2 id="mc-appreciations-title">Thank you to our hair donors</h2><p>Notes of appreciation from Mamta Care for verified hair donations.</p></div>
       <div className="mc-appreciation-counts">{page && <span><b>{page.today.toLocaleString('en-IN')}</b> recorded as verified today (IST)</span>}
       {total !== null && <span><b>{total.toLocaleString('en-IN')}</b> completed donations to date</span>}</div></header>
+    <figure className="mc-donor-portraits">
+      <figcaption>From our donor community</figcaption>
+      <div>
+        <img src="/courier/hair-donor.webp" width="96" height="96" alt="Mamta Care donor holding her donated braids" loading="lazy" />
+        <img src={donorWithCertificate} width="96" height="96" alt="Mamta Care donor with donated hair and a certificate of appreciation" loading="lazy" />
+      </div>
+    </figure>
     {failed ? <p role="status">Donor appreciations could not be loaded. <button type="button" onClick={()=>setRetry(retry+1)}>Try again</button></p> :
       !page ? <p role="status">Loading donor appreciations…</p> :
       page.items.length ? <ul>{page.items.map(card=><li key={card.id}><small>Donor appreciation · {card.id}</small><h3>{card.label}</h3><p>{card.quote}</p><span>— Mamta Care Charitable Trust</span></li>)}</ul> :
