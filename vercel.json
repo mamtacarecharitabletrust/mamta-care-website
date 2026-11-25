@@ -2,6 +2,34 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
+      "source": "/join-volunteer",
+      "destination": "https://mamta-donor-desk-launch-new.bharathairseva-in.workers.dev/join-volunteer"
+    },
+    {
+      "source": "/volunteer-payment-qr.jpg",
+      "destination": "https://mamta-donor-desk-launch-new.bharathairseva-in.workers.dev/volunteer-payment-qr.jpg"
+    },
+    {
+      "source": "/volunteer-logo.jpeg",
+      "destination": "https://mamta-donor-desk-launch-new.bharathairseva-in.workers.dev/volunteer-logo.jpeg"
+    },
+    {
+      "source": "/api/public/volunteer-referrals",
+      "destination": "https://mamta-donor-desk-launch-new.bharathairseva-in.workers.dev/api/public/volunteer-referrals"
+    },
+    {
+      "source": "/volunteer-checkout",
+      "destination": "https://mamta-donor-desk-launch-new.bharathairseva-in.workers.dev/volunteer-checkout"
+    },
+    {
+      "source": "/volunteer-checkout/status",
+      "destination": "https://mamta-donor-desk-launch-new.bharathairseva-in.workers.dev/volunteer-checkout/status"
+    },
+    {
+      "source": "/volunteer-checkout/pay",
+      "destination": "https://mamta-donor-desk-launch-new.bharathairseva-in.workers.dev/volunteer-checkout/pay"
+    },
+    {
       "source": "/api/hair-impact",
       "destination": "/api/hair-impact"
     },

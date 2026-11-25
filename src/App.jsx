@@ -96,7 +96,7 @@ const info = {
 
   volunteerForm:
 
-    "https://mamta-donor-desk-launch-new.bharathairseva-in.workers.dev/join-volunteer",
+    "https://mamta-care-website.vercel.app/join-volunteer",
 
   trackingApp:
     PUBLIC_TRACKING_BASE + registrationQrSearch(),

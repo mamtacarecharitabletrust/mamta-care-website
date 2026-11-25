@@ -59,14 +59,14 @@ export async function checkoutRoute(req,env){
  const hash=await sessionHash(req);const lookup=()=>query(env,'SELECT * FROM mc_vol_phonepe WHERE session_hash=?',hash).first();
  let row=hash&&await lookup();if(!row)return json({error:'Open the application in the same browser used to start payment.'},404);
  if(url.pathname===base&&req.method==='GET')return checkoutPage();
- if(req.method!=='POST'||req.headers.get('origin')!==url.origin)return json({error:'Request unavailable'},403);
+ if(req.method!=='POST'||(req.headers.get('origin')!==url.origin&&req.headers.get('origin')!=='https://mamta-care-website.vercel.app'))return json({error:'Request unavailable'},403);
  try{
  await check(env,row);row=await lookup();
  if(url.pathname===base+'/pay'&&['failed','new'].includes(row.state)){
   const id=row.state==='failed'?orderId():row.merchant_order;
   const lock=await query(env,"UPDATE mc_vol_phonepe SET merchant_order=?,state='starting',started=?,next_check=?,provider_order=NULL,checkout_url=NULL WHERE merchant_order=? AND state=?",id,now(),now()+20,row.merchant_order,row.state).run();
   if(lock.meta.changes){
-   const d=await api(env,'pay',{merchantOrderId:id,amount:fee,expireAfter:1200,paymentFlow:{type:'PG_CHECKOUT',message:'Mamta Care volunteer application scrutiny',merchantUrls:{redirectUrl:url.origin+base}}});
+   const d=await api(env,'pay',{merchantOrderId:id,amount:fee,expireAfter:1200,paymentFlow:{type:'PG_CHECKOUT',message:'Mamta Care volunteer application scrutiny',merchantUrls:{redirectUrl:req.headers.get('origin')+base}}});
    if(!allowedUrl(d.redirectUrl)||!d.orderId)throw Error('Checkout unavailable');
    await query(env,"UPDATE mc_vol_phonepe SET state='open',provider_order=?,checkout_url=? WHERE merchant_order=? AND state='starting'",d.orderId,d.redirectUrl,id).run();
   }

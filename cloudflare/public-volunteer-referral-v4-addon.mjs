@@ -28,7 +28,7 @@ async function volunteerProof(file){
 async function mcctVolV4Submit(req,env){
  if(req.method!=="POST")return mcctVolV4Fail("Method not allowed",405);
  const origin=req.headers.get("Origin")||"";
- if(origin!==new URL(req.url).origin||req.headers.get("X-Mamta-Public")!=="1"||!/^multipart\/form-data;/i.test(req.headers.get("Content-Type")||""))return mcctVolV4Fail("Request verification failed",403);
+ if((origin!==new URL(req.url).origin&&origin!=="https://mamta-care-website.vercel.app")||req.headers.get("X-Mamta-Public")!=="1"||!/^multipart\/form-data;/i.test(req.headers.get("Content-Type")||""))return mcctVolV4Fail("Request verification failed",403);
  const limit=10*1024*1024+32768;
  if(Number(req.headers.get('content-length'))>limit)return mcctVolV4Fail('Documents exceed the upload limit.',413);
  let d;try{
