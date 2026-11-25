@@ -537,6 +537,8 @@ function Layout({ children }) {
 
           <p>
 
+            <a href="/hair-donation/hyderabad">Hair donation in Hyderabad</a>
+            <br />
             <Link to="/about">
 
               About Us

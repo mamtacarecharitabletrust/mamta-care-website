@@ -42,6 +42,22 @@
       "destination": "https://mamta-website-hair-registration.bharathairseva-in.workers.dev/api/registration-status"
     },
     {
+      "source": "/hair-donation/hyderabad",
+      "destination": "/regional-guides/hyderabad-en.html"
+    },
+    {
+      "source": "/te/hair-donation/hyderabad",
+      "destination": "/regional-guides/hyderabad-te.html"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/robots.txt"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/sitemap.xml"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
