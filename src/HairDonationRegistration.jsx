@@ -70,7 +70,7 @@ export default function HairDonationRegistration() {
     let active = true;
     fetch("/api/hair-registration-status?school_drive=" + encodeURIComponent(driveId), {cache:"no-store"})
       .then(async response => {
-        if (!response.ok) throw new Error(response.status === 404 ? "This school enrollment link is invalid. Ask the school coordinator for its drive link." : "Unable to check the school drive. Refresh this page to retry.");
+        if (!response.ok) throw new Error(response.status === 404 ? "This student enrollment link is invalid. Ask the drive coordinator for its drive link." : "Unable to check the institution drive. Refresh this page to retry.");
         return response.json();
       })
       .then(info => { if (active) setDriveInfo(info); })
@@ -165,7 +165,7 @@ export default function HairDonationRegistration() {
   };
   const validate = (current) => {
     if (driveInfo?.batches?.length && !driveInfo.batches.includes(schoolBatch)) return "Select your class or session batch.";
-    if (driveId !== null && !driveInfo?.school) return driveInfo?.error || "Checking your school drive…";
+    if (driveId !== null && !driveInfo?.school) return driveInfo?.error || "Checking your institution drive…";
     if (current === 2) {
       if (!values.full_name.trim() || !/^[0-9]{10}$/.test(values.phone.replace(/\D/g, "")) ||
         !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim()) ||
@@ -176,7 +176,7 @@ export default function HairDonationRegistration() {
     }
     if (current === 3 && (photoBusy.front || photoBusy.back)) return "Your photographs are being prepared securely. Please try again.";
     if (current === 3 && (!files.front || !files.back)) return "Select one front photograph and one back photograph.";
-    if (current === 4 && driveId && !driveConsent) return "An adult donor or a parent or guardian must confirm school drive enrollment.";
+    if (current === 4 && driveId && !driveConsent) return "An adult donor or a parent or guardian must confirm institution drive enrollment.";
     if (current === 4 && (!values.voluntary || !values.private_photos || !values.terms_accepted)) return "Please accept the voluntary donation, privacy, and registration terms.";
     return "";
   };
@@ -292,9 +292,9 @@ export default function HairDonationRegistration() {
     <div className="mchr-container">
       <div className="mchr-top"><img src={officialLogo} alt="Official Mamta Care Charitable Trust logo" /><div>
         <p className="mchr-overline">MAMTA CARE CHARITABLE TRUST</p>
-        <h1>{driveId ? "School drive enrollment" : "Donate Hair. Give Hope."}</h1>
+        <h1>{driveId ? "Student drive enrollment" : "Donate Hair. Give Hope."}</h1>
         {driveInfo?.batches?.length > 0 && <label>Class or session batch <select required value={schoolBatch} onChange={e=>setSchoolBatch(e.target.value)}><option value="">Select your batch</option>{driveInfo.batches.map(g=><option key={g}>{g}</option>)}</select></label>}
-        {driveId !== null && <p aria-live="polite">{driveInfo?.school ? <strong>{driveInfo.school} · {driveInfo.drive_date}</strong> : (driveInfo?.error || "Checking your school drive…")}</p>}
+        {driveId !== null && <p aria-live="polite">{driveInfo?.school ? <strong>{driveInfo.school} · {driveInfo.drive_date}</strong> : (driveInfo?.error || "Checking your institution drive…")}</p>}
         {driveId && <p>Register one student at a time. If the student is under 18, a parent or guardian should complete the form with them.</p>}
         <p>Secure hair donation registration · Designed for mobile and desktop</p>
       </div></div>
@@ -409,7 +409,7 @@ export default function HairDonationRegistration() {
             {step === 4 && <>
               <StepTitle number="04" title="Review and consent" help="Please read each declaration before submitting your registration." />
               <div className="mchr-summary"><div>Method: <strong>{method === "haircut" ? "Haircut · " + values.hair_length : "Complete Head Shave · BALD(FULL LENGTH)"}</strong></div><div>Front and back photos: <strong>{files.front && files.back ? "Selected" : "Missing"}</strong></div></div>
-              {driveId && <label className="mchr-check"><input type="checkbox" checked={driveConsent} onChange={e => setDriveConsent(e.target.checked)} /><span>I am the adult donor or the student’s parent or guardian, and I agree to enroll this student in this school drive.</span></label>}
+              {driveId && <label className="mchr-check"><input type="checkbox" checked={driveConsent} onChange={e => setDriveConsent(e.target.checked)} /><span>I am the adult donor or the student’s parent or guardian, and I agree to enroll this student in this institution drive.</span></label>}
               <label className="mchr-check"><input type="checkbox" checked={values.voluntary} onChange={e => set("voluntary", e.target.checked)}/><span>I voluntarily wish to donate my hair to help make wigs for cancer patients through Mamta Care Charitable Trust. I confirm that no one has pressured me and that I have read the donation conditions. <b>Required</b></span></label>
               <label className="mchr-check"><input type="checkbox" checked={values.private_photos} onChange={e => set("private_photos", e.target.checked)}/><span>I permit the Trust to securely collect and use my submitted photographs and donor details for registration and coordination under its privacy notice. <b>Required</b></span></label>
               <div className="mchr-note" style={{margin:"14px 0"}}>
