@@ -21,12 +21,28 @@ export async function directory(db,user,params){
  const filter=previous?'':(['unallocated','pending','completed'].includes(params.get('stage'))?params.get('stage'):'');
  let where=' WHERE NOT EXISTS(SELECT 1 FROM mc_donor_recycle r WHERE r.donor_id=d.id)',bind=[];
  if(staff==='_unassigned')where+=" AND trim(coalesce(d.assigned_to,''))=''";else if(staff){where+=' AND d.assigned_to=?';bind.push(staff)}
- if(search){where+=' AND (d.full_name LIKE ? OR d.registration_id LIKE ? OR d.phone LIKE ?)';bind.push(...Array(3).fill('%'+search+'%'))}
+ const digits=/^[+\d\s().-]+$/.test(search)?search.replace(/\D/g,'').replace(/^91(?=\d{10}$)/,''):'';
+ const phone="replace(replace(replace(replace(replace(replace(coalesce(d.phone,''),' ',''),'-',''),'+',''),'(',''),')',''),'.','')";
+ if(search){
+  where+=' AND (instr(lower(d.full_name),lower(?))>0 OR instr(lower(d.registration_id),lower(?))>0';
+  bind.push(search,search);
+  if(digits){where+=' OR instr('+phone+',?)>0';bind.push(digits)}
+  where+=')';
+ }
  const from=' FROM donors d LEFT JOIN staff s ON s.username=d.assigned_to'+where;
  const stmt=(sql,values)=>values.length?db.prepare(sql).bind(...values):db.prepare(sql);
- const [counts,records]=await db.batch([stmt('SELECT '+stage+' AS stage,count(*) AS n'+from+' GROUP BY 1',bind),stmt('SELECT d.id,d.full_name,d.registration_id,d.city,d.registered_at,d.created_at,d.updated_at,d.followup_status,d.assigned_to,s.display_name,'+stage+' AS stage'+from+' AND '+(previous?verified:'NOT ('+verified+')')+(filter?' AND ('+stage+')=?':''),filter?[...bind,filter]:bind)]);
+ const [counts,records]=await db.batch([stmt('SELECT '+stage+' AS stage,count(*) AS n'+from+' GROUP BY 1',bind),stmt('SELECT d.id,d.full_name,d.registration_id,d.phone,d.city,d.registered_at,d.created_at,d.updated_at,d.followup_status,d.assigned_to,s.display_name,'+stage+' AS stage'+from+' AND '+(previous?verified:'NOT ('+verified+')')+(filter?' AND ('+stage+')=?':''),filter?[...bind,filter]:bind)]);
  const count=Object.fromEntries(counts.results.map(r=>[r.stage,r.n])),rows=records.results;for(const d of rows)d.applied=timestamp(d.registered_at);
- rows.sort((a,b)=>(Number.isFinite(b.applied)?b.applied:0)-(Number.isFinite(a.applied)?a.applied:0)||Number(b.created_at)-Number(a.created_at)||a.id.localeCompare(b.id));
+ const needle=search.toLowerCase();
+ function rank(row){
+  if(!needle)return 0;
+  const names=[row.full_name,row.registration_id].map(v=>String(v||'').trim().toLowerCase());
+  const phone=String(row.phone||'').replace(/\D/g,'');
+  if(names.includes(needle)||(digits&&(phone===digits||phone==='91'+digits)))return 0;
+  if(names.some(v=>v.startsWith(needle))||(digits&&(phone.startsWith(digits)||phone.replace(/^91(?=\d{10}$)/,'').startsWith(digits))))return 1;
+  return 2;
+ }
+ rows.sort((a,b)=>rank(a)-rank(b)||(Number.isFinite(b.applied)?b.applied:0)-(Number.isFinite(a.applied)?a.applied:0)||Number(b.created_at)-Number(a.created_at)||a.id.localeCompare(b.id));
  const href=(prev,st='')=>{const p=new URLSearchParams();if(prev)p.set('view','previous');if(st)p.set('stage',st);if(search)p.set('q',search);if(staff&&user.role==='admin')p.set('staff',staff);return esc(list+(p.size?'?'+p:''))};
  const anchor=(url,label,selected)=>'<a href="'+url+'"'+(selected?' aria-current="page"':'')+'>'+label+'</a>';
  const now=Date.now();const body=rows.map(d=>{const detail=user.role==='admin'?'/app/premium/donor/'+encodeURIComponent(d.id):'/app/premium/workspace?open='+encodeURIComponent(d.id)+'&q='+encodeURIComponent(d.registration_id||d.full_name);return '<li><a class="md-record" href="'+esc(detail)+'"><span><strong>'+esc(d.full_name)+'</strong><small>'+esc([d.registration_id,d.city].filter(Boolean).join(' · '))+'</small></span><span><span class="md-status md-'+d.stage+'">'+labels[d.stage]+'</span><small>'+esc([d.display_name||d.assigned_to,['Call again','Not answered'].includes(d.followup_status)?d.followup_status:''].filter(Boolean).join(' · '))+'</small></span><span><b>Applied</b>'+time(d.applied,now)+'</span><span><b>Last updated</b>'+time(timestamp(d.updated_at),now)+'</span></a></li>'}).join('');
@@ -36,6 +52,7 @@ export async function directory(db,user,params){
  (previous?'':'<nav class="md-filters" aria-label="Current donor status">'+anchor(href(false),'All current',!filter)+Object.keys(labels).filter(k=>k!=='verified').map(k=>anchor(href(false,k),'<span class="md-status md-'+k+'">'+labels[k]+' · '+(count[k]||0)+'</span>',filter===k)).join('')+'</nav>')+
  (previous?'<p><a class="btn" href="/app/premium/donor-audit">📋 Audit</a></p>':'')+
  '<form action="'+list+'">'+input('view',previous?'previous':'')+input('stage',filter)+input('staff',user.role==='admin'?staff:'')+'<label>Search donors <input name="q" type="search" value="'+esc(search)+'" placeholder="Name, registration ID or phone"></label><button class="btn">Search</button></form>'+
+ '<div class="md-matches" aria-busy="false">'+(body?'<ul class="md-records">'+body+'</ul>':'<p>No donors match this view.</p>')+'</div><p class="md-search-message" role="status"></p>'+
  (user.role==='admin'?'<div class="actions"><a href="/app/premium/scan">Scan QR / barcode</a> · <a href="/app/premium/category/donors">Donor tools</a> · <a href="/app/premium/recycle-bin">Recycle Bin</a></div>':'')+
- (body?'<ul class="md-records">'+body+'</ul>':'<p>No donors match this view.</p>')+'</section>'
+ '</section>'
 }
