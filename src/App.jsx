@@ -90,7 +90,7 @@ const info = {
 
   wigRequestForm:
 
-    "/wig-request",
+    "/wig-assistance-preview-v7.html",
 
   volunteerForm:
 
@@ -934,7 +934,7 @@ function Home() {
                 className="btn hero-secondary"
                 href={info.wigRequestForm}
               >
-                Ask about free wig support
+                Request a Free Wig
               </a>
 
               <motion.a
@@ -1666,7 +1666,7 @@ function Home() {
 
           >
 
-            Ask about free wig support
+            Request a Free Wig
 
             <span>
 
@@ -4221,9 +4221,10 @@ function HairDonation() {
 ========================================================= */
 
 function WigRequest() {
-  return <section className="section"><h1>Ask about free wig support</h1>
-    <p>Call Mamta Care to discuss availability, fit and the next steps. The wig and application are free. Ask about any courier costs or refundable deposit before sharing documents or making a payment.</p>
-    <a className="btn" href="tel:+918500012190">Call 8500012190</a></section>;
+  React.useEffect(() => {
+    window.location.replace("/wig-assistance-preview-v7.html");
+  }, []);
+  return <a href="/wig-assistance-preview-v7.html">Open the Wig Assistance Portal</a>;
 }
 
 /* =========================================================
