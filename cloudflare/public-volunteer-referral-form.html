@@ -45,14 +45,14 @@ footer{text-align:center;border-top:1px solid #e5e0d5;color:#6d8475;padding:20px
 <h1>Join the community of care.</h1>
 <p>Help Mamta Care promote voluntary hair donation and compassionate wig support for people affected by cancer. Whether you are a trained hairstylist, community organizer or awareness volunteer, you can express your interest here.</p>
 <div class="info"><strong>What happens after registration?</strong>
-<p>1. Your application enters our existing private volunteer referral queue.</p>
-<p>2. Mamta Care reviews your details, location, role, consent and any necessary agreements.</p>
+<p>1. Pay the ₹999 volunteer joining fee using the Trust’s QR below, then enter your payment reference.</p>
+<p>2. The team checks the payment against its bank records and reviews your application.</p>
 <p>3. An official volunteer ID is issued only after authorization and verification; this form alone does not create a login or ID card.</p></div>
 <div class="info"><strong>Hair donation guidance</strong><p>Usable donated hair must measure at least <b>14 inches, excluding split ends</b>. Complete head shaving is also an accepted donation method. Only authorized professionals should undertake haircuts or shaves.</p></div>
 <p>Need help? Call <strong>8500012190</strong>.</p>
 </section>
 <section class="card">
-<h2>Volunteer interest form</h2>
+<h2>Volunteer application</h2>
 <p class="muted">Please do not upload Aadhaar, PAN, medical records or other identity documents here. Those are requested privately only if needed during onboarding.</p>
 <form id="volunteer" novalidate>
 <label><span>Full name <b class="req">*</b></span><input name="full_name" autocomplete="name" minlength="3" maxlength="110" required placeholder="Your full name"></label>
@@ -74,8 +74,8 @@ footer{text-align:center;border-top:1px solid #e5e0d5;color:#6d8475;padding:20px
 <label><span>Other details (optional)</span><textarea name="note" maxlength="100" placeholder="A short note about your experience or availability"></textarea></label>
 <label class="consent"><input type="checkbox" name="consent_confirmed" required><span>I consent to Mamta Care contacting me for volunteer screening, safety training, agreement and identity verification where applicable.</span></label>
 <label class="consent"><input type="checkbox" name="privacy_accepted" required><span>I understand the form is an expression of interest, not a guarantee of approval, employment, salary or an official volunteer ID card.</span></label>
-<div class="turnstile"><div class="cf-turnstile" data-sitekey="MCCT_WIG_SITEKEY_PLACEHOLDER" data-theme="light" data-appearance="always"></div></div>
-<button type="submit" id="submit">Submit Volunteer Interest</button>
+<section class="info"><h3>Volunteer joining fee · ₹999</h3><p>Scan the Mamta Care QR in your UPI app and enter ₹999. On the same phone, save the QR and use your UPI app’s scan-from-gallery option. Check the recipient before paying.</p><img src="/volunteer-payment-qr.jpg" alt="Mamta Care payment QR" width="240"><p><a href="/volunteer-payment-qr.jpg" download="Mamta-Care-UPI.jpg">Save payment QR</a></p><label>UPI reference / UTR (12 digits)<input name="utr" required inputmode="numeric" minlength="12" maxlength="12" pattern="[0-9]{12}"></label><p>Find the reference in your successful payment receipt. If you retry this form, use the same reference and pay only once.</p></section><div class="turnstile"><div class="cf-turnstile" data-sitekey="MCCT_WIG_SITEKEY_PLACEHOLDER" data-theme="light" data-appearance="always"></div></div>
+<button type="submit" id="submit">Submit volunteer application</button>
 <div id="response" role="status" aria-live="polite"></div>
 </form>
 </section>
@@ -89,13 +89,13 @@ form.addEventListener("submit",async e=>{
  e.preventDefault();if(!form.reportValidity())return;
  const f=Object.fromEntries(new FormData(form).entries()),token=form.querySelector('[name="cf-turnstile-response"]')?.value||"";
  if(token.length<10){info("Please complete the security verification.",true);return;}
- const payload={full_name:f.full_name,phone:f.phone,email:f.email||"",city:f.city,profession:f.profession,interest:f.interest,note:f.note||"",consent_confirmed:f.consent_confirmed==="on",privacy_accepted:f.privacy_accepted==="on",cf_turnstile_response:token};
+ const payload={utr:f.utr,full_name:f.full_name,phone:f.phone,email:f.email||"",city:f.city,profession:f.profession,interest:f.interest,note:f.note||"",consent_confirmed:f.consent_confirmed==="on",privacy_accepted:f.privacy_accepted==="on",cf_turnstile_response:token};
  btn.disabled=true;
  try{
   const r=await fetch("/api/public/volunteer-referrals",{method:"POST",credentials:"same-origin",cache:"no-store",headers:{"Content-Type":"application/json","X-Mamta-Public":"1"},body:JSON.stringify(payload)});
   const d=await r.json().catch(()=>({ok:false,error:"Unexpected response"}));
   if(!r.ok||!d.ok)throw Error(d.error||"Unable to submit interest");
-  info("Your interest has been recorded for review."+(d.reference?" Reference: "+d.reference+".":"")+" Mamta Care will contact eligible volunteers. No official ID is issued yet.");
+  info("Your volunteer application has been received."+(d.reference?" Reference: "+d.reference+".":"")+" Your payment and application are awaiting review.");
   form.reset();
  }catch(err){info(err.message||"Unable to submit. Please call Mamta Care for assistance.",true);}
  finally{btn.disabled=false;try{window.turnstile?.reset()}catch{}}

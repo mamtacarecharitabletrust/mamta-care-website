@@ -3630,15 +3630,7 @@ function Volunteer() {
 
           <p>
 
-            We welcome people who
-
-            would like to contribute
-
-            their time, skills and
-
-            support to our
-
-            initiatives.
+            Pay the ₹999 joining fee using the Mamta Care QR, then submit your UPI reference with your application. Our team will verify the payment and review your application.
 
           </p>
 
@@ -3657,7 +3649,7 @@ function Volunteer() {
 
           >
 
-            Open Volunteer Form
+            Apply as a volunteer · ₹999
 
           </a>
 

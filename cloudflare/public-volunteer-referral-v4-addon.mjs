@@ -31,8 +31,14 @@ async function mcctVolV4Submit(req,env){
   contactKey=await mcctWigV3Hash(env,"mcct:volunteer:phone:"+phone);
   bucket=await mcctWigV3Hash(env,"mcct:volunteer:ip:"+today+":"+(req.headers.get("CF-Connecting-IP")||"unknown"));
  }catch{return mcctVolV4Fail("Application service temporarily unavailable",503)}
- const dup=await env.DB.prepare("SELECT 1 AS found FROM mcct_public_volunteer_intakes WHERE contact_hash=? AND day_ist=? LIMIT 1").bind(contactKey,today).first();
- if(dup)return mcctWigV3Json({ok:true,received:true,message:"Your interest has been submitted for review if not already registered."},202);
+ const receipt=String(d.utr||'').trim();
+ if(!/^[0-9]{12}$/.test(receipt))return mcctVolV4Fail("Enter the 12-digit UPI reference from your successful payment.");
+ async function existing(){
+  const row=await env.DB.prepare("SELECT i.contact_hash,i.referral_id FROM mc_volunteer_payments p JOIN mcct_public_volunteer_intakes i ON i.referral_id=p.referral_id WHERE p.utr=?").bind(receipt).first();
+  if(!row)return null;
+  return row.contact_hash===contactKey?mcctWigV3Json({ok:true,received:true,reference:row.referral_id.slice(0,8).toUpperCase()},202):mcctVolV4Fail("This payment reference is already in use. Contact Mamta Care before making another payment.",409);
+ }
+ const previous=await existing();if(previous)return previous;
  const rate=await env.DB.prepare("INSERT INTO mcct_public_volunteer_rate(bucket,day_ist,submissions,updated_at) VALUES(?,?,1,?) ON CONFLICT(bucket) DO UPDATE SET submissions=submissions+1,updated_at=excluded.updated_at WHERE submissions<5").bind(bucket,today,ts).run();
  if((rate.meta?.changes||0)!==1)return mcctVolV4Fail("Daily submission limit reached. Contact Mamta Care directly.",429);
  const id=crypto.randomUUID();
@@ -42,12 +48,13 @@ async function mcctVolV4Submit(req,env){
     env.DB.prepare("INSERT INTO mca_referrals(id,referrer_type,referrer_id,name,email,phone,city,note,consent_confirmed,status,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)")
      .bind(id,"public_web","website_volunteer_form",name,email,phone,city,summary,1,"pending",ts),
     env.DB.prepare("INSERT INTO mcct_public_volunteer_intakes(referral_id,contact_hash,day_ist,created_at) SELECT ?,?,?,? WHERE changes()=1")
-     .bind(id,contactKey,today,ts)
+     .bind(id,contactKey,today,ts),
+    env.DB.prepare("INSERT INTO mc_volunteer_payments(referral_id,utr,amount) VALUES(?,?,999)").bind(id,receipt)
   ]);
   if((inserted[0]?.meta?.changes||0)!==1||(inserted[1]?.meta?.changes||0)!==1)return mcctVolV4Fail("Application not confirmed; please contact Mamta Care",503);
   return mcctWigV3Json({ok:true,received:true,reference:id.slice(0,8).toUpperCase(),status:"pending",id_card_issued:false,approved:false,message:"Volunteer interest received for administrator review. No ID or status is issued automatically."},202);
  }catch(e){
-  if(String(e?.message||e).includes("UNIQUE"))return mcctWigV3Json({ok:true,received:true,message:"Your interest has been submitted for review if not already registered."},202);
+  if(String(e?.message||e).includes("UNIQUE"))return (await existing())||mcctVolV4Fail("An application is already on file today. Contact Mamta Care with your reference; do not pay again.",409);
   console.error("MCCT_VOLUNTEER_APPLY",String(e?.name||"Error"));
   return mcctVolV4Fail("Unable to record interest. Please try again later.",503);
  }

@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS mc_volunteer_payments (referral_id TEXT PRIMARY KEY REFERENCES mca_referrals(id), utr TEXT NOT NULL UNIQUE, amount INTEGER NOT NULL CHECK(amount>0), verified_by TEXT, verified_at INTEGER);
