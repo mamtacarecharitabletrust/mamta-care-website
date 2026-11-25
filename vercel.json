@@ -17,5 +17,12 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/courier-my-hair",
+      "destination": "https://mamta-donor-desk-launch-new.bharathairseva-in.workers.dev/courier-my-hair",
+      "permanent": false
+    }
   ]
 }

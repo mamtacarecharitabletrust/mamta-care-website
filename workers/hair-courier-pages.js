@@ -1,0 +1,39 @@
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function page(title,body,script){
+ const nonce=crypto.randomUUID().replaceAll('-','');
+ return new Response('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+title+' | Mamta Care</title><style nonce="'+nonce+'">*{box-sizing:border-box}body{margin:0;background:#faf5ee;color:#34282f;font:16px/1.55 system-ui}main{max-width:690px;margin:auto;padding:25px 18px 70px}header{font-weight:700;color:#692a42}h1{line-height:1.14}form,article,section{padding:20px;border:1px solid #dfd1c7;border-radius:14px;background:white;margin:15px 0}label{display:block;margin:14px 0;font-weight:600}input,select,button,textarea{font:inherit}input:not([type=checkbox]),select,textarea{display:block;width:100%;padding:10px;margin-top:4px}button{background:#662841;color:white;border:0;border-radius:8px;padding:11px 17px;margin:4px 0;cursor:pointer}button:disabled{opacity:.55}a{color:#65243d}output{display:block}fieldset{border:0;margin:0;padding:0}small{font-weight:400}article a{margin-right:12px}#status{font-weight:600}</style><main><header>Mamta Care Charitable Trust</header><h1>'+title+'</h1>'+body+'<p id="status" role="status" aria-live="polite"></p></main><script nonce="'+nonce+'">'+script+'</script></html>',{headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; style-src 'nonce-"+nonce+"'; script-src 'nonce-"+nonce+"'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"}});
+}
+function donorClient(){
+ const $=id=>document.getElementById(id),status=$('status'),verify=$('verify'),details=$('details'),fields=$('fields');
+ let session;
+ const labels={hair:'hair photo',parcel:'parcel photo',video:'donation video'};
+ async function post(path,body,token){
+  const headers=token?{Authorization:'Bearer '+token}:{};
+  if(!(body instanceof File)){headers['Content-Type']='application/json';body=JSON.stringify(body);}
+  const response=await fetch('/courier-my-hair/'+path,{method:'POST',headers,body});
+  const result=await response.json();if(!response.ok)throw Error(result.error||'Please retry.');return result;
+ }
+ function receipt(state){details.hidden=true;status.textContent=(state==='approved'?'Approved. Your courier dispatch is recorded in Donor Desk.':'Received for admin review. Your courier dispatch will be recorded after approval.')+' Reference: '+session.id+'. Reopen this page to check the decision.';}
+ verify.onsubmit=async e=>{e.preventDefault();const b=verify.querySelector('button');b.disabled=true;status.textContent='Checking registration…';
+ try{session=await post('verify',{registration:$('reg').value,phone:$('phone').value});verify.hidden=true;if(session.state!=='draft'){receipt(session.state);return;}
+ details.hidden=false;status.textContent=session.reason?'Please submit corrected details: '+session.reason:'Registration verified.';
+ for(const k of session.files){$(k).required=false;$(k+'-state').textContent='Saved. Select a new file only to replace it.';}
+ }catch(err){status.textContent=err.message;}finally{b.disabled=false;}};
+ details.onsubmit=async e=>{e.preventDefault();fields.disabled=true;
+ try{
+ for(const k of Object.keys(labels)){const file=$(k).files[0];if(!file)continue;
+ if(file.size>(k==='video'?30:6)*1048576)throw Error('The '+labels[k]+' is too large.');
+ status.textContent='Uploading '+labels[k]+'…';await post(session.id+'/'+k,file,session.token);
+ $(k).value='';$(k).required=false;$(k+'-state').textContent='Saved.';}
+ status.textContent='Sending to Donor Desk…';const result=await post(session.id+'/submit',{carrier:$('carrier').value,awb:$('awb').value,date:$('date').value,consent:$('consent').checked},session.token);receipt(result.state);
+ }catch(err){status.textContent=err.message+' Previously saved files can be reused.';}finally{fields.disabled=false;}};
+}
+export function donorPage(carriers){
+ const file=(k,label,accept)=>'<label>'+label+'<input required id="'+k+'" type="file" accept="'+accept+'"><small id="'+k+'-state"></small></label>';
+ return page('Courier my hair','<p>Already dispatched your hair? Send your parcel details for admin review, or verify your registration below to check an earlier submission. Need the correct shipping address before dispatch? <a href="tel:+918500012190">Call 8500012190</a>.</p><form id="verify"><label>Registration ID<input id="reg" required maxlength="80"></label><label>Registered mobile number<input id="phone" type="tel" inputmode="numeric" pattern="[0-9]{10}" maxlength="10" required></label><button>Continue</button></form><form id="details" hidden><fieldset id="fields"><label>Courier company<select required id="carrier"><option value="">Choose a carrier</option>'+carriers.map(c=>'<option>'+esc(c)+'</option>').join('')+'</select></label><label>AWB or consignment number<input required id="awb" minlength="5" maxlength="65"></label><label>Dispatch date<input required id="date" type="date"></label><p>Attach two photos (JPEG, PNG or WebP, up to 6 MB each) and a short video (MP4, MOV or WebM, up to 30 MB). You can speak in your own language and keep your face outside the frame.</p>'+file('hair','Photo of the donated hair','image/jpeg,image/png,image/webp')+file('parcel','Photo of the packed parcel or courier receipt','image/jpeg,image/png,image/webp')+'<p>Hold the donated hair and say, in your own words, “I am donating my hair through Mamta Care Charitable Trust to support cancer patients.”</p>'+file('video','Donation video','video/mp4,video/quicktime,video/webm')+'<label><input type="checkbox" required id="consent"> I agree to private review of these files for my donation. This gives no permission for publicity.</label><button>Submit for admin review</button></fieldset></form><a href="https://mamta-care-website.vercel.app/track-your-hair-donation">Track my donation</a>', '('+donorClient.toString()+')()');
+}
+function reviewClient(){document.addEventListener('submit',async e=>{e.preventDefault();const form=e.target,mode=e.submitter.value,reason=form.elements.reason.value.trim();if(mode==='changes'&&!reason){form.elements.reason.focus();return;}const field=form.querySelector('fieldset');field.disabled=true;const status=document.getElementById('status');try{const r=await fetch('/app/hair-courier-reviews/'+form.dataset.id+'/'+mode,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reason})});const data=await r.json();if(!r.ok)throw Error(data.error);form.closest('article').remove();status.textContent=mode==='approve'?'Dispatch recorded and tracking sync queued.':'Correction requested. The donor can reopen Courier my hair.';}catch(err){status.textContent=err.message;field.disabled=false;}});}
+export function adminPage(rows){
+ const cards=rows.map(r=>'<article><h2>'+esc(r.registration_id)+'</h2><p>'+esc(r.carrier)+' · '+esc(r.awb)+' · '+esc(r.dispatch_date)+'</p>'+['hair','parcel','video'].map((k,i)=>'<a target="_blank" rel="noopener" href="/app/hair-courier-reviews/'+esc(r.id)+'/'+k+'">'+['Hair photo','Parcel photo','Video'][i]+'</a>').join('')+'<form data-id="'+esc(r.id)+'"><fieldset><label>Reason if changes are needed<textarea name="reason" maxlength="500"></textarea></label><button value="approve">Approve dispatch</button> <button value="changes">Request changes</button></fieldset></form></article>').join('');
+ return page('Hair courier reviews','<a href="/app/premium">Back to Donor Desk</a><p>Check the two photos, video, carrier and AWB before approving dispatch. Physical receipt is recorded separately.</p>'+(cards||'<p>No submissions awaiting review.</p>'),'('+reviewClient.toString()+')()');
+}
