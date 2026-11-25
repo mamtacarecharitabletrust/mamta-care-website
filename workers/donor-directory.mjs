@@ -1,0 +1,42 @@
+const list='/app/premium/donors';
+const labels={unallocated:'Not allocated',pending:'Pending',completed:'Completed · Waiting for verification',verified:'Verified'};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const verified="upper(trim(coalesce(d.verification_status,'')))='VERIFIED'";
+const stage="CASE WHEN "+verified+" THEN 'verified' WHEN lower(trim(d.followup_status))='completed' THEN 'completed' WHEN trim(coalesce(d.assigned_to,''))='' THEN 'unallocated' ELSE 'pending' END";
+export function timestamp(value){
+ if(value==null||value==='')return NaN;
+ if(typeof value==='number'||/^\d{10,13}$/.test(value)){const n=Number(value);return n<1e11?n*1000:n}
+ let s=String(value).trim(),m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[, ]+([\d:]+)(?:\s*(AM|PM))?)?$/i);
+ if(m){const [h,min,sec]=(m[4]||'0').split(':').map(Number);return Date.UTC(+m[3],+m[1]-1,+m[2],m[5]?h%12+(m[5].toUpperCase()==='PM'?12:0):h,min||0,sec||0)-19800000}
+ if(/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2})?$/.test(s))s=s.replace(' ','T')+'+05:30';
+ return Date.parse(s)
+}
+const dateFormat=new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit'});
+function time(ms,now){if(!Number.isFinite(ms))return 'Unknown';const minutes=Math.floor((now-ms)/60000);let n=minutes,unit='minute';if(minutes>=1440){n=Math.floor(minutes/1440);unit='day'}else if(minutes>=60){n=Math.floor(minutes/60);unit='hour'}const age=minutes<0?'Check date':minutes===0?'Just now':n+' '+unit+(n===1?'':'s')+' ago';return esc(age)+'<small>'+esc(dateFormat.format(ms))+' IST</small>'}
+export const directoryCss=`
+.md-tabs,.md-filters{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.md-tabs a,.md-filters a{display:inline-flex;gap:7px;align-items:center;min-height:42px;padding:5px 12px;background:white;border:1px solid #cbbac3;border-radius:8px;color:#53233c;text-decoration:none}.md-tabs a[aria-current],.md-filters a[aria-current]{outline:2px solid #642744;font-weight:700}.md-status{display:inline-block;padding:4px 9px;border-radius:7px;font-weight:700}.md-unallocated{background:#fde2e2;color:#8b1724}.md-pending{background:#ffebcb;color:#854100}.md-completed{background:#d9f2e3;color:#145834}.md-verified{background:#e9e7f6;color:#483866}.md-directory small{display:block;color:#63545d}.md-directory table{width:100%;border-collapse:collapse}.md-directory th,.md-directory td{text-align:left;padding:10px;border-bottom:1px solid #ddd}.md-directory form{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.md-directory input{padding:9px}.md-directory a:focus-visible{outline:3px solid #652540}@media(max-width:720px){.md-directory thead{display:none}.md-directory tr{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px;border:1px solid #dfd3d9;border-radius:10px;margin:10px 0;background:white}.md-directory td{display:block;padding:0;border:0}.md-directory td:first-child,.md-directory td:nth-child(2){grid-column:1/-1}.md-directory td[data-label]:before{content:attr(data-label);display:block;font-weight:600;font-size:.82em}.md-directory table,.md-directory tbody{display:block}}
+`;
+export async function directory(db,user,params){
+ const previous=params.get('view')==='previous'||params.get('status')==='verified',search=(params.get('q')||'').trim().slice(0,65),staff=user.role==='admin'?(params.get('staff')||'').slice(0,90):user.username;
+ const filter=previous?'':(['unallocated','pending','completed'].includes(params.get('stage'))?params.get('stage'):'');
+ let where=' WHERE NOT EXISTS(SELECT 1 FROM mc_donor_recycle r WHERE r.donor_id=d.id)',bind=[];
+ if(staff==='_unassigned')where+=" AND trim(coalesce(d.assigned_to,''))=''";else if(staff){where+=' AND d.assigned_to=?';bind.push(staff)}
+ if(search){where+=' AND (d.full_name LIKE ? OR d.registration_id LIKE ? OR d.phone LIKE ?)';bind.push(...Array(3).fill('%'+search+'%'))}
+ const from=' FROM donors d LEFT JOIN staff s ON s.username=d.assigned_to'+where;
+ const stmt=(sql,values)=>values.length?db.prepare(sql).bind(...values):db.prepare(sql);
+ const [counts,records]=await db.batch([stmt('SELECT '+stage+' AS stage,count(*) AS n'+from+' GROUP BY 1',bind),stmt('SELECT d.id,d.full_name,d.registration_id,d.city,d.registered_at,d.created_at,d.updated_at,d.followup_status,d.assigned_to,s.display_name,'+stage+' AS stage'+from+' AND '+(previous?verified:'NOT ('+verified+')')+(filter?' AND ('+stage+')=?':''),filter?[...bind,filter]:bind)]);
+ const count=Object.fromEntries(counts.results.map(r=>[r.stage,r.n])),rows=records.results;for(const d of rows)d.applied=timestamp(d.registered_at);
+ rows.sort((a,b)=>(Number.isFinite(b.applied)?b.applied:0)-(Number.isFinite(a.applied)?a.applied:0)||Number(b.created_at)-Number(a.created_at)||a.id.localeCompare(b.id));
+ const page=Math.min(Math.max(1,parseInt(params.get('page'),10)||1),Math.max(1,Math.ceil(rows.length/40)));
+ const href=(prev,st='',pg=1)=>{const p=new URLSearchParams();if(prev)p.set('view','previous');if(st)p.set('stage',st);if(search)p.set('q',search);if(staff&&user.role==='admin')p.set('staff',staff);if(pg>1)p.set('page',pg);return esc(list+(p.size?'?'+p:''))};
+ const anchor=(url,label,selected)=>'<a href="'+url+'"'+(selected?' aria-current="page"':'')+'>'+label+'</a>';
+ const now=Date.now();const body=rows.slice((page-1)*40,page*40).map(d=>{const detail=user.role==='admin'?'/app/premium/donor/'+encodeURIComponent(d.id):'/app/premium/workspace?q='+encodeURIComponent(d.registration_id||d.full_name);return '<tr><td><strong>'+esc(d.full_name)+'</strong><small>'+esc([d.registration_id,d.city].filter(Boolean).join(' · '))+'</small></td><td><span class="md-status md-'+d.stage+'">'+labels[d.stage]+'</span><small>'+esc([d.display_name||d.assigned_to,['Call again','Not answered'].includes(d.followup_status)?d.followup_status:''].filter(Boolean).join(' · '))+'</small></td><td data-label="Applied">'+time(d.applied,now)+'</td><td data-label="Updated">'+time(timestamp(d.updated_at),now)+'</td><td>'+anchor(esc(detail),'Open donor',false)+'</td></tr>'}).join('');
+ const input=(k,v)=>v?'<input type="hidden" name="'+k+'" value="'+esc(v)+'">':'';
+ const total=(count.completed||0)+(count.pending||0)+(count.unallocated||0);
+ return '<section class="card md-directory"><h1>'+ (previous?'Previous donors':'Current donors')+'</h1><nav class="md-tabs" aria-label="Donor lists">'+anchor(href(false),'Current donors · '+total,!previous)+anchor(href(true),'Previous donors · '+(count.verified||0),previous)+'</nav>'+
+ (previous?'':'<nav class="md-filters" aria-label="Current donor status">'+anchor(href(false),'All current',!filter)+Object.keys(labels).filter(k=>k!=='verified').map(k=>anchor(href(false,k),'<span class="md-status md-'+k+'">'+labels[k]+' · '+(count[k]||0)+'</span>',filter===k)).join('')+'</nav>')+
+ '<form action="'+list+'">'+input('view',previous?'previous':'')+input('stage',filter)+input('staff',user.role==='admin'?staff:'')+'<label>Search donors <input name="q" type="search" value="'+esc(search)+'" placeholder="Name, registration ID or phone"></label><button class="btn">Search</button></form>'+
+ (user.role==='admin'?'<div class="actions"><a href="/app/premium/scan">Scan QR / barcode</a> · <a href="/app/premium/category/donors">Donor tools</a> · <a href="/app/premium/recycle-bin">Recycle Bin</a></div>':'')+
+ (body?'<table><thead><tr><th>Donor</th><th>Status / assigned to</th><th>Applied</th><th>Last updated</th><th></th></tr></thead><tbody>'+body+'</tbody></table>':'<p>No donors match this view.</p>')+
+ '<nav class="md-tabs" aria-label="Pages">'+(page>1?anchor(href(previous,filter,page-1),'Previous page',false):'')+(page*40<rows.length?anchor(href(previous,filter,page+1),'Next page',false):'')+'</nav></section>'
+}
