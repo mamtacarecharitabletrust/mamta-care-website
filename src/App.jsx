@@ -3630,7 +3630,7 @@ function Volunteer() {
 
           <p>
 
-            Pay the ₹999 joining fee using the Mamta Care QR, then submit your UPI reference with your application. Our team will verify the payment and review your application.
+            Choose your volunteer role and upload address proof and government ID. The form shows the ₹999 joining fee and payment QR only for roles that require payment.
 
           </p>
 
@@ -3649,7 +3649,7 @@ function Volunteer() {
 
           >
 
-            Apply as a volunteer · ₹999
+            Apply as a volunteer
 
           </a>
 

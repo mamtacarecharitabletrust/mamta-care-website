@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS mc_volunteer_proofs(referral_id TEXT PRIMARY KEY REFERENCES mca_referrals(id),role TEXT NOT NULL,fee INTEGER NOT NULL CHECK(fee IN (0,999)),address_mime TEXT NOT NULL,id_mime TEXT NOT NULL);
