@@ -63,6 +63,7 @@ const WEBSITE_REGISTRATION_ENABLED = true; // Server still checks Cloudflare reg
 
 export default function HairDonationRegistration() {
   const driveId = new URLSearchParams(window.location.search).get("drive");
+  const [schoolBatch,setSchoolBatch] = React.useState("");
   const [driveInfo, setDriveInfo] = React.useState(null);
   React.useEffect(() => {
     if (driveId === null) return;
@@ -163,6 +164,7 @@ export default function HairDonationRegistration() {
     }
   };
   const validate = (current) => {
+    if (driveInfo?.batches?.length && !driveInfo.batches.includes(schoolBatch)) return "Select your class or session batch.";
     if (driveId !== null && !driveInfo?.school) return driveInfo?.error || "Checking your school drive…";
     if (current === 2) {
       if (!values.full_name.trim() || !/^[0-9]{10}$/.test(values.phone.replace(/\D/g, "")) ||
@@ -248,7 +250,7 @@ export default function HairDonationRegistration() {
       if (!token) throw new Error("Complete the security check first.");
       if (!requestId.current) requestId.current = crypto.randomUUID();
       const body = new FormData();
-      if (driveId !== null) { body.set("school_drive_id", driveId); body.set("drive_adult_confirmation", driveConsent ? "yes" : "no"); }
+      if (driveId !== null) { body.set("school_drive_id", driveId); body.set("school_batch",schoolBatch); body.set("drive_adult_confirmation", driveConsent ? "yes" : "no"); }
       const fields = {
         ...values,
         submission_uuid: requestId.current,
@@ -291,6 +293,7 @@ export default function HairDonationRegistration() {
       <div className="mchr-top"><img src={officialLogo} alt="Official Mamta Care Charitable Trust logo" /><div>
         <p className="mchr-overline">MAMTA CARE CHARITABLE TRUST</p>
         <h1>{driveId ? "School drive enrollment" : "Donate Hair. Give Hope."}</h1>
+        {driveInfo?.batches?.length > 0 && <label>Class or session batch <select required value={schoolBatch} onChange={e=>setSchoolBatch(e.target.value)}><option value="">Select your batch</option>{driveInfo.batches.map(g=><option key={g}>{g}</option>)}</select></label>}
         {driveId !== null && <p aria-live="polite">{driveInfo?.school ? <strong>{driveInfo.school} · {driveInfo.drive_date}</strong> : (driveInfo?.error || "Checking your school drive…")}</p>}
         {driveId && <p>Register one student at a time. If the student is under 18, a parent or guardian should complete the form with them.</p>}
         <p>Secure hair donation registration · Designed for mobile and desktop</p>
