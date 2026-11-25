@@ -953,6 +953,7 @@ function Home() {
                 <span className="track-arrow">↗</span>
               </motion.a>
               <a className="btn hero-secondary" href="/courier-my-hair">Courier my hair</a>
+              <a className="btn hero-secondary" href="/hair-donation/india">Find hair donation by city</a>
             </motion.div>
 
             <TrustNotice />
@@ -4201,6 +4202,7 @@ function HairDonation() {
             Register Hair Donation
 
           </a>
+          <p><a href="/hair-donation/india">Find doorstep hair donation and courier options by city</a></p>
 
         </div>
 

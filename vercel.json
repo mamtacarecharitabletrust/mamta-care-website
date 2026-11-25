@@ -58,6 +58,10 @@
       "destination": "/sitemap.xml"
     },
     {
+      "source": "/hair-donation/india",
+      "destination": "/regional-guides/india.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
