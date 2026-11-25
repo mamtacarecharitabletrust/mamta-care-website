@@ -40,18 +40,12 @@ export function donationLabel(raw){
  if(length)return length[1]+(length[2]?'–'+length[2]:'')+' inches';
  return 'Hair donation';
 }
-const eligible=" FROM mc_public_appreciations a JOIN donors d ON d.id=a.donor_id WHERE upper(trim(d.verification_status))='VERIFIED' AND NOT EXISTS (SELECT 1 FROM mc_donor_recycle r WHERE r.donor_id=d.id)";
+const eligible=" FROM mc_public_appreciations a JOIN donors d ON d.id=a.donor_id LEFT JOIN mcy_donor_media y ON y.donor_id=d.id AND y.stage='after' LEFT JOIN mcx_after_photos x ON x.donor_id=d.id LEFT JOIN mc_gallery_grants g ON g.donor_id=d.id WHERE a.hidden=0 AND upper(trim(d.verification_status))='VERIFIED' AND NOT EXISTS(SELECT 1 FROM mc_donor_recycle r WHERE r.donor_id=d.id) AND coalesce(y.object_key,x.object_key) IS NOT NULL AND length(trim(d.full_name))>0 AND length(trim(d.city))>0 AND g.source_key=coalesce(y.object_key,x.object_key) AND g.display_name=d.full_name AND g.city=d.city";
 const headers={'Cache-Control':'no-store','Access-Control-Allow-Origin':'https://mamta-care-website.vercel.app','X-Content-Type-Options':'nosniff'};
 export async function publicCards(req,env){
- const offset=Number(new URL(req.url).searchParams.get('offset')||0);
- if(!Number.isSafeInteger(offset)||offset<0||offset>1000000)return Response.json({error:'Invalid page'},{status:400,headers});
- const start=Math.floor((Date.now()/1000+19800)/86400)*86400-19800;
- const [counts,page]=await env.APPRECIATIONS_DB.batch([
-  env.APPRECIATIONS_DB.prepare('SELECT count(*) AS n'+eligible+' AND a.first_verified>=? AND a.first_verified<?').bind(start,start+86400),
-  env.APPRECIATIONS_DB.prepare('SELECT a.seq,d.hair_length'+eligible+' AND a.hidden=0 ORDER BY a.first_verified IS NULL,a.first_verified DESC,a.seq DESC LIMIT 7 OFFSET ?').bind(offset)
- ]);
- const items=page.results.slice(0,6).map(r=>({id:r.seq,label:donationLabel(r.hair_length),quote:appreciation(r.seq)}));
- return Response.json({today:counts.results[0].n,items,more:page.results.length>6},{headers});
+ const page=await env.APPRECIATIONS_DB.prepare('SELECT a.seq,g.public_id,g.display_name,g.city'+eligible+' ORDER BY a.seq DESC').all();
+ const items=page.results.map(r=>({id:r.seq,quote:r.seq<=144?appreciation(r.seq):'Thank you, '+r.display_name+', for supporting wig making through Mamta Care.',publicPortrait:{url:'https://mamta-donor-desk-launch-new.bharathairseva-in.workers.dev/public/donor-portraits/'+r.public_id,displayName:r.display_name,city:r.city}}));
+ return Response.json({items,more:false},{headers});
 }
 export async function hideCard(req,env){
  const input=await req.json();const number=Number(input.card),reg=String(input.registration||'').trim().toUpperCase();

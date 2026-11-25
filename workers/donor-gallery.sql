@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS mc_gallery_grants(donor_id TEXT PRIMARY KEY,public_id TEXT NOT NULL UNIQUE,source_key TEXT NOT NULL,display_name TEXT NOT NULL,city TEXT NOT NULL,approved_by TEXT NOT NULL,approved_at INTEGER NOT NULL);
