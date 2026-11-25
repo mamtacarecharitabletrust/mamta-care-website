@@ -48,14 +48,19 @@ export function donorPage(carriers){
 .mc-trust-notice .mc-trust-proof{grid-column:2;justify-self:start;color:var(--trust-ink);font:650 13px/1.5 system-ui,sans-serif;padding:2px 0;background:transparent;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--trust-accent)}
 .mc-trust-notice .mc-trust-proof:focus-visible{outline:2px solid currentColor;outline-offset:2px}
 .cinematic-hero .mc-trust-notice{--trust-ink:#fff8e7;--trust-secondary:#fff8ee;--trust-accent:#f2daa4;max-width:660px;text-shadow:0 1px 4px #161710}
-@media(max-width:540px){.mc-trust-notice{grid-template-columns:30px minmax(0,1fr);gap:0 8px}.mc-trust-notice .mc-trust-mark{width:30px;height:30px;align-self:start}.mc-trust-notice .mc-trust-id{display:block}.mc-trust-notice .mc-trust-id::before{display:none}}</style></head><body>
+@media(max-width:540px){.mc-trust-notice{grid-template-columns:30px minmax(0,1fr);gap:0 8px}.mc-trust-notice .mc-trust-mark{width:30px;height:30px;align-self:start}.mc-trust-notice .mc-trust-id{display:block}.mc-trust-notice .mc-trust-id::before{display:none}}
+.mc-trust-notice .mc-trust-detail{display:block;font-size:15px;line-height:1.55;color:var(--trust-ink)}
+.mc-trust-notice .mc-trust-detail strong{display:inline;font:800 1.16em/1.3 system-ui,sans-serif;color:inherit;background:linear-gradient(transparent 70%,#cc9c4b55 70%);box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.cinematic-hero .mc-trust-notice .mc-trust-detail strong{color:#ffe0a3}
+.mc-trust-notice .mc-trust-id::before{display:none}
+</style></head><body>
  <header class="mast"><div class="wrap"><a class="brand" href="${site}/"><img src="${site}/courier/trust-logo.webp" alt="Mamta Care logo" width="66" height="66"><span>Mamta Care<small>Charitable Trust</small></span></a><nav aria-label="Donor services"><a href="${track}">Track my donation</a><a href="tel:+918500012190">Call Mamta Care</a></nav></div></header>
  <main class="wrap"><section class="hero" aria-labelledby="title"><div class="hero-copy"><h1 id="title">Courier my hair</h1><p>Your donated hair can become part of a wig for someone going through cancer treatment. Here’s how to pack your donation and let our team know it’s on its way.</p><a href="#guide">Read the packing guide ↓</a></div><img src="${site}/courier/hair-donor.webp" alt="A Mamta Care hair donor holding two donated braids" width="337" height="600"></section>
  <aside class="mc-trust-notice" aria-label="Mamta Care registration">
       <img class="mc-trust-mark" src="${site}/courier/trust-logo.webp" alt="Mamta Care Charitable Trust" width="58" height="58" />
       <div class="mc-trust-copy">
         <strong class="mc-trust-title">A women-led charitable trust</strong>
-        <span class="mc-trust-detail">Registered on the Government of India’s NGO Darpan portal · NITI Aayog</span>
+        <span class="mc-trust-detail">Registered on the <strong>Government of India</strong>’s NGO Darpan portal · NITI Aayog</span>
         <span class="mc-trust-id">NGO Darpan ID · MH/2025/0518578</span>
       </div>
       <a class="mc-trust-proof" href="${site}/official-documents">View registration documents</a>
