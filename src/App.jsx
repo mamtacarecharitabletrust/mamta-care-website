@@ -1,3 +1,4 @@
+import DonorAppreciations from "./DonorAppreciations";
 import TrustNotice from "./TrustNotice";
 import React, { useRef, useState } from "react";
 import HairDonationRegistration from "./HairDonationRegistration";
@@ -1007,6 +1008,7 @@ function Home() {
 
       ====================================================== */}
 
+      <DonorAppreciations />
       <section className="statement-section">
 
         <Reveal className="statement-inner">
