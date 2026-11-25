@@ -55,6 +55,7 @@ export default function DonationTracker({initialId}) {
   return <main className="mc-track-layout"><div className="mc-track">
     <h1>Track your hair donation</h1>
     <p>Enter the registration ID from your confirmation or certificate and the last four digits of your registered mobile number.</p>
+    <p>Sending your donation by courier? <a href="/courier-my-hair">Courier my hair</a></p>
     <form onSubmit={lookup}>
       <label>Official registration ID<input required maxLength={75} value={id} disabled={busy} autoCapitalize="characters" spellCheck={false} onChange={e=>{setId(e.target.value);setResult(null);setError('');}} /></label>
       <label>Last four mobile digits<input required type="text" inputMode="numeric" pattern="[0-9]{4}" maxLength={4} value={digits} disabled={busy} onChange={e=>{setDigits(e.target.value.replace(/\D/g,''));setResult(null);setError('');}} /></label>

@@ -291,11 +291,13 @@ export default function HairDonationRegistration() {
           <strong>Kindly contact Mamta Care Charitable Trust with your registration number</strong> if you need assistance or want to arrange the next steps of your hair donation.
           <a href="tel:+918500012190">Call Mamta Care: 8500012190</a>
         </div>
+        <a className="mchr-secondary" href="/courier-my-hair">Courier my hair</a>
+        <Link className="mchr-secondary" to="/track">Track my donation</Link>
         <Link className="mchr-secondary" to="/">Return to website</Link>
       </section> : syncPending ? <section className="mchr-panel mchr-pending" role="status" aria-live="polite">
         {receiptConfirmed ? <>
           <span className="mchr-success-icon" aria-hidden="true">✓</span>
-          <h2>Registration Successful!</h2>
+          <h2>Application received</h2>
           <p><strong>Thank you for choosing Mamta Care Charitable Trust.</strong></p>
           <p>Your hair donation application and both photographs have been securely received. No administrator photo approval is required.</p>
           <p>You are not just donating hair — you are gifting confidence, dignity and hope to someone undergoing cancer treatment.</p>
