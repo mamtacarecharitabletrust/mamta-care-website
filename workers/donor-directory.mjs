@@ -34,6 +34,7 @@ export async function directory(db,user,params){
  const total=(count.completed||0)+(count.pending||0)+(count.unallocated||0);
  return '<section class="card md-directory"><h1>'+ (previous?'Previous donors':'Current donors')+'</h1><nav class="md-tabs" aria-label="Donor lists">'+anchor(href(false),'Current donors · '+total,!previous)+anchor(href(true),'Previous donors · '+(count.verified||0),previous)+'</nav>'+
  (previous?'':'<nav class="md-filters" aria-label="Current donor status">'+anchor(href(false),'All current',!filter)+Object.keys(labels).filter(k=>k!=='verified').map(k=>anchor(href(false,k),'<span class="md-status md-'+k+'">'+labels[k]+' · '+(count[k]||0)+'</span>',filter===k)).join('')+'</nav>')+
+ (previous?'<p><a class="btn" href="/app/premium/donor-audit">📋 Audit</a></p>':'')+
  '<form action="'+list+'">'+input('view',previous?'previous':'')+input('stage',filter)+input('staff',user.role==='admin'?staff:'')+'<label>Search donors <input name="q" type="search" value="'+esc(search)+'" placeholder="Name, registration ID or phone"></label><button class="btn">Search</button></form>'+
  (user.role==='admin'?'<div class="actions"><a href="/app/premium/scan">Scan QR / barcode</a> · <a href="/app/premium/category/donors">Donor tools</a> · <a href="/app/premium/recycle-bin">Recycle Bin</a></div>':'')+
  (body?'<ul class="md-records">'+body+'</ul>':'<p>No donors match this view.</p>')+'</section>'
