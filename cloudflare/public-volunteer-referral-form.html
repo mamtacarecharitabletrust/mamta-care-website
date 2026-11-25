@@ -46,7 +46,7 @@ footer{text-align:center;border-top:1px solid #e5e0d5;color:#6d8475;padding:20px
 <p>Help Mamta Care promote voluntary hair donation and compassionate wig support for people affected by cancer. Whether you are a trained hairstylist, community organizer or awareness volunteer, you can express your interest here.</p>
 <div class="info"><strong>What happens after registration?</strong>
 <p>1. Choose a role and attach your address proof and government ID.</p>
-<p>2. Only fee-paying roles display a payment QR. The team reviews your documents and any applicable payment.</p>
+<p>2. Paid roles use verified mobile checkout. The team reviews your documents and any applicable payment.</p>
 <p>3. An official volunteer ID is issued only after authorization and verification; this form alone does not create a login or ID card.</p></div>
 <div class="info"><strong>Hair donation guidance</strong><p>Usable donated hair must measure at least <b>14 inches, excluding split ends</b>. Complete head shaving is also an accepted donation method. Only authorized professionals should undertake haircuts or shaves.</p></div>
 <p>Need help? Call <strong>8500012190</strong>.</p>
@@ -85,7 +85,7 @@ footer{text-align:center;border-top:1px solid #e5e0d5;color:#6d8475;padding:20px
 <label>Government ID proof<input type="file" required name="id_proof" accept="image/jpeg,image/png,application/pdf"></label>
 <label class="consent"><input type="checkbox" name="consent_confirmed" required><span>I consent to Mamta Care contacting me for volunteer screening, safety training, agreement and identity verification where applicable.</span></label>
 <label class="consent"><input type="checkbox" name="privacy_accepted" required><span>I understand the form is an expression of interest, not a guarantee of approval, employment, salary or an official volunteer ID card.</span></label>
-<section hidden id="fee-panel" class="info"><h3>Application scrutiny fee · ₹999</h3><p>This fee covers only the review of your application and documents. Payment does not guarantee selection or enrol you as a volunteer of Mamta Care Charitable Trust.</p><label class="consent"><input type="checkbox" name="fee_ack" disabled><span>I understand that ₹999 is for application scrutiny only. Volunteer status requires separate approval.</span></label><div id="qr-payment"><p><a class="upi-pay" target="_blank" rel="noopener noreferrer" href="upi://pay?pa=8600616035%40idfcfirst&amp;pn=Anirudh+Mukund+Thakur&amp;cu=INR&amp;am=999.00&amp;tn=Mamta+Care+volunteer+scrutiny+fee">Open UPI app · Pay ₹999</a></p><p>Keep this application tab open. After paying, return to your browser and enter the 12-digit UTR here. Mamta Care verifies the credit against its bank record before approval.</p><p>Alternatively, scan the Mamta Care QR in your UPI app and enter ₹999. On the same phone, save the QR and use your UPI app’s scan-from-gallery option. Check the recipient before paying.</p><img id="fee-qr" alt="Mamta Care payment QR" width="240"><p><a href="/volunteer-payment-qr.jpg" download="Mamta-Care-UPI.jpg">Save payment QR</a></p><label>UPI reference / UTR (12 digits)<input name="utr" disabled inputmode="numeric" minlength="12" maxlength="12" pattern="[0-9]{12}"></label><p>Find the reference in your successful payment receipt. If you retry this form, use the same reference and pay only once.</p></div><p id="gateway-note" hidden>Your application is saved before checkout. After payment, Mamta Care checks the result directly with PhonePe.</p></section><div class="turnstile"><div class="cf-turnstile" data-sitekey="MCCT_WIG_SITEKEY_PLACEHOLDER" data-theme="light" data-appearance="always"></div></div>
+<section hidden id="fee-panel" class="info"><h3>Application scrutiny fee · ₹999</h3><p>This fee covers only the review of your application and documents. Payment does not guarantee selection or enrol you as a volunteer of Mamta Care Charitable Trust.</p><label class="consent"><input type="checkbox" name="fee_ack" disabled><span>I understand that ₹999 is for application scrutiny only. Volunteer status requires separate approval.</span></label><p id="gateway-unavailable" hidden>Paid applications are temporarily unavailable while Mamta Care connects automatic payment verification. If you already paid, contact Mamta Care on 8500012190 before making another payment.</p><p id="gateway-note" hidden>Your application is saved before checkout. After payment, Mamta Care checks the result directly with PhonePe.</p></section><div class="turnstile"><div class="cf-turnstile" data-sitekey="MCCT_WIG_SITEKEY_PLACEHOLDER" data-theme="light" data-appearance="always"></div></div>
 <button type="submit" id="submit">Submit volunteer application</button>
 <div id="response" role="status" aria-live="polite"></div>
 </form>
@@ -108,15 +108,15 @@ function displayFee(){
  const paid=form.elements.interest.selectedOptions[0]?.dataset.fee==='999';
  document.getElementById('fee-panel').hidden=!paid;
  const ack=fields.fee_ack;ack.disabled=!paid;ack.required=paid;if(!paid)ack.checked=false;
- document.getElementById('qr-payment').hidden=mobileCheckout;document.getElementById('gateway-note').hidden=!mobileCheckout;
- btn.textContent=paid&&mobileCheckout?'Save application and continue to payment':'Submit volunteer application';
- const utr=form.elements.utr;utr.disabled=!paid||mobileCheckout;utr.required=paid&&!mobileCheckout;
- if(paid&&!mobileCheckout)document.getElementById('fee-qr').src='/volunteer-payment-qr.jpg';else{utr.value='';document.getElementById('fee-qr').removeAttribute('src')}
+ document.getElementById('gateway-unavailable').hidden=mobileCheckout;
+ document.getElementById('gateway-note').hidden=!mobileCheckout;
+ btn.disabled=paid&&!mobileCheckout;
+ btn.textContent=paid?(mobileCheckout?'Save application and continue to payment':'Paid applications temporarily unavailable'):'Submit volunteer application';
 }
 form.elements.interest.addEventListener('change',displayFee);window.addEventListener('pageshow',displayFee);
 function info(text,bad=false){box.textContent=text;box.className="show"+(bad?" bad":"");box.scrollIntoView({behavior:"smooth",block:"nearest"});}
 form.addEventListener("submit",async e=>{
- e.preventDefault();if(!form.reportValidity())return;
+ e.preventDefault();if((fields.interest.selectedOptions[0]?.dataset.fee==='999'&&!mobileCheckout)||!form.reportValidity())return;
  const payload=new FormData(form);
  for(const field of ['address_proof','id_proof']){const file=payload.get(field);if(!file?.size||file.size>5*1024*1024){info('Choose two documents of up to 5 MB each.',true);return}}
  if(!payload.get('cf-turnstile-response')){info('Please complete the security verification.',true);return}
@@ -129,7 +129,7 @@ form.addEventListener("submit",async e=>{
   info("Your volunteer application has been received."+(d.reference?" Reference: "+d.reference+".":"")+" Your application is awaiting review.");
   form.reset();updateDistricts();displayFee();
  }catch(err){info(err.message||"Unable to submit. Please call Mamta Care for assistance.",true);}
- finally{btn.disabled=false;try{window.turnstile?.reset()}catch{}}
+ finally{displayFee();try{window.turnstile?.reset()}catch{}}
 });
 })();
 </script></body></html>

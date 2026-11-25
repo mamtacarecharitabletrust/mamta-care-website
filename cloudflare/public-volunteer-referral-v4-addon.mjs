@@ -43,6 +43,7 @@ async function mcctVolV4Submit(req,env){
  const digits=rawPhone.replace(/[^0-9]/g,"");
  const phone=digits.length===10?"+91"+digits:"+"+digits;
  const fee=volunteerRoleFees.get(interest);
+ if(fee&&!phonePeEnabled(env))return mcctVolV4Fail('Paid applications require automatic payment verification. If you have already paid, contact Mamta Care before paying again.',503);
  const state=String(d.state||''),district=String(d.district||'');
  const towns=Object.hasOwn(volunteerLocations,state)&&Object.hasOwn(volunteerLocations[state],district)?volunteerLocations[state][district]:null;
  if(!towns||(d.city!=='__other'&&!towns.includes(city))||(d.city==='__other'&&(typeof d.city_other!=='string'||d.city_other.trim().length>100)))return mcctVolV4Fail('Select your state, district and city.');
@@ -62,19 +63,15 @@ async function mcctVolV4Submit(req,env){
  const browser=automatic?await sessionHash(req):null;
  if(automatic&&!browser)return mcctVolV4Fail('Reload the application to start secure mobile checkout.',409);
  const resume=()=>mcctWigV3Json({ok:true,checkout:'/volunteer-checkout'},202);
- const receipt=fee&&!automatic?String(d.utr||'').trim():'';
- if(fee&&!automatic&&!/^[0-9]{12}$/.test(receipt))return mcctVolV4Fail("Enter the 12-digit UPI reference from your successful payment.");
+
  async function existing(){
   if(automatic){
    const same=await env.DB.prepare('SELECT i.contact_hash FROM mc_vol_phonepe g JOIN mcct_public_volunteer_intakes i ON i.referral_id=g.referral_id WHERE g.session_hash=?').bind(browser).first();
    if(same)return same.contact_hash===contactKey?resume():mcctVolV4Fail('This browser already has a payment application. Use a separate browser profile for another applicant.',409);
    return null;
   }
-  if(!fee){const prior=await env.DB.prepare('SELECT i.referral_id FROM mcct_public_volunteer_intakes i JOIN mc_volunteer_proofs v ON v.referral_id=i.referral_id WHERE i.contact_hash=? AND i.day_ist=? AND v.role=?').bind(contactKey,today,interest).first();
-   return prior?mcctWigV3Json({ok:true,received:true,reference:prior.referral_id.slice(0,8).toUpperCase()},202):null}
-  const row=await env.DB.prepare("SELECT i.contact_hash,i.referral_id FROM mc_volunteer_payments p JOIN mcct_public_volunteer_intakes i ON i.referral_id=p.referral_id WHERE p.utr=?").bind(receipt).first();
-  if(!row)return null;
-  return row.contact_hash===contactKey?mcctWigV3Json({ok:true,received:true,reference:row.referral_id.slice(0,8).toUpperCase()},202):mcctVolV4Fail("This payment reference is already in use. Contact Mamta Care before making another payment.",409);
+  const prior=await env.DB.prepare('SELECT i.referral_id FROM mcct_public_volunteer_intakes i JOIN mc_volunteer_proofs v ON v.referral_id=i.referral_id WHERE i.contact_hash=? AND i.day_ist=? AND v.role=?').bind(contactKey,today,interest).first();
+   return prior?mcctWigV3Json({ok:true,received:true,reference:prior.referral_id.slice(0,8).toUpperCase()},202):null;
  }
  const previous=await existing();if(previous)return previous;
  const rate=await env.DB.prepare("INSERT INTO mcct_public_volunteer_rate(bucket,day_ist,submissions,updated_at) VALUES(?,?,1,?) ON CONFLICT(bucket) DO UPDATE SET submissions=submissions+1,updated_at=excluded.updated_at WHERE submissions<5").bind(bucket,today,ts).run();
@@ -90,7 +87,7 @@ async function mcctVolV4Submit(req,env){
      .bind(id,contactKey,today,ts),
     env.DB.prepare("INSERT INTO mc_volunteer_proofs(referral_id,role,fee,address_mime,id_mime) VALUES(?,?,?,?,?)").bind(id,interest,fee,proofs[0].mime,proofs[1].mime),
     env.DB.prepare("INSERT INTO mc_volunteer_locations(referral_id,state,district,city,fee_ack_version) VALUES(?,?,?,?,?)").bind(id,state,district,city,fee?'scrutiny-v1':null),
-    ...(automatic?[env.DB.prepare('INSERT INTO mc_vol_phonepe(referral_id,session_hash,merchant_order) VALUES(?,?,?)').bind(id,browser,orderId())]:fee?[env.DB.prepare("INSERT INTO mc_volunteer_payments(referral_id,utr,amount) VALUES(?,?,?)").bind(id,receipt,fee)]:[])
+    ...(automatic?[env.DB.prepare('INSERT INTO mc_vol_phonepe(referral_id,session_hash,merchant_order) VALUES(?,?,?)').bind(id,browser,orderId())]:[])
   ]);
   if((inserted[0]?.meta?.changes||0)!==1||(inserted[1]?.meta?.changes||0)!==1)return mcctVolV4Fail("Application not confirmed; please contact Mamta Care",503);
   if(automatic)return resume();
