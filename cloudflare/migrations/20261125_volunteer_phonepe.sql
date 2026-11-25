@@ -1,0 +1,2 @@
+CREATE TABLE IF NOT EXISTS mc_vol_phonepe(referral_id TEXT PRIMARY KEY REFERENCES mca_referrals(id),session_hash TEXT NOT NULL UNIQUE,merchant_order TEXT NOT NULL UNIQUE,state TEXT NOT NULL DEFAULT 'new',provider_order TEXT,checkout_url TEXT,reference TEXT,reference_type TEXT,next_check INTEGER NOT NULL DEFAULT 0,started INTEGER NOT NULL DEFAULT 0);
+CREATE INDEX IF NOT EXISTS mc_vol_phonepe_due ON mc_vol_phonepe(state,next_check);
