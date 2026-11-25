@@ -12,7 +12,7 @@ export async function gallery(req,env,currentUser){
  if(path.startsWith(prefix)){
   const id=path.slice(prefix.length); if(req.method!=='GET'||!/^[a-f0-9-]{36}$/.test(id))return reply('',404);
   const row=await env.DB.prepare('SELECT g.public_id'+source+active+' AND g.public_id=?').bind(id).first();
-  if(!row)return reply('',404); const obj=await env.DONOR_PHOTOS.get('gallery-portraits/'+id+'.jpg');
+  if(!row)return reply('',404); const obj=await env.DONOR_PHOTOS.get('gallery-portraits/full/'+id+'.jpg') || await env.DONOR_PHOTOS.get('gallery-portraits/'+id+'.jpg');
   return obj?new Response(obj.body,{headers:{...headers,'Content-Type':'image/jpeg'}}):reply('',404);
  }
  if(path!==base&&!path.startsWith(base+'/'))return null;
@@ -21,7 +21,7 @@ export async function gallery(req,env,currentUser){
  if(path===base&&req.method==='GET'){
   const rows=(await env.DB.prepare(columns+' ORDER BY a.seq DESC').all()).results;
   const cards=await Promise.all(rows.map(async r=>{const rev=await revision(r);return '<article data-seq="'+r.seq+'" data-rev="'+rev+'"><img width="100" height="100" loading="lazy" src="'+base+'/preview?id='+r.seq+'&amp;rev='+rev+'" alt="After-haircut photo"><div><strong>'+esc(r.full_name)+'</strong><br>'+esc(r.city)+'</div>'+ (r.public_id?'<button data-action="hide">Remove from website</button>':'<label><input type="checkbox"> I confirm this donor gave permission to publish this photo with this name and city on the Mamta Care website.</label><button data-action="publish">Publish donor card</button>')+'<output aria-live="polite"></output></article>'}));
-  const nonce=crypto.randomUUID();return new Response('<!doctype html><html lang="en"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Donor gallery | Mamta Care</title><style nonce="'+nonce+'">body{font:16px/1.5 system-ui;background:#fffaf8;color:#432137;max-width:760px;padding:20px;margin:auto}article{border-bottom:1px solid #decfd4;padding:20px 0;display:grid;grid-template-columns:100px 1fr;align-items:center;gap:12px}img{object-fit:cover;border-radius:8px}label,button,output{grid-column:1/-1}button{width:fit-content;background:#692343;color:white;border:0;border-radius:8px;padding:12px;font:inherit}</style><a href="/app/premium">← Donor Desk</a><h1>Donor gallery</h1><p>Verified donors with an after-haircut photo.</p>'+ (cards.join('')||'<p>No eligible photos.</p>')+'<script nonce="'+nonce+'">'+client.toString()+';client();</script></html>',{headers:{...headers,'Content-Type':'text/html; charset=utf-8','Content-Security-Policy':"default-src 'none'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; script-src 'nonce-"+nonce+"'; style-src 'nonce-"+nonce+"'"}})
+  const nonce=crypto.randomUUID();return new Response('<!doctype html><html lang="en"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Donor gallery | Mamta Care</title><style nonce="'+nonce+'">body{font:16px/1.5 system-ui;background:#fffaf8;color:#432137;max-width:760px;padding:20px;margin:auto}article{border-bottom:1px solid #decfd4;padding:20px 0;display:grid;grid-template-columns:100px 1fr;align-items:center;gap:12px}img{object-fit:contain;border-radius:8px}label,button,output{grid-column:1/-1}button{width:fit-content;background:#692343;color:white;border:0;border-radius:8px;padding:12px;font:inherit}</style><a href="/app/premium">← Donor Desk</a><h1>Donor gallery</h1><p>Verified donors with an after-haircut photo.</p>'+ (cards.join('')||'<p>No eligible photos.</p>')+'<script nonce="'+nonce+'">'+client.toString()+';client();</script></html>',{headers:{...headers,'Content-Type':'text/html; charset=utf-8','Content-Security-Policy':"default-src 'none'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; script-src 'nonce-"+nonce+"'; style-src 'nonce-"+nonce+"'"}})
  }
  const seq=Number(url.searchParams.get('id'));if(!Number.isSafeInteger(seq)||seq<=0)return reply('',400);
  const row=await env.DB.prepare(columns+' AND a.seq=?').bind(seq).first();
@@ -33,9 +33,9 @@ export async function gallery(req,env,currentUser){
  if(req.method!=='POST')return reply('',405);
  if(path===base+'/hide'){await env.DB.prepare('UPDATE mc_public_appreciations SET hidden=1 WHERE seq=?').bind(seq).run();return reply('Removed');}
  if(path!==base+'/publish'||req.headers.get('x-publication-permission')!=='confirmed'||req.headers.get('content-type')!=='image/jpeg')return reply('',400);
- if(Number(req.headers.get('content-length'))>250000)return reply('',413);
- const bytes=new Uint8Array(await req.arrayBuffer());if(bytes.length>250000||bytes[0]!==255||bytes[1]!==216||bytes.at(-2)!==255||bytes.at(-1)!==217)return reply('Invalid thumbnail',400);
- const id=crypto.randomUUID(),key='gallery-portraits/'+id+'.jpg';await env.DONOR_PHOTOS.put(key,bytes,{httpMetadata:{contentType:'image/jpeg'}});
+ if(Number(req.headers.get('content-length'))>1000000)return reply('',413);
+ const bytes=new Uint8Array(await req.arrayBuffer());if(bytes.length>1000000||bytes[0]!==255||bytes[1]!==216||bytes.at(-2)!==255||bytes.at(-1)!==217)return reply('Invalid thumbnail',400);
+ const id=crypto.randomUUID(),key='gallery-portraits/full/'+id+'.jpg';await env.DONOR_PHOTOS.put(key,bytes,{httpMetadata:{contentType:'image/jpeg'}});
  try{const res=await env.DB.prepare('INSERT INTO mc_gallery_grants(donor_id,public_id,source_key,display_name,city,approved_by,approved_at) SELECT d.id,?,coalesce(y.object_key,x.object_key),d.full_name,d.city,?,unixepoch()'+source+' AND a.seq=? AND coalesce(y.object_key,x.object_key)=? AND d.full_name=? AND d.city=? AND g.public_id IS NULL ON CONFLICT(donor_id) DO NOTHING').bind(id,actor.username,seq,row.photo,row.full_name,row.city).run();if(!res.meta.changes){await env.DONOR_PHOTOS.delete(key);return reply('Record changed. Reload the gallery.',409)}}catch(error){await env.DONOR_PHOTOS.delete(key);throw error}
  return reply('Published');
 }
@@ -45,7 +45,10 @@ function client(){document.addEventListener('click',async event=>{
  if(action==='publish'&&!card.querySelector('input').checked){out.textContent='Confirm the publication permission first.';return}
  if(action==='hide'&&!confirm('Remove this donor card from the public website?'))return;
  button.disabled=true;
- try{const opts={method:'POST'};if(action==='publish'){const img=card.querySelector('img');await img.decode();const s=Math.min(img.naturalWidth,img.naturalHeight),c=document.createElement('canvas');c.width=c.height=240;c.getContext('2d').drawImage(img,(img.naturalWidth-s)/2,(img.naturalHeight-s)/2,s,s,0,0,240,240);opts.body=await new Promise(resolve=>c.toBlob(resolve,'image/jpeg',0.85));opts.headers={'content-type':'image/jpeg','x-publication-permission':'confirmed'}}
+ try{const opts={method:'POST'};if(action==='publish'){const img=card.querySelector('img');await img.decode();const scale=Math.min(1,960/Math.max(img.naturalWidth,img.naturalHeight));
+ const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.naturalWidth*scale));c.height=Math.max(1,Math.round(img.naturalHeight*scale));
+ const context=c.getContext('2d');context.fillStyle='#fff';context.fillRect(0,0,c.width,c.height);context.imageSmoothingQuality='high';context.drawImage(img,0,0,c.width,c.height);
+ opts.body=await new Promise(resolve=>c.toBlob(resolve,'image/jpeg',0.92));opts.headers={'content-type':'image/jpeg','x-publication-permission':'confirmed'}}
  const r=await fetch(location.pathname+'/'+action+'?id='+card.dataset.seq+'&rev='+card.dataset.rev,opts);if(!r.ok)throw Error(await r.text()||'Update failed');location.reload()
  }catch(e){out.textContent=e.message;button.disabled=false}
 })}
