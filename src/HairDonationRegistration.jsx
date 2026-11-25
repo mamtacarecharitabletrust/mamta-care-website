@@ -1,3 +1,4 @@
+import TrustNotice from "./TrustNotice";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -274,6 +275,7 @@ export default function HairDonationRegistration() {
         <h1>Donate Hair. Give Hope.</h1>
         <p>Secure hair donation registration · Designed for mobile and desktop</p>
       </div></div>
+      <TrustNotice />
       {!WEBSITE_REGISTRATION_ENABLED && <div className="mchr-preview-warning" role="status">
         <strong>Registration page preview — not accepting applications yet.</strong>
         You can explore all four steps and choose photos without sending any details. This page will submit the existing Google Form automatically when the secure integration has been verified.

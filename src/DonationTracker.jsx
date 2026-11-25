@@ -1,3 +1,4 @@
+import TrustNotice from "./TrustNotice";
 import React, { useEffect, useRef, useState } from 'react';
 import './DonationTracker.css';
 import {TrustStory, DonationImpact} from './TrackingImpact';
@@ -54,6 +55,7 @@ export default function DonationTracker({initialId}) {
   }
   return <main className="mc-track-layout"><div className="mc-track">
     <h1>Track your hair donation</h1>
+    <TrustNotice />
     <p>Enter the registration ID from your confirmation or certificate and the last four digits of your registered mobile number.</p>
     <p>Sending your donation by courier? <a href="/courier-my-hair">Courier my hair</a></p>
     <form onSubmit={lookup}>

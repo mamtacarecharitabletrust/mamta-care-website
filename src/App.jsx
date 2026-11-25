@@ -1,3 +1,4 @@
+import TrustNotice from "./TrustNotice";
 import React, { useRef, useState } from "react";
 import HairDonationRegistration from "./HairDonationRegistration";
 import DonationTracker from "./DonationTracker";
@@ -818,6 +819,7 @@ function Home() {
           PREMIUM 3D HERO
       ====================================================== */}
 
+      <TrustNotice />
       <section
         ref={heroRef}
         className="cinematic-hero"
