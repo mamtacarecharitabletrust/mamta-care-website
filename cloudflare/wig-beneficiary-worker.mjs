@@ -60,8 +60,68 @@ async function reconcile(env,a){const id=a.reference+':agreement',m=await q(env,
  return json({ok:true,status:'AWAITING_ACCEPTANCE',provider_accepted:true,delivery_confirmed:false});
 }
 function page(body,status=200){return new Response('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wig assistance agreement</title><main><h1>Mamta Care Charitable Trust</h1>'+body+'</main></html>',{status,headers:{...headers,'content-type':'text/html; charset=utf-8','content-security-policy':"default-src 'none'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"}});}
+
+const paymentPath='/wig-agreement/payment/';
+function destination(env){
+ const upi=String(env.WIG_AGREEMENT_TRUST_UPI_ID||''),payee=String(env.WIG_AGREEMENT_TRUST_PAYEE||''),qr=String(env.WIG_AGREEMENT_TRUST_QR_URL||'');
+ if(env.WIG_AGREEMENT_DESTINATION_VERIFIED!=='true'||!/^[a-z0-9._-]+@[a-z0-9.-]+$/i.test(upi)||payee!=='Mamta Care Charitable Trust')return null;
+ let u;try{u=new URL(qr)}catch{return null}
+ if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||u.hostname!==String(env.WIG_AGREEMENT_TRUST_QR_HOST||''))return null;
+ return {upi,payee,qr};
+}
+async function destinationDigest(d){return sha(JSON.stringify(d));}
+async function releasePayment(env,agreementId){
+ const a=await row(env,agreementId);
+ if(!a||a.status!=='ACCEPTED'||!a.accepted_at||!a.acceptance_reference)return {ok:false,reason:'acceptance_required'};
+ const c=await currentCase(env,a.case_id);
+ if(!c||!eligible(env,c))return {ok:false,reason:'policy_or_case_hold'};
+ const m=await q(env,"SELECT state FROM mcwig_beneficiary_mail_v1 WHERE agreement_id=? AND kind='PAYMENT'",a.id).first();
+ if(!m||m.state!=='HOLD')return {ok:false,reason:'already_reserved_or_needs_review'};
+ const s=JSON.parse(a.snapshot_json),amount=a.deposit+a.expenses;
+ if(norm(c.email)!==norm(s.email)||norm(c.patient_name)!==norm(s.patientName)||c.registration_id!==s.registrationId)return {ok:false,reason:'recipient_changed'};
+ const d=destination(env);
+ if(!d&&amount>0)return {ok:false,reason:'verified_trust_destination_required'};
+ const h=await relay(env,{action:'wig_agreement_health'});
+ if(h?.ok!==true||h.ready_send!==true||!(h.quota>0))return {ok:false,reason:'relay_disabled_or_quota'};
+ // The accepted PDF is generated from the immutable original snapshot.
+ const accepted=await render(env,{...s,status:'ACCEPTED',acceptedAt:a.accepted_at,acceptanceReference:a.acceptance_reference,originalDocumentDigest:a.document_digest});
+ const key='wig-agreement-private/'+a.id+'/accepted-'+crypto.randomUUID()+'.pdf',token=randomHex(),now=Date.now(),id=a.reference+':payment';
+ const digest=amount>0?await destinationDigest(d):'WAIVER';
+ await env.DONOR_PHOTOS.put(key,accepted.bytes,{httpMetadata:{contentType:'application/pdf'}});
+ try{
+  await env.DB.batch([
+   q(env,"INSERT INTO mcwig_beneficiary_payment_link_v1(agreement_id,token_hash,destination_digest,amount,expires_at) SELECT id,?,?,?,? FROM mcwig_beneficiary_agreement_v1 WHERE id=? AND status='ACCEPTED' AND EXISTS(SELECT 1 FROM mcwig_beneficiary_mail_v1 WHERE agreement_id=? AND kind='PAYMENT' AND state='HOLD')",await sha(token),digest,amount,now+30*86400000,a.id,a.id),
+   q(env,"UPDATE mcwig_beneficiary_mail_v1 SET state='PROCESSING',updated_at=? WHERE message_id=? AND state='HOLD' AND EXISTS(SELECT 1 FROM mcwig_beneficiary_payment_link_v1 WHERE agreement_id=? AND token_hash=?)",now,id,a.id,await sha(token)),
+   q(env,"UPDATE mcwig_beneficiary_agreement_v1 SET accepted_document_key=? WHERE id=? AND status='ACCEPTED' AND EXISTS(SELECT 1 FROM mcwig_beneficiary_payment_link_v1 WHERE agreement_id=? AND token_hash=?)",key,a.id,a.id,await sha(token))
+  ]).then(results=>{if(results.some(x=>changed(x)!==1))throw Error('Reservation conflict')});
+ }catch(e){const reserved=await q(env,'SELECT accepted_document_key FROM mcwig_beneficiary_agreement_v1 WHERE id=?',a.id).first().catch(()=>null);if(reserved&&reserved.accepted_document_key!==key)await env.DONOR_PHOTOS.delete(key);return {ok:false,reason:'reservation_needs_review'}}
+ let r;try{r=await relay(env,{action:'wig_agreement_send',message_id:id,kind:'PAYMENT',to:s.email,patient_name:s.patientName,registration_id:s.registrationId,link:ORIGIN+paymentPath+token,amount,deposit:a.deposit,expenses:a.expenses,accepted:true,acceptance_reference:a.acceptance_reference,destination_verified:amount>0?true:false,waived:amount===0,pdf_base64:accepted.base64});}catch{}
+ if(r?.ok===true&&r.sent===true&&r.message_id===id){
+  await env.DB.batch([q(env,"UPDATE mcwig_beneficiary_mail_v1 SET state='SENT',updated_at=? WHERE message_id=? AND state='PROCESSING'",Date.now(),id),q(env,"UPDATE mcwig_beneficiary_agreement_v1 SET status=?,payment_email_sent_at=? WHERE id=? AND status='ACCEPTED'",amount===0?'WAIVED':'AWAITING_PAYMENT',Date.now(),a.id)]);
+  return {ok:true,status:amount===0?'WAIVED':'AWAITING_PAYMENT'};
+ }
+ await q(env,"UPDATE mcwig_beneficiary_mail_v1 SET state='UNKNOWN',updated_at=? WHERE message_id=? AND state='PROCESSING'",Date.now(),id).run();
+ return {ok:false,reason:'provider_outcome_requires_reconciliation'};
+}
+async function paymentPage(req,env,u){
+ const token=u.pathname.slice(paymentPath.length);
+ if(req.method!=='GET'||u.origin!==ORIGIN||!tokenPattern.test(token))return page('<p>Invalid payment link.</p>',404);
+ try{
+  const a=await q(env,"SELECT a.status,a.accepted_at,a.reference,l.amount,l.expires_at,l.destination_digest FROM mcwig_beneficiary_payment_link_v1 l JOIN mcwig_beneficiary_agreement_v1 a ON a.id=l.agreement_id WHERE l.token_hash=?",await sha(token)).first();
+  if(!a||!a.accepted_at||a.expires_at<=Date.now())return page('<p>This payment link has expired or is unavailable. Contact the Trust.</p>',404);
+  if(a.status==='WAIVED')return page('<h2>Payment waived</h2><p>No payment is due.</p>');
+  if(a.status==='PAID')return page('<h2>Payment verified</h2><p>No further payment is required.</p>');
+  const d=destination(env);
+  if(a.status!=='AWAITING_PAYMENT'||!sendEnabled(env)||!d||a.destination_digest!==await destinationDigest(d))return page('<p>Payment is temporarily unavailable. Do not transfer funds. Contact the Trust for assistance.</p>',503);
+  const url='upi://pay?pa='+encodeURIComponent(d.upi)+'&pn='+encodeURIComponent(d.payee)+'&am='+encodeURIComponent(a.amount+'.00')+'&cu=INR&tn='+encodeURIComponent(a.reference);
+  const qrOrigin=new URL(d.qr).origin;
+  const body='<h2>Verified Trust payment instructions</h2><p>Payee: '+escape(d.payee)+'</p><p>UPI ID: '+escape(d.upi)+'</p><p>Amount: INR '+escape(a.amount)+'</p><p><img width="220" height="220" alt="Official Trust UPI QR" src="'+escape(d.qr)+'"></p><p><a href="'+escape(url)+'">Pay using PhonePe or another UPI app</a></p><p>Confirm the displayed recipient and amount in your UPI app. Do not pay twice. Keep the transaction reference and contact the Trust for bank verification. Opening a UPI app does not confirm payment.</p>';
+  return new Response('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wig assistance payment</title><main><h1>Mamta Care Charitable Trust</h1>'+body+'</main></html>',{headers:{...headers,'content-type':'text/html; charset=utf-8','content-security-policy':"default-src 'none'; img-src "+qrOrigin+"; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"}});
+ }catch{return page('<p>Payment service unavailable. Do not transfer funds.</p>',503)}
+}
+
 export async function handleWigAgreementPublic(req,env){
- const u=new URL(req.url);if(!u.pathname.startsWith(publicPath))return null;if(u.origin!==ORIGIN)return page('<p>Invalid agreement address.</p>',404);
+ const u=new URL(req.url);if(u.pathname.startsWith(paymentPath))return paymentPage(req,env,u);if(!u.pathname.startsWith(publicPath))return null;if(u.origin!==ORIGIN)return page('<p>Invalid agreement address.</p>',404);
  const token=u.pathname.slice(publicPath.length);if(!tokenPattern.test(token))return page('<p>Invalid or expired agreement link.</p>',404);
  try{
   const a=await q(env,"SELECT a.*,c.otp_hash,c.otp_salt,c.expires_at,c.attempts,c.consumed_at FROM mcwig_beneficiary_challenge_v1 c JOIN mcwig_beneficiary_agreement_v1 a ON a.id=c.agreement_id WHERE c.token_hash=?",await sha(token)).first();
@@ -80,7 +140,9 @@ export async function handleWigAgreementPublic(req,env){
    q(env,"INSERT OR IGNORE INTO mcwig_beneficiary_mail_v1(message_id,agreement_id,kind,state,created_at,updated_at) SELECT ?,id,'PAYMENT','HOLD',?,? FROM mcwig_beneficiary_agreement_v1 WHERE id=? AND acceptance_reference=? AND status='ACCEPTED'",a.reference+':payment',now,now,a.id,ref)
   ]);
   if(changed(results[0])!==1||changed(results[1])!==1)return page('<p>The agreement has already been processed or the link has expired.</p>',409);
-  return page('<h2>Agreement accepted</h2><p>Your verified electronic consent has been recorded. Your reference: '+escape(ref)+'. Keep your original agreement. The Trust will contact you separately regarding any applicable payment. Do not transfer funds before receiving verified instructions.</p>');
+  // Acceptance is already durably recorded. A failed payment email must never roll it back.
+  let followup;try{followup=await releasePayment(env,a.id)}catch{followup={ok:false,reason:'dispatch_pending'}}
+  return page('<h2>Agreement accepted</h2><p>Your verified electronic consent has been recorded. Your reference: '+escape(ref)+'. '+(followup.ok?'The follow-up email has been accepted by the mail provider.':'Payment instructions are pending Trust review. Do not transfer funds before receiving verified instructions.')+'</p>');
  }catch{return page('<p>Agreement service temporarily unavailable. Contact the Trust for assistance.</p>',503)}
 }
 export async function handleWigAgreementAdmin(req,env,user){
@@ -96,6 +158,7 @@ export async function handleWigAgreementAdmin(req,env,user){
   if(req.method==='GET'&&action==='pdf')return new Response(await loadPdf(env,a),{headers:{...headers,'content-type':'application/pdf','content-disposition':'attachment; filename="Wig-Assistance-Agreement.pdf"','content-security-policy':'sandbox'}});
   if(req.method==='POST'&&action==='send')return await sendFirst(req,env,user,a);
   if(req.method==='POST'&&action==='reconcile')return await reconcile(env,a);
+  if(req.method==='POST'&&action==='release-payment'){const result=await releasePayment(env,a.id);return json(result,result.ok?200:409);}
   return fail('Unsupported action',404);
  }catch{return fail('Agreement operation failed; review status before repeating',503)}
 }

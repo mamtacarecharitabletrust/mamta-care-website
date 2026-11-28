@@ -46,10 +46,17 @@ function mcWigAgreementRelayPost_(p){
    subject='Your wig assistance agreement | Mamta Care Charitable Trust';
    body='Dear '+name+',\n\nYour wig assistance has been approved. Registration: '+reg+'. Please read the attached personalized agreement. To electronically accept its terms, open '+link+' and enter your verification code: '+p.otp+'. Do not share this code. Payment instructions will be sent separately after verified acceptance. Please do not make any payment now.';
   }else{
-   const amount=p.amount;
-   if(p.accepted!==true||!p.acceptance_reference||!Number.isSafeInteger(amount)||amount<0||amount>10000||p.destination_verified!==true)return reply({ok:false,error:'Verified acceptance and payment destination required'});
-   subject='Agreement accepted — payment instructions | Mamta Care Charitable Trust';
-   body='Dear '+name+',\n\nYour wig assistance agreement has been accepted. Registration: '+reg+'. Amount payable: INR '+amount+'. Use the official payment page '+link+' to see the verified Trust QR and payment instructions. Payment is confirmed only after our team verifies the bank credit. Your acceptance document is attached.';
+   const amount=p.amount,deposit=p.deposit,expenses=p.expenses;
+   if(p.accepted!==true||!p.acceptance_reference||!Number.isSafeInteger(amount)||amount<0||amount>10000||!Number.isSafeInteger(deposit)||deposit<0||deposit>8000||!Number.isSafeInteger(expenses)||expenses<0||expenses>2000||deposit+expenses!==amount)return reply({ok:false,error:'Verified acceptance and exact amount required'});
+   if(amount===0){
+    if(p.waived!==true)return reply({ok:false,error:'Waiver not confirmed'});
+    subject='Agreement accepted — payment waived | Mamta Care Charitable Trust';
+    body='Dear '+name+',\n\nYour agreement has been accepted. Registration: '+reg+'. No payment is due. Your acceptance document is attached. Our team will coordinate wig allotment.';
+   }else{
+    if(p.destination_verified!==true)return reply({ok:false,error:'Verified Trust destination required'});
+    subject='Agreement accepted — payment instructions | Mamta Care Charitable Trust';
+    body='Dear '+name+',\n\nYour wig assistance agreement has been accepted. Registration: '+reg+'.\nWig purchase or manufacturing charge: INR 0\nRefundable deposit: INR '+deposit+'\nProcessing and logistics: INR '+expenses+'\nTotal: INR '+amount+'.\n\nUse the official payment page '+link+' for the verified Trust QR and PhonePe/UPI instructions. Payment is confirmed only after bank verification. Your acceptance document is attached.';
+   }
   }
   body+='\n\nReduce, Reuse and Recycle\nWig Assistance Department\nMamta Care Charitable Trust';
   const fingerprint=Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,JSON.stringify([kind,to,subject,body,pdf])+secret,Utilities.Charset.UTF_8).map(b=>('0'+(b&255).toString(16)).slice(-2)).join('');
