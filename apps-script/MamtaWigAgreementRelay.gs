@@ -14,7 +14,7 @@ function mcWigAgreementRelayPost_(p){
  if(diff)return reply({ok:false,error:'Unauthorized'});
  const enabled=prop.getProperty('WIG_AGREEMENT_RELAY_ENABLED')==='YES';
  const action=String(p.action||'');
- if(action==='wig_agreement_health')return reply({ok:true,ready_send:enabled&&!!prop.getProperty('WIG_AGREEMENT_ALLOWED_ORIGIN')&&!!prop.getProperty('WIG_AGREEMENT_LEDGER_SHEET_ID'),quota:MailApp.getRemainingDailyQuota()});
+ if(action==='wig_agreement_health')return reply({ok:true,ready_send:enabled&&!!prop.getProperty('WIG_AGREEMENT_ALLOWED_ORIGIN')&&!!prop.getProperty('WIG_AGREEMENT_LEDGER_SHEET_ID'),quota:MailApp.getRemainingDailyQuota(),simple_agreement_v1:true});
  if(!['wig_agreement_send','wig_agreement_status'].includes(action))return reply({ok:false,error:'Unsupported action'});
  const id=String(p.message_id||'');
  if(!/^[a-zA-Z0-9_-]{16,100}:(agreement|payment)$/.test(id))return reply({ok:false,error:'Invalid message ID'});
@@ -40,11 +40,18 @@ function mcWigAgreementRelayPost_(p){
   if(!pdf||pdf.length>7000000||!/^[A-Za-z0-9+/]+={0,2}$/.test(pdf))return reply({ok:false,error:'Agreement PDF required'});
   const bytes=Utilities.base64Decode(pdf);
   if(bytes.length<100||bytes.length>5000000||bytes.slice(0,5).map(x=>String.fromCharCode(x&255)).join('')!=='%PDF-')return reply({ok:false,error:'Invalid PDF'});
-  let subject,body;
+  let subject,body,htmlBody;
   if(kind==='AGREEMENT'){
-   if(!/^\d{6}$/.test(String(p.otp||'')))return reply({ok:false,error:'Verification code required'});
-   subject='Your wig assistance agreement | Mamta Care Charitable Trust';
-   body='Dear '+name+',\n\nYour wig assistance has been approved. Registration: '+reg+'. Please read the attached personalized agreement. To electronically accept its terms, open '+link+' and enter your verification code: '+p.otp+'. Do not share this code. Payment instructions will be sent separately after verified acceptance. Please do not make any payment now.';
+   if(p.acceptance_mode!=='secure_link_v1')return reply({ok:false,error:'Secure link version required'});
+   const deposit=p.deposit,expenses=p.expenses,total=deposit+expenses;
+   if(!Number.isSafeInteger(deposit)||deposit<0||deposit>8000||!Number.isSafeInteger(expenses)||expenses<0||expenses>2000)return reply({ok:false,error:'Invalid agreement amounts'});
+   const esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+   const money=n=>'₹'+String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+   const test=p.test_only===true;
+   if(test&&(deposit!==0||expenses!==0||reg.indexOf('QA-')!==0))return reply({ok:false,error:'Invalid test amounts'});
+   subject=(test?'TEST ONLY — ':'')+'Wig Assistance Agreement | Mamta Care Charitable Trust';
+   body='Dear '+name+',\n\n'+(test?'This is a fictional test. No payment is due.\n\n':'')+'Registration: '+reg+'. Your personalized agreement is attached. Wig purchase and manufacturing charge: ₹0.\nTotal initial payment: '+money(total)+'\nProcessing and logistics: '+money(expenses)+'\nRefundable security deposit: '+money(deposit)+'\n\nRead the agreement, then open '+link+' and select Accept Agreement. No OTP or typing is required. The link expires after 48 hours. No payment is requested now.';
+   htmlBody='<div style="max-width:600px;margin:auto;font-family:Arial,sans-serif;color:#252525;line-height:1.65"><div style="background:#70203e;color:#ffffff;padding:22px;border-radius:12px 12px 0 0"><strong>MAMTA CARE CHARITABLE TRUST</strong><br><span>Wig Assistance Department</span></div><div style="padding:24px;border:1px solid #e3d6d9;border-top:0">'+(test?'<p><strong>TEST ONLY — fictional beneficiary; no payment due.</strong></p>':'')+'<h2 style="color:#70203e;margin-top:0">Your wig assistance agreement</h2><p>Dear '+esc(name)+',</p><p>Registration: <strong>'+esc(reg)+'</strong></p><p>Your personalized agreement is attached. The wig is provided without purchase or manufacturing charges.</p><table role="presentation" width="100%" cellpadding="12" cellspacing="0" style="border:1px solid #e5e5e5;border-radius:8px;background:#fbfaf9"><tr><td>Total initial payment</td><td align="right" style="font-weight:bold;font-size:23px;color:#111111">'+money(total)+'</td></tr><tr><td>Processing &amp; logistics charges</td><td align="right" style="font-weight:bold;font-size:21px;color:#b42318">'+money(expenses)+'</td></tr><tr><td>Refundable security deposit</td><td align="right" style="font-weight:bold;font-size:21px;color:#137333">'+money(deposit)+'</td></tr></table><p>The refundable amount is subject to the agreement’s return and inspection conditions. Normal wear is accepted.</p><p>Please read the attached agreement and confirm your acceptance.</p><p style="text-align:center;margin:28px 0"><a href="'+esc(link)+'" style="display:inline-block;background:#70203e;color:#fff;font-size:18px;font-weight:bold;text-decoration:none;padding:15px 30px;border-radius:8px">Accept Agreement</a></p><p style="font-size:13px;color:#555">The secure link expires after 48 hours. No payment is requested at this stage.</p><hr style="border:0;border-top:1px solid #eee"><strong>Reduce · Reuse · Recycle</strong><br>Mamta Care Charitable Trust</div></div>';
   }else{
    const amount=p.amount,deposit=p.deposit,expenses=p.expenses;
    if(p.accepted!==true||!p.acceptance_reference||!Number.isSafeInteger(amount)||amount<0||amount>10000||!Number.isSafeInteger(deposit)||deposit<0||deposit>8000||!Number.isSafeInteger(expenses)||expenses<0||expenses>2000||deposit+expenses!==amount)return reply({ok:false,error:'Verified acceptance and exact amount required'});
@@ -59,12 +66,12 @@ function mcWigAgreementRelayPost_(p){
    }
   }
   body+='\n\nReduce, Reuse and Recycle\nWig Assistance Department\nMamta Care Charitable Trust';
-  const fingerprint=Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,JSON.stringify([kind,to,subject,body,pdf])+secret,Utilities.Charset.UTF_8).map(b=>('0'+(b&255).toString(16)).slice(-2)).join('');
+  const fingerprint=Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,JSON.stringify([kind,to,subject,body,htmlBody||'',pdf])+secret,Utilities.Charset.UTF_8).map(b=>('0'+(b&255).toString(16)).slice(-2)).join('');
   if(old){if(old[0][1]!==kind||old[0][2]!==fingerprint)return reply({ok:false,error:'Message content mismatch'});if(old[0][3]==='SENT')return reply({ok:true,sent:true,already_sent:true,message_id:id});return reply({ok:false,uncertain:true,error:'Previous attempt requires reconciliation'})}
   if(MailApp.getRemainingDailyQuota()<1)return reply({ok:false,retryable:true,error:'Mail quota exhausted'});
   sheet.appendRow([id,kind,fingerprint,'RESERVED',new Date()]);const row=sheet.getLastRow();SpreadsheetApp.flush();
   try{
-   MailApp.sendEmail({to,subject,body,name:'Mamta Care Charitable Trust',attachments:[Utilities.newBlob(bytes,'application/pdf',kind==='AGREEMENT'?'Wig-Assistance-Agreement.pdf':'Accepted-Wig-Agreement.pdf')]});
+   MailApp.sendEmail({to,subject,body,...(htmlBody?{htmlBody}:{}),name:'Mamta Care Charitable Trust',attachments:[Utilities.newBlob(bytes,'application/pdf',kind==='AGREEMENT'?'Wig-Assistance-Agreement.pdf':'Accepted-Wig-Agreement.pdf')]});
    sheet.getRange(row,4,1,2).setValues([['SENT',new Date()]]);SpreadsheetApp.flush();
    return reply({ok:true,sent:true,message_id:id,delivered:false});
   }catch(e){try{sheet.getRange(row,4,1,2).setValues([['UNKNOWN',new Date()]]);SpreadsheetApp.flush()}catch(_){}return reply({ok:false,uncertain:true,error:'Mail outcome uncertain; check Sent Mail before retrying'})}
