@@ -153,11 +153,28 @@ export async function handleWigAgreementAdmin(req,env,user){
  try{
   if(req.method==='POST'&&!writeOK(req))return fail('Invalid request origin',403);
   if(req.method==='POST'&&action==='prepare')return await prepare(req,env,user,id);
+  if(req.method==='GET'&&action==='case-status'){
+   const c=await currentCase(env,id);if(!c)return fail('Approved case not found',404);
+   const a=await q(env,"SELECT id,status,document_digest,deposit,expenses,accepted_at FROM mcwig_beneficiary_agreement_v1 WHERE case_id=? AND status!='SUPERSEDED'",id).first();
+   const mail=a?(await q(env,'SELECT kind,state,updated_at FROM mcwig_beneficiary_mail_v1 WHERE agreement_id=?',a.id).all()).results:[];
+   return json({ok:true,eligible:eligible(env,c),agreement:a||null,mail});
+  }
   const a=await row(env,id);if(!a)return fail('Agreement not found',404);
   if(req.method==='GET'&&action==='status'){const mail=(await q(env,'SELECT kind,state,updated_at FROM mcwig_beneficiary_mail_v1 WHERE agreement_id=?',id).all()).results;return json({ok:true,id,status:a.status,document_digest:a.document_digest,accepted_at:a.accepted_at,mail});}
   if(req.method==='GET'&&action==='pdf')return new Response(await loadPdf(env,a),{headers:{...headers,'content-type':'application/pdf','content-disposition':'attachment; filename="Wig-Assistance-Agreement.pdf"','content-security-policy':'sandbox'}});
   if(req.method==='POST'&&action==='send')return await sendFirst(req,env,user,a);
   if(req.method==='POST'&&action==='reconcile')return await reconcile(env,a);
+  if(req.method==='POST'&&action==='reconcile-payment'){
+   const id=a.reference+':payment',m=await q(env,'SELECT state FROM mcwig_beneficiary_mail_v1 WHERE message_id=?',id).first();
+   if(!m)return fail('No payment email attempt',404);
+   if(m.state==='SENT')return json({ok:true,status:a.status});
+   if(!['PROCESSING','UNKNOWN'].includes(m.state)||a.status!=='ACCEPTED')return fail('Review payment dispatch state',409);
+   const r=await relay(env,{action:'wig_agreement_status',message_id:id});
+   if(r?.ok!==true||r.message_id!==id||r.sent!==true||r.state!=='SENT')return fail('Provider has not confirmed sending; do not replay',409);
+   const state=a.deposit+a.expenses===0?'WAIVED':'AWAITING_PAYMENT';
+   await env.DB.batch([q(env,"UPDATE mcwig_beneficiary_mail_v1 SET state='SENT',updated_at=? WHERE message_id=? AND state IN ('PROCESSING','UNKNOWN')",Date.now(),id),q(env,"UPDATE mcwig_beneficiary_agreement_v1 SET status=?,payment_email_sent_at=? WHERE id=? AND status='ACCEPTED'",state,Date.now(),a.id)]);
+   return json({ok:true,status:state,provider_accepted:true,delivery_confirmed:false});
+  }
   if(req.method==='POST'&&action==='release-payment'){const result=await releasePayment(env,a.id);return json(result,result.ok?200:409);}
   return fail('Unsupported action',404);
  }catch{return fail('Agreement operation failed; review status before repeating',503)}
