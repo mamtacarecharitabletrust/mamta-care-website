@@ -1,0 +1,17 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createAgreement,agreementEmail,paymentEmail,transition,POLICY_VERSION} from '../cloudflare/wig-beneficiary-agreement.mjs';
+const fixture={caseId:'fictional-case',registrationId:'DEMO',patientName:'Sample Patient',email:'test@example.invalid',approved:true,reference:'DEMO-AGREEMENT',policyVersion:POLICY_VERSION,policyAdopted:true,now:1000};
+const a=createAgreement(fixture);
+const sent=()=>transition(a,{type:'AGREEMENT_SENT',now:1100,adminApproved:true,providerConfirmed:true,documentDigest:'mock-document-digest'});
+const accepted=()=>transition(sent(),{type:'ACCEPTED',now:1200,verificationPassed:true,explicitConsent:true,documentDigest:'mock-document-digest',acceptanceReference:'demo-receipt'});
+const destination={trustDestinationVerified:true,upiId:'example@invalid',qrUrl:'https://example.invalid/qr',paymentPageUrl:'https://example.invalid/pay',acceptedDocumentReference:'demo-receipt'};
+test('only approved patients and adopted policy',()=>{assert.throws(()=>createAgreement({...fixture,approved:false}));assert.throws(()=>createAgreement({...fixture,policyAdopted:false}));});
+test('variable expenses and hardship waiver',()=>{assert.equal(createAgreement({...fixture,expenses:500,deposit:3000}).total,3500);assert.equal(createAgreement({...fixture,expenses:0,deposit:0}).total,0);assert.throws(()=>createAgreement({...fixture,expenses:2001}));});
+test('first email contains no payment instructions',()=>{const m=agreementEmail(a,{secureLink:'https://example.invalid/accept',documentReference:'demo.pdf'});assert.equal(m.id,'DEMO-AGREEMENT:agreement');assert.ok(!m.body.includes(destination.paymentPageUrl));assert.equal(m.qrUrl,undefined);});
+test('preview is not sent',()=>assert.throws(()=>transition(a,{type:'AGREEMENT_SENT',now:1100,adminApproved:true,providerConfirmed:false,documentDigest:'x'})));
+test('cannot accept altered agreement or skip explicit consent',()=>{for(const e of [{documentDigest:'wrong',explicitConsent:true},{documentDigest:'mock-document-digest',explicitConsent:false}])assert.throws(()=>transition(sent(),{type:'ACCEPTED',now:1200,verificationPassed:true,acceptanceReference:'demo',...e}));});
+test('payment only after verified consent',()=>{assert.throws(()=>paymentEmail(a,destination));assert.throws(()=>paymentEmail(sent(),destination));assert.equal(paymentEmail(accepted(),destination).id,'DEMO-AGREEMENT:payment');});
+test('destination must be verified',()=>assert.throws(()=>paymentEmail(accepted(),{...destination,trustDestinationVerified:false})));
+test('bank credit and acknowledged payment email required',()=>{assert.throws(()=>transition(accepted(),{type:'PAYMENT_CONFIRMED',now:1300,bankVerified:true,amount:10000,utr:'123456789012'}));const due=transition(accepted(),{type:'PAYMENT_EMAIL_SENT',now:1300,providerConfirmed:true});assert.throws(()=>transition(due,{type:'PAYMENT_CONFIRMED',now:1400,bankVerified:false,amount:10000,utr:'123456789012'}));assert.equal(transition(due,{type:'PAYMENT_CONFIRMED',now:1400,bankVerified:true,amount:10000,utr:'123456789012'}).state,'PAID');});
+test('duplicate transitions rejected',()=>{assert.throws(()=>transition(accepted(),{type:'ACCEPTED',now:1300,verificationPassed:true,explicitConsent:true,documentDigest:'mock-document-digest',acceptanceReference:'demo'}));});
